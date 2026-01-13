@@ -80,8 +80,31 @@ class DevRevConfig(BaseSettings):
     @field_validator("base_url")
     @classmethod
     def validate_base_url(cls, v: str) -> str:
-        """Ensure base URL doesn't have trailing slash."""
-        return v.rstrip("/")
+        """Validate and normalize base URL.
+
+        Security: Enforces HTTPS-only connections to prevent credential leakage.
+
+        Args:
+            v: The base URL value
+
+        Returns:
+            Normalized URL without trailing slash
+
+        Raises:
+            ValueError: If URL uses insecure HTTP protocol
+        """
+        url = v.rstrip("/")
+        # Security: Enforce HTTPS to prevent credential exposure
+        if url.startswith("http://"):
+            raise ValueError(
+                "Insecure HTTP URLs are not allowed. Use HTTPS to protect your API credentials."
+            )
+        if not url.startswith("https://"):
+            raise ValueError(
+                "Base URL must start with 'https://'. "
+                f"Got: {url[:50]}..."  # Truncate to avoid leaking full URL in errors
+            )
+        return url
 
     @field_validator("log_level")
     @classmethod

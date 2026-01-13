@@ -23,6 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Model validation for edge cases
 
+### Security
+- **HTTPS Enforcement**: Added validation to reject insecure HTTP URLs in `base_url` configuration
+  - Prevents accidental credential leakage over unencrypted connections
+  - Clear error messages guide users to use HTTPS
+- Security audit completed with `bandit` (5,189 lines scanned, 0 issues)
+- Dependency audit completed with `pip-audit` (0 known vulnerabilities)
+- Added comprehensive security tests for token masking and URL validation
+- Updated SECURITY.md with audit results and implementation details
+
 ## [0.1.0] - 2026-01-12
 
 ### Added
