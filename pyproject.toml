@@ -58,7 +58,7 @@ security = [
     "safety>=2.3.0",
 ]
 all = [
-    "py-devrev[dev,docs,benchmark,security]",
+    "devrev-Python-SDK[dev,docs,benchmark,security]",
 ]
 
 [project.urls]

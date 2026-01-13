@@ -463,6 +463,89 @@ wheels = [
 ]
 
 [[package]]
+name = "devrev-python-sdk"
+version = "1.0.0"
+source = { editable = "." }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "bandit" },
+    { name = "mkdocs" },
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings", extra = ["python"] },
+    { name = "mypy" },
+    { name = "pip-audit" },
+    { name = "pre-commit" },
+    { name = "pymdown-extensions" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-benchmark" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "respx" },
+    { name = "ruff" },
+    { name = "safety" },
+]
+benchmark = [
+    { name = "pytest" },
+    { name = "pytest-benchmark" },
+]
+dev = [
+    { name = "mypy" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "respx" },
+    { name = "ruff" },
+]
+docs = [
+    { name = "mkdocs" },
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings", extra = ["python"] },
+    { name = "pymdown-extensions" },
+]
+security = [
+    { name = "bandit" },
+    { name = "pip-audit" },
+    { name = "safety" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "bandit", marker = "extra == 'security'", specifier = ">=1.7.0" },
+    { name = "devrev-python-sdk", extras = ["dev", "docs", "benchmark", "security"], marker = "extra == 'all'" },
+    { name = "httpx", specifier = ">=0.25.0" },
+    { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.5.0" },
+    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5.0" },
+    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.24.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.7.0" },
+    { name = "pip-audit", marker = "extra == 'security'", specifier = ">=2.7.0" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
+    { name = "pydantic", specifier = ">=2.5.0" },
+    { name = "pydantic-settings", specifier = ">=2.1.0" },
+    { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.7.0" },
+    { name = "pytest", marker = "extra == 'benchmark'", specifier = ">=7.4.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
+    { name = "pytest-benchmark", marker = "extra == 'benchmark'", specifier = ">=4.0.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
+    { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.12.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "respx", marker = "extra == 'dev'", specifier = ">=0.20.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
+    { name = "safety", marker = "extra == 'security'", specifier = ">=2.3.0" },
+]
+provides-extras = ["dev", "docs", "benchmark", "security", "all"]
+
+[[package]]
 name = "distlib"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1175,89 +1258,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/37/a8/d832f7293ebb21690
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e0/a9/023730ba63db1e494a271cb018dcd361bd2c917ba7004c3e49d5daf795a2/py_cpuinfo-9.0.0-py3-none-any.whl", hash = "sha256:859625bc251f64e21f077d099d4162689c762b5d6a4c3c97553d56241c9674d5", size = 22335, upload-time = "2022-10-25T20:38:27.636Z" },
 ]
-
-[[package]]
-name = "py-devrev"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "httpx" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "python-dotenv" },
-]
-
-[package.optional-dependencies]
-all = [
-    { name = "bandit" },
-    { name = "mkdocs" },
-    { name = "mkdocs-material" },
-    { name = "mkdocstrings", extra = ["python"] },
-    { name = "mypy" },
-    { name = "pip-audit" },
-    { name = "pre-commit" },
-    { name = "pymdown-extensions" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-benchmark" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "respx" },
-    { name = "ruff" },
-    { name = "safety" },
-]
-benchmark = [
-    { name = "pytest" },
-    { name = "pytest-benchmark" },
-]
-dev = [
-    { name = "mypy" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "respx" },
-    { name = "ruff" },
-]
-docs = [
-    { name = "mkdocs" },
-    { name = "mkdocs-material" },
-    { name = "mkdocstrings", extra = ["python"] },
-    { name = "pymdown-extensions" },
-]
-security = [
-    { name = "bandit" },
-    { name = "pip-audit" },
-    { name = "safety" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "bandit", marker = "extra == 'security'", specifier = ">=1.7.0" },
-    { name = "httpx", specifier = ">=0.25.0" },
-    { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.5.0" },
-    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5.0" },
-    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.24.0" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.7.0" },
-    { name = "pip-audit", marker = "extra == 'security'", specifier = ">=2.7.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
-    { name = "py-devrev", extras = ["dev", "docs", "benchmark", "security"], marker = "extra == 'all'" },
-    { name = "pydantic", specifier = ">=2.5.0" },
-    { name = "pydantic-settings", specifier = ">=2.1.0" },
-    { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.7.0" },
-    { name = "pytest", marker = "extra == 'benchmark'", specifier = ">=7.4.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
-    { name = "pytest-benchmark", marker = "extra == 'benchmark'", specifier = ">=4.0.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
-    { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.12.0" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "respx", marker = "extra == 'dev'", specifier = ">=0.20.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
-    { name = "safety", marker = "extra == 'security'", specifier = ">=2.3.0" },
-]
-provides-extras = ["dev", "docs", "benchmark", "security", "all"]
 
 [[package]]
 name = "py-serializable"
