@@ -86,7 +86,7 @@ def create_ticket():
                 "title": response.work.title,
             }
         )
-    except DevRevError as e:
+    except DevRevError:
         logging.exception("Error while creating ticket with DevRev")
         return jsonify({"error": "Failed to create ticket"}), 400
     except KeyError:
