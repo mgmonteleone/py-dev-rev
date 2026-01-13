@@ -1,0 +1,141 @@
+# API Change Detection Workflow
+# Issue #65 - API change detection
+# Weekly check for breaking changes in DevRev API
+name: API Change Detection
+
+on:
+  schedule:
+    # Run weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  detect-changes:
+    name: Detect API Changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install httpx pyyaml deepdiff
+
+      - name: Detect API changes
+        id: detect
+        run: |
+          python << 'EOF'
+          import httpx
+          import yaml
+          import json
+          import os
+          from deepdiff import DeepDiff
+
+          OPENAPI_URL = "https://api.devrev.ai/openapi.yaml"
+          LOCAL_SPEC = "openapi-public.yaml"
+
+          # Fetch latest spec
+          try:
+              response = httpx.get(OPENAPI_URL, timeout=60)
+              response.raise_for_status()
+              remote_spec = yaml.safe_load(response.text)
+          except Exception as e:
+              print(f"Error fetching remote spec: {e}")
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write("has_changes=false\n")
+                  f.write("error=fetch_failed\n")
+              exit(0)
+
+          # Load local spec
+          try:
+              with open(LOCAL_SPEC, 'r') as f:
+                  local_spec = yaml.safe_load(f)
+          except FileNotFoundError:
+              print("Local spec not found")
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write("has_changes=true\n")
+                  f.write("breaking=false\n")
+              exit(0)
+
+          # Compare paths (endpoints)
+          remote_paths = set(remote_spec.get('paths', {}).keys())
+          local_paths = set(local_spec.get('paths', {}).keys())
+
+          removed = local_paths - remote_paths
+          added = remote_paths - local_paths
+
+          # Detect breaking changes
+          breaking_changes = []
+          non_breaking_changes = []
+
+          if removed:
+              breaking_changes.append(f"Removed endpoints: {', '.join(sorted(removed))}")
+
+          if added:
+              non_breaking_changes.append(f"New endpoints: {', '.join(sorted(added))}")
+
+          # Check for parameter changes in existing endpoints
+          for path in local_paths & remote_paths:
+              local_methods = local_spec['paths'].get(path, {})
+              remote_methods = remote_spec['paths'].get(path, {})
+              
+              # Check for removed methods
+              for method in set(local_methods.keys()) - set(remote_methods.keys()):
+                  if method not in ['parameters', 'servers']:
+                      breaking_changes.append(f"Removed method: {method.upper()} {path}")
+
+          has_changes = bool(breaking_changes or non_breaking_changes)
+          has_breaking = bool(breaking_changes)
+
+          # Write outputs
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"has_changes={str(has_changes).lower()}\n")
+              f.write(f"breaking={str(has_breaking).lower()}\n")
+              f.write(f"breaking_count={len(breaking_changes)}\n")
+              f.write(f"addition_count={len(non_breaking_changes)}\n")
+
+          # Write report file
+          with open('api_change_report.md', 'w') as f:
+              f.write("# API Change Detection Report\n\n")
+              if breaking_changes:
+                  f.write("## ⚠️ Breaking Changes\n\n")
+                  for change in breaking_changes:
+                      f.write(f"- {change}\n")
+                  f.write("\n")
+              if non_breaking_changes:
+                  f.write("## ✨ Non-Breaking Changes\n\n")
+                  for change in non_breaking_changes:
+                      f.write(f"- {change}\n")
+              if not has_changes:
+                  f.write("No API changes detected.\n")
+
+          print(f"Breaking: {len(breaking_changes)}, Non-breaking: {len(non_breaking_changes)}")
+          EOF
+
+      - name: Create issue for breaking changes
+        if: steps.detect.outputs.breaking == 'true'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "⚠️ Breaking API Changes Detected"
+          content-filepath: api_change_report.md
+          labels: |
+            api-change
+            breaking-change
+            urgent
+          assignees: mgmonteleone
+
+      - name: Upload report
+        if: steps.detect.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-change-report
+          path: api_change_report.md
+          retention-days: 30
+
