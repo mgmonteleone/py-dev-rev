@@ -2,7 +2,7 @@
 
 A modern, type-safe Python SDK for the DevRev API.
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)](https://mypy-lang.org/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -36,7 +36,7 @@ A modern, type-safe Python SDK for the DevRev API.
 
 - **100% API Coverage**: Full support for all 209 public DevRev API endpoints
 - **Type Safety**: Complete type annotations with Pydantic v2 models
-- **Modern Python**: Requires Python 3.12+ for optimal performance and features
+- **Modern Python**: Supports Python 3.11+ (N-2 policy)
 - **Developer Friendly**: Intuitive API design with comprehensive documentation
 
 This SDK is generated and maintained from the official DevRev OpenAPI specification (`openapi-public.yaml`), ensuring it stays current with the latest API changes.
@@ -87,8 +87,15 @@ pip install -e ".[dev]"
 
 ### Requirements
 
-- Python 3.12 or higher
+- Python 3.11 or higher
 - Dependencies are automatically installed
+
+### Python support policy
+
+py-devrev follows an **N-2** support policy (current stable Python + two previous minor versions).
+
+- See: [Python version support policy](docs/guides/version-support.md)
+- See: [Compatibility matrix](docs/guides/compatibility.md)
 
 ---
 

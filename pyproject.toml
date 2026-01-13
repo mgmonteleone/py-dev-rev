@@ -7,7 +7,7 @@ name = "py-devrev"
 version = "0.1.0"
 description = "A modern, type-safe Python SDK for the DevRev API"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 license = "MIT"
 authors = [
     { name = "Matthew G. Monteleone", email = "matthewm@augmentcode.com" }
@@ -16,6 +16,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
@@ -71,7 +72,7 @@ packages = ["src/devrev"]
 
 # Ruff Configuration
 [tool.ruff]
-target-version = "py312"
+target-version = "py311"
 line-length = 100
 src = ["src", "tests"]
 
@@ -101,7 +102,7 @@ known-first-party = ["devrev"]
 
 # mypy Configuration
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true

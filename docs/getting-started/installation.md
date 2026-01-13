@@ -4,7 +4,7 @@ This guide covers all methods for installing the DevRev Python SDK.
 
 ## Requirements
 
-- **Python 3.12 or higher** is required
+- **Python 3.11 or higher** is required
 - **pip** or another Python package manager
 
 ## Quick Install
@@ -109,7 +109,7 @@ We recommend using virtual environments:
 === "conda"
 
     ```bash
-    conda create -n devrev python=3.12
+    conda create -n devrev python=3.11
     conda activate devrev
     pip install py-devrev
     ```
@@ -117,8 +117,8 @@ We recommend using virtual environments:
 === "pyenv + virtualenv"
 
     ```bash
-    pyenv install 3.12.0
-    pyenv virtualenv 3.12.0 devrev
+    pyenv install 3.11.0
+    pyenv virtualenv 3.11.0 devrev
     pyenv activate devrev
     pip install py-devrev
     ```
@@ -135,15 +135,15 @@ pip install --upgrade py-devrev
 
 ### Python Version Error
 
-If you see "Python >= 3.12 required":
+If you see "Python >= 3.11 required":
 
 ```bash
 # Check your Python version
 python --version
 
 # Use pyenv to install a newer version
-pyenv install 3.12.0
-pyenv global 3.12.0
+pyenv install 3.11.0
+pyenv global 3.11.0
 ```
 
 ### SSL Certificate Errors

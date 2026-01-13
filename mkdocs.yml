@@ -133,6 +133,8 @@ nav:
     - Error Handling: guides/error-handling.md
     - Logging & Debugging: guides/logging.md
     - Configuration: guides/configuration.md
+    - Version Support: guides/version-support.md
+    - Compatibility Matrix: guides/compatibility.md
     - Testing: guides/testing.md
   - API Reference:
     - api/index.md

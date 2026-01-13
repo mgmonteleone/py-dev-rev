@@ -64,10 +64,10 @@ Follow the component type specifications below.
 Return structured status to coordinator.
 
 ## Design Considerations
-- When using libraries always use the morst recent, modern, stable version.
+- When using libraries always use the most recent, modern, stable version.
 - Always use pydantic v2 and type annotations where appropriate.
 - Always create type hints
-- Always use Python 3.12+ features. unless other wise instructed not to.
+- Always use Python 3.11+ features, unless otherwise instructed.
 
 ## Component Type Specifications
 

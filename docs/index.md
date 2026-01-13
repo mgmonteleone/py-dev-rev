@@ -90,7 +90,7 @@ A modern, type-safe Python SDK for the [DevRev API](https://devrev.ai).
 
 ## Requirements
 
-- **Python 3.12+** - Built with modern Python features
+- **Python 3.11+** - Supports current stable Python and the two previous minor versions (N-2)
 - **DevRev API Token** - Get one from your DevRev dashboard
 
 ## Installation

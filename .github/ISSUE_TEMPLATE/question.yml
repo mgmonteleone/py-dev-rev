@@ -1,0 +1,33 @@
+name: Question
+description: Ask a question about usage or behavior
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please include as much context as possible (and **never** paste API tokens).
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do, and what isn't clear?
+    validations:
+      required: true
+
+  - type: input
+    id: sdk_version
+    attributes:
+      label: SDK version (if applicable)
+      placeholder: e.g. 0.1.0
+    validations:
+      required: false
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version (if applicable)
+      placeholder: e.g. 3.12.2
+    validations:
+      required: false

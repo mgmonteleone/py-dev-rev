@@ -29,10 +29,10 @@
 
 ## Python Version and Type Hints
 
-- Target Python 3.12+ for compatibility with modern features
+- Target Python 3.11+ for compatibility with modern features
 - Use type hints for all function signatures and class attributes
 - Leverage `typing` module features: `Optional`, `Union`, `TypeVar`, `Generic`
-- If necissary, use `from __future__ import annotations` for forward references, but we do not need to plan for legacy python support 3.12 is minumum
+- If necessary, use `from __future__ import annotations` for forward references; we do not need to plan for legacy Python support (3.11 is the minimum)
 - Enable strict type checking with tools like mypy
 
 ## Code Organization

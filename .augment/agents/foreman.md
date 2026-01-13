@@ -109,7 +109,7 @@ After PR creation:
 ## Technical Standards (Enforce in All Builder Agents)
 
 ### Python
-- Python 3.12+ features (`match` statements, `|` union types)
+- Python 3.11+ features (e.g. `match` statements, `|` union types)
 - Strict typing with pydantic v2 (or the most recent stable version)
 - Google-style docstrings
 

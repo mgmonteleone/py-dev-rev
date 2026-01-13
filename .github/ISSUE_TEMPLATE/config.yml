@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://mgmonteleone.github.io/py-dev-rev/
+    about: Read the docs for usage guides and API reference.
+  - name: Security issues
+    url: https://github.com/mgmonteleone/py-dev-rev/security/policy
+    about: Please report security vulnerabilities responsibly.

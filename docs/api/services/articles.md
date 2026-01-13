@@ -20,30 +20,39 @@ Manage knowledge base articles in DevRev.
 
 ```python
 from devrev import DevRevClient
+from devrev.models.articles import ArticlesListRequest
 
 client = DevRevClient()
 
-response = client.articles.list(limit=20)
-for article in response.articles:
+# Using a request object
+request = ArticlesListRequest(limit=20)
+articles = client.articles.list(request)
+for article in articles:
     print(f"{article.title}")
 ```
 
 ### Get Article
 
 ```python
-response = client.articles.get(id="don:core:dvrv-us-1:devo/1:article/123")
-print(f"Article: {response.article.title}")
-print(f"Content: {response.article.body[:100]}...")
+from devrev.models.articles import ArticlesGetRequest
+
+request = ArticlesGetRequest(id="don:core:dvrv-us-1:devo/1:article/123")
+article = client.articles.get(request)
+print(f"Article: {article.title}")
+if article.content:
+    print(f"Content: {article.content[:100]}...")
 ```
 
 ### Create Article
 
 ```python
-response = client.articles.create(
+from devrev.models.articles import ArticlesCreateRequest
+
+request = ArticlesCreateRequest(
     title="Getting Started Guide",
-    applies_to_parts=["don:core:dvrv-us-1:devo/1:part/1"],
-    body="# Welcome\n\nThis guide helps you get started...",
+    content="# Welcome\n\nThis guide helps you get started...",
 )
-print(f"Created: {response.article.id}")
+article = client.articles.create(request)
+print(f"Created: {article.id}")
 ```
 

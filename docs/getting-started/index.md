@@ -10,7 +10,7 @@ The DevRev Python SDK provides a modern, type-safe interface to the DevRev API. 
 
 Before you begin, ensure you have:
 
-- **Python 3.12 or higher** installed
+- **Python 3.11 or higher** installed
 - A **DevRev account** with API access
 - An **API token** from your DevRev dashboard
 

@@ -10,7 +10,7 @@ description: "Standards and best practices for data modeling using Pydantic v2"
 - **Always use Pydantic models for data validation and serialization**
 - Use Pydantic v2 syntax and features (BaseModel, Field, model_validator, computed_field)
 - Always use the latest stable pydantic version (v2.x)
-- Define explicit field types with proper annotations using Python 3.12+ syntax (`str | None` instead of `Optional[str]`)
+- Define explicit field types with proper annotations using modern Python union syntax (`str | None` instead of `Optional[str]`)
 - Use `Field()` for validation constraints, defaults, and documentation
 - Use `TypeAdapter` for validating non-model types (lists, primitives, etc.)
 
@@ -437,7 +437,7 @@ async def post_user_to_api(url: str, user: CreateUserRequest) -> UserResponse:
 
 ## Common Patterns Summary
 
-1. **Always use Python 3.12+ type syntax**: `str | None` instead of `Optional[str]`
+1. **Always use modern Python union type syntax**: `str | None` instead of `Optional[str]`
 2. **Use `datetime.now(timezone.utc)`** instead of deprecated `datetime.utcnow()`
 3. **Use `model_validate()`** instead of deprecated `from_orm()`
 4. **Handle `ValidationError`** when processing untrusted data
