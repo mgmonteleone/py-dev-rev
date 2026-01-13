@@ -1,0 +1,3 @@
+py-devrev>=0.1.0
+functions-framework>=3.0.0
+

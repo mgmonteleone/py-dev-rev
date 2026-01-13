@@ -41,6 +41,24 @@ dev = [
     "pre-commit>=3.6.0",
     "respx>=0.20.0",
 ]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.24.0",
+    "pymdown-extensions>=10.7.0",
+]
+benchmark = [
+    "pytest-benchmark>=4.0.0",
+    "pytest>=7.4.0",
+]
+security = [
+    "pip-audit>=2.7.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+]
+all = [
+    "py-devrev[dev,docs,benchmark,security]",
+]
 
 [project.urls]
 Homepage = "https://github.com/mgmonteleone/py-dev-rev"
