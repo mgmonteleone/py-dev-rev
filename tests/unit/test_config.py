@@ -127,9 +127,7 @@ class TestSecurityFeatures:
             config = DevRevConfig()
             assert config.base_url == "https://api.devrev.ai"
 
-    def test_base_url_rejects_invalid_schemes(
-        self, mock_env_vars: dict[str, str]
-    ) -> None:
+    def test_base_url_rejects_invalid_schemes(self, mock_env_vars: dict[str, str]) -> None:
         """Test that non-HTTPS schemes are rejected.
 
         Args:
@@ -161,9 +159,7 @@ class TestSecurityFeatures:
         assert token not in repr(config)
         assert token not in f"{config}"
 
-    def test_api_token_accessible_via_secret_value(
-        self, mock_env_vars: dict[str, str]
-    ) -> None:
+    def test_api_token_accessible_via_secret_value(self, mock_env_vars: dict[str, str]) -> None:
         """Test that token is accessible only through get_secret_value.
 
         Args:

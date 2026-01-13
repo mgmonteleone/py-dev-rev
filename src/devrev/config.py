@@ -97,8 +97,7 @@ class DevRevConfig(BaseSettings):
         # Security: Enforce HTTPS to prevent credential exposure
         if url.startswith("http://"):
             raise ValueError(
-                "Insecure HTTP URLs are not allowed. "
-                "Use HTTPS to protect your API credentials."
+                "Insecure HTTP URLs are not allowed. Use HTTPS to protect your API credentials."
             )
         if not url.startswith("https://"):
             raise ValueError(
