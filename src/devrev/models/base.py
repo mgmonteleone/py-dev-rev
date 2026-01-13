@@ -99,6 +99,14 @@ class OrgSummary(DevRevResponseModel):
     display_name: str | None = Field(default=None, description="Organization's display name")
 
 
+class ObjectSummary(DevRevResponseModel):
+    """Summary of a generic DevRev object (used for link source/target)."""
+
+    id: str = Field(..., description="Object ID")
+    display_id: str | None = Field(default=None, description="Display ID")
+    type: str | None = Field(default=None, description="Object type")
+
+
 class TagWithValue(DevRevResponseModel):
     """Tag with value for resource tagging."""
 
