@@ -78,4 +78,3 @@ class AsyncTagsService(AsyncBaseService):
     async def delete(self, request: TagsDeleteRequest) -> None:
         """Delete a tag."""
         await self._post("/tags.delete", request, TagsDeleteResponse)
-

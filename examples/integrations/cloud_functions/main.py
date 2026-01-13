@@ -11,7 +11,6 @@ Deploy:
         --allow-unauthenticated
 """
 
-import json
 from typing import Any
 
 import functions_framework
@@ -76,11 +75,7 @@ def list_accounts(request: Request) -> tuple[dict[str, Any], int]:
         limit = request.args.get("limit", 10, type=int)
         response = client.accounts.list(limit=limit)
 
-        return {
-            "accounts": [
-                {"id": a.id, "name": a.display_name} for a in response.accounts
-            ]
-        }, 200
+        return {"accounts": [{"id": a.id, "name": a.display_name} for a in response.accounts]}, 200
 
     except DevRevError as e:
         return {"error": str(e)}, 500
@@ -130,4 +125,3 @@ def create_ticket(request: Request) -> tuple[dict[str, Any], int]:
 
     finally:
         client.close()
-

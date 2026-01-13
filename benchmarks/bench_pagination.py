@@ -53,7 +53,7 @@ class TestPaginationBenchmarks:
     def test_single_page_10_items(self, benchmark, mock_api, client):
         """Benchmark single page with 10 items."""
         responses = create_paginated_responses(1, 10)
-        mock_api.get("https://api.devrev.ai/accounts.list").mock(
+        mock_api.post("https://api.devrev.ai/accounts.list").mock(
             return_value=Response(200, json=responses[0])
         )
 
@@ -65,7 +65,7 @@ class TestPaginationBenchmarks:
     def test_single_page_100_items(self, benchmark, mock_api, client):
         """Benchmark single page with 100 items."""
         responses = create_paginated_responses(1, 100)
-        mock_api.get("https://api.devrev.ai/accounts.list").mock(
+        mock_api.post("https://api.devrev.ai/accounts.list").mock(
             return_value=Response(200, json=responses[0])
         )
 
@@ -79,13 +79,13 @@ class TestPaginationBenchmarks:
         responses = create_paginated_responses(10, 100)
         call_count = 0
 
-        def mock_response(request):
+        def mock_response(_request):
             nonlocal call_count
             response = responses[min(call_count, len(responses) - 1)]
             call_count += 1
             return Response(200, json=response)
 
-        mock_api.get("https://api.devrev.ai/accounts.list").mock(side_effect=mock_response)
+        mock_api.post("https://api.devrev.ai/accounts.list").mock(side_effect=mock_response)
 
         def fetch_all():
             nonlocal call_count
@@ -110,13 +110,13 @@ class TestPaginationBenchmarks:
         responses = create_paginated_responses(10, 100)
         call_count = 0
 
-        def mock_response(request):
+        def mock_response(_request):
             nonlocal call_count
             response = responses[min(call_count, len(responses) - 1)]
             call_count += 1
             return Response(200, json=response)
 
-        mock_api.get("https://api.devrev.ai/accounts.list").mock(side_effect=mock_response)
+        mock_api.post("https://api.devrev.ai/accounts.list").mock(side_effect=mock_response)
 
         def process_pages():
             nonlocal call_count
@@ -135,4 +135,3 @@ class TestPaginationBenchmarks:
             return total
 
         benchmark(process_pages)
-

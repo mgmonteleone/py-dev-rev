@@ -66,4 +66,3 @@ class AsyncLinksService(AsyncBaseService):
     async def delete(self, request: LinksDeleteRequest) -> None:
         """Delete a link."""
         await self._post("/links.delete", request, LinksDeleteResponse)
-

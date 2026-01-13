@@ -90,4 +90,3 @@ class TestAuthenticationError:
         client = DevRevClient(api_token="invalid-token-12345")
         with pytest.raises(AuthenticationError):
             client.accounts.list()
-

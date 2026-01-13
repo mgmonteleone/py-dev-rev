@@ -24,7 +24,7 @@ def get_client() -> DevRevClient:
 
 
 @app.teardown_appcontext
-def close_client(error):
+def close_client(_error):
     """Close the client at the end of the request."""
     client = g.pop("devrev_client", None)
     if client is not None:
@@ -44,13 +44,7 @@ def list_accounts():
     limit = request.args.get("limit", 10, type=int)
 
     response = client.accounts.list(limit=limit)
-    return jsonify(
-        {
-            "accounts": [
-                {"id": a.id, "name": a.display_name} for a in response.accounts
-            ]
-        }
-    )
+    return jsonify({"accounts": [{"id": a.id, "name": a.display_name} for a in response.accounts]})
 
 
 @app.route("/works/<work_id>")
@@ -98,4 +92,3 @@ def create_ticket():
 
 if __name__ == "__main__":
     app.run(debug=True)
-

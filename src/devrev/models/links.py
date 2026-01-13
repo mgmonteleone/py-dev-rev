@@ -39,8 +39,12 @@ class Link(DevRevResponseModel):
 
     id: str = Field(..., description="Link ID")
     link_type: str = Field(..., description="Type of link (may be LinkType enum value or custom)")
-    source: str | ObjectSummary | dict[str, Any] = Field(..., description="Source object (ID or summary)")
-    target: str | ObjectSummary | dict[str, Any] = Field(..., description="Target object (ID or summary)")
+    source: str | ObjectSummary | dict[str, Any] = Field(
+        ..., description="Source object (ID or summary)"
+    )
+    target: str | ObjectSummary | dict[str, Any] = Field(
+        ..., description="Target object (ID or summary)"
+    )
     created_date: datetime | None = Field(default=None, description="Creation date")
 
 
@@ -101,4 +105,3 @@ class LinksDeleteResponse(DevRevResponseModel):
     """Response from deleting a link."""
 
     pass
-

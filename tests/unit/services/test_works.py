@@ -52,9 +52,7 @@ class TestWorksService:
         sample_work_data: dict[str, Any],
     ) -> None:
         """Test creating a work item."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"work": sample_work_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
 
         service = WorksService(mock_http_client)
         result = service.create(
@@ -74,9 +72,7 @@ class TestWorksService:
         sample_work_data: dict[str, Any],
     ) -> None:
         """Test getting a work item by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"work": sample_work_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
 
         service = WorksService(mock_http_client)
         result = service.get("don:core:issue:123")
@@ -90,9 +86,7 @@ class TestWorksService:
         sample_work_data: dict[str, Any],
     ) -> None:
         """Test listing work items."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"works": [sample_work_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"works": [sample_work_data]})
 
         service = WorksService(mock_http_client)
         result = service.list()
@@ -107,9 +101,7 @@ class TestWorksService:
         sample_work_data: dict[str, Any],
     ) -> None:
         """Test listing work items with filters."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"works": [sample_work_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"works": [sample_work_data]})
 
         service = WorksService(mock_http_client)
         result = service.list(type=[WorkType.ISSUE], limit=10)
@@ -124,9 +116,7 @@ class TestWorksService:
     ) -> None:
         """Test updating a work item."""
         sample_work_data["title"] = "Updated Title"
-        mock_http_client.post.return_value = create_mock_response(
-            {"work": sample_work_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
 
         service = WorksService(mock_http_client)
         result = service.update("don:core:issue:123", title="Updated Title")
@@ -141,9 +131,7 @@ class TestWorksService:
     ) -> None:
         """Test creating a work item with priority."""
         sample_work_data["priority"] = "p1"
-        mock_http_client.post.return_value = create_mock_response(
-            {"work": sample_work_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
 
         service = WorksService(mock_http_client)
         result = service.create(
@@ -155,4 +143,3 @@ class TestWorksService:
         )
 
         assert isinstance(result, Work)
-

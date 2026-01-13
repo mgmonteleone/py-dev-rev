@@ -68,11 +68,7 @@ async def list_accounts(
 ) -> dict[str, Any]:
     """List DevRev accounts."""
     response = await client.accounts.list(limit=limit)
-    return {
-        "accounts": [
-            {"id": a.id, "name": a.display_name} for a in response.accounts
-        ]
-    }
+    return {"accounts": [{"id": a.id, "name": a.display_name} for a in response.accounts]}
 
 
 @app.get("/works/{work_id}")
@@ -88,8 +84,8 @@ async def get_work(
             "title": response.work.title,
             "type": response.work.type,
         }
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail="Work not found")
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail="Work not found") from e
 
 
 @app.post("/tickets", response_model=TicketResponse)
@@ -111,11 +107,10 @@ async def create_ticket(
             title=response.work.title,
         )
     except DevRevError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

@@ -129,9 +129,7 @@ class TestAsyncTagsService:
         sample_tag_data: dict[str, Any],
     ) -> None:
         """Test creating a tag asynchronously."""
-        mock_async_http_client.post.return_value = create_mock_response(
-            {"tag": sample_tag_data}
-        )
+        mock_async_http_client.post.return_value = create_mock_response({"tag": sample_tag_data})
 
         service = AsyncTagsService(mock_async_http_client)
         request = TagsCreateRequest(name="test-tag")
@@ -173,9 +171,7 @@ class TestAsyncLinksService:
         sample_link_data: dict[str, Any],
     ) -> None:
         """Test creating a link asynchronously."""
-        mock_async_http_client.post.return_value = create_mock_response(
-            {"link": sample_link_data}
-        )
+        mock_async_http_client.post.return_value = create_mock_response({"link": sample_link_data})
 
         service = AsyncLinksService(mock_async_http_client)
         request = LinksCreateRequest(
@@ -237,9 +233,7 @@ class TestAsyncGroupsService:
             "id": "don:identity:user:456",
             "member": {"id": "don:identity:user:456", "display_name": "Test User"},
         }
-        mock_async_http_client.post.return_value = create_mock_response(
-            {"members": [member_data]}
-        )
+        mock_async_http_client.post.return_value = create_mock_response({"members": [member_data]})
 
         service = AsyncGroupsService(mock_async_http_client)
         request = GroupMembersListRequest(group="don:core:group:123")
@@ -247,4 +241,3 @@ class TestAsyncGroupsService:
 
         assert len(result) == 1
         assert isinstance(result[0], GroupMember)
-

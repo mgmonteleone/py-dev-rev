@@ -25,37 +25,27 @@ class TimelineEntriesService(BaseService):
 
     def create(self, request: TimelineEntriesCreateRequest) -> TimelineEntry:
         """Create a new timeline entry."""
-        response = self._post(
-            "/timeline-entries.create", request, TimelineEntriesCreateResponse
-        )
+        response = self._post("/timeline-entries.create", request, TimelineEntriesCreateResponse)
         return response.timeline_entry
 
     def get(self, request: TimelineEntriesGetRequest) -> TimelineEntry:
         """Get a timeline entry by ID."""
-        response = self._post(
-            "/timeline-entries.get", request, TimelineEntriesGetResponse
-        )
+        response = self._post("/timeline-entries.get", request, TimelineEntriesGetResponse)
         return response.timeline_entry
 
     def list(self, request: TimelineEntriesListRequest) -> Sequence[TimelineEntry]:
         """List timeline entries for an object."""
-        response = self._post(
-            "/timeline-entries.list", request, TimelineEntriesListResponse
-        )
+        response = self._post("/timeline-entries.list", request, TimelineEntriesListResponse)
         return response.timeline_entries
 
     def update(self, request: TimelineEntriesUpdateRequest) -> TimelineEntry:
         """Update a timeline entry."""
-        response = self._post(
-            "/timeline-entries.update", request, TimelineEntriesUpdateResponse
-        )
+        response = self._post("/timeline-entries.update", request, TimelineEntriesUpdateResponse)
         return response.timeline_entry
 
     def delete(self, request: TimelineEntriesDeleteRequest) -> None:
         """Delete a timeline entry."""
-        self._post(
-            "/timeline-entries.delete", request, TimelineEntriesDeleteResponse
-        )
+        self._post("/timeline-entries.delete", request, TimelineEntriesDeleteResponse)
 
 
 class AsyncTimelineEntriesService(AsyncBaseService):
@@ -70,18 +60,12 @@ class AsyncTimelineEntriesService(AsyncBaseService):
 
     async def get(self, request: TimelineEntriesGetRequest) -> TimelineEntry:
         """Get a timeline entry by ID."""
-        response = await self._post(
-            "/timeline-entries.get", request, TimelineEntriesGetResponse
-        )
+        response = await self._post("/timeline-entries.get", request, TimelineEntriesGetResponse)
         return response.timeline_entry
 
-    async def list(
-        self, request: TimelineEntriesListRequest
-    ) -> Sequence[TimelineEntry]:
+    async def list(self, request: TimelineEntriesListRequest) -> Sequence[TimelineEntry]:
         """List timeline entries for an object."""
-        response = await self._post(
-            "/timeline-entries.list", request, TimelineEntriesListResponse
-        )
+        response = await self._post("/timeline-entries.list", request, TimelineEntriesListResponse)
         return response.timeline_entries
 
     async def update(self, request: TimelineEntriesUpdateRequest) -> TimelineEntry:
@@ -93,7 +77,4 @@ class AsyncTimelineEntriesService(AsyncBaseService):
 
     async def delete(self, request: TimelineEntriesDeleteRequest) -> None:
         """Delete a timeline entry."""
-        await self._post(
-            "/timeline-entries.delete", request, TimelineEntriesDeleteResponse
-        )
-
+        await self._post("/timeline-entries.delete", request, TimelineEntriesDeleteResponse)

@@ -138,4 +138,3 @@ class GroupMembersListResponse(PaginatedResponse):
     """Response from listing members."""
 
     members: list[GroupMember] = Field(..., description="List of members")
-

@@ -8,7 +8,6 @@ from devrev.models.parts import (
     PartsCreateRequest,
     PartsDeleteRequest,
     PartsGetRequest,
-    PartsListRequest,
     PartsUpdateRequest,
     PartType,
 )
@@ -26,9 +25,7 @@ class TestPartsService:
         sample_part_data: dict[str, Any],
     ) -> None:
         """Test creating a part."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"part": sample_part_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"part": sample_part_data})
 
         service = PartsService(mock_http_client)
         request = PartsCreateRequest(
@@ -49,9 +46,7 @@ class TestPartsService:
         sample_part_data: dict[str, Any],
     ) -> None:
         """Test getting a part by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"part": sample_part_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"part": sample_part_data})
 
         service = PartsService(mock_http_client)
         request = PartsGetRequest(id="don:core:part:123")
@@ -67,16 +62,14 @@ class TestPartsService:
         sample_part_data: dict[str, Any],
     ) -> None:
         """Test listing parts."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"parts": [sample_part_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"parts": [sample_part_data]})
 
         service = PartsService(mock_http_client)
         result = service.list()
 
-        assert len(result) == 1
-        assert isinstance(result[0], Part)
-        assert result[0].id == "don:core:part:123"
+        assert len(result.parts) == 1
+        assert isinstance(result.parts[0], Part)
+        assert result.parts[0].id == "don:core:part:123"
         mock_http_client.post.assert_called_once()
 
     def test_list_parts_with_request(
@@ -85,15 +78,12 @@ class TestPartsService:
         sample_part_data: dict[str, Any],
     ) -> None:
         """Test listing parts with pagination."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"parts": [sample_part_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"parts": [sample_part_data]})
 
         service = PartsService(mock_http_client)
-        request = PartsListRequest(limit=50)
-        result = service.list(request)
+        result = service.list(limit=50)
 
-        assert len(result) == 1
+        assert len(result.parts) == 1
         mock_http_client.post.assert_called_once()
 
     def test_update_part(
@@ -103,9 +93,7 @@ class TestPartsService:
     ) -> None:
         """Test updating a part."""
         updated_data = {**sample_part_data, "name": "Updated Part"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"part": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"part": updated_data})
 
         service = PartsService(mock_http_client)
         request = PartsUpdateRequest(
@@ -142,15 +130,12 @@ class TestPartsService:
             sample_part_data,
             {**sample_part_data, "id": "don:core:part:456", "name": "Part 2"},
         ]
-        mock_http_client.post.return_value = create_mock_response(
-            {"parts": parts}
-        )
+        mock_http_client.post.return_value = create_mock_response({"parts": parts})
 
         service = PartsService(mock_http_client)
         result = service.list()
 
-        assert len(result) == 2
-        assert result[0].name == "Test Part"
-        assert result[1].name == "Part 2"
+        assert len(result.parts) == 2
+        assert result.parts[0].name == "Test Part"
+        assert result.parts[1].name == "Part 2"
         mock_http_client.post.assert_called_once()
-

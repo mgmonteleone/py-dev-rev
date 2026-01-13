@@ -8,13 +8,13 @@ from devrev.models.slas import (
     SlasCreateRequest,
     SlasGetRequest,
     SlasListRequest,
-    SlaTrackerStatus,
     SlasTransitionRequest,
     SlasUpdateRequest,
+    SlaTrackerStatus,
 )
 from devrev.services.slas import SlasService
 
-from .conftest import create_mock_response
+from .conftest import create_mock_response  # noqa: I001
 
 
 class TestSlasService:
@@ -26,9 +26,7 @@ class TestSlasService:
         sample_sla_data: dict[str, Any],
     ) -> None:
         """Test creating an SLA."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"sla": sample_sla_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"sla": sample_sla_data})
 
         service = SlasService(mock_http_client)
         request = SlasCreateRequest(
@@ -49,9 +47,7 @@ class TestSlasService:
         sample_sla_data: dict[str, Any],
     ) -> None:
         """Test getting an SLA by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"sla": sample_sla_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"sla": sample_sla_data})
 
         service = SlasService(mock_http_client)
         request = SlasGetRequest(id="don:core:sla:123")
@@ -67,9 +63,7 @@ class TestSlasService:
         sample_sla_data: dict[str, Any],
     ) -> None:
         """Test listing SLAs."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"slas": [sample_sla_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"slas": [sample_sla_data]})
 
         service = SlasService(mock_http_client)
         result = service.list()
@@ -85,9 +79,7 @@ class TestSlasService:
         sample_sla_data: dict[str, Any],
     ) -> None:
         """Test listing SLAs with pagination."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"slas": [sample_sla_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"slas": [sample_sla_data]})
 
         service = SlasService(mock_http_client)
         request = SlasListRequest(limit=50, cursor="next-cursor")
@@ -103,9 +95,7 @@ class TestSlasService:
     ) -> None:
         """Test updating an SLA."""
         updated_data = {**sample_sla_data, "name": "Updated SLA"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"sla": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"sla": updated_data})
 
         service = SlasService(mock_http_client)
         request = SlasUpdateRequest(
@@ -125,9 +115,7 @@ class TestSlasService:
     ) -> None:
         """Test transitioning an SLA status."""
         transitioned_data = {**sample_sla_data, "status": "paused"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"sla": transitioned_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"sla": transitioned_data})
 
         service = SlasService(mock_http_client)
         request = SlasTransitionRequest(
@@ -145,13 +133,10 @@ class TestSlasService:
         mock_http_client: MagicMock,
     ) -> None:
         """Test listing SLAs returns empty list."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"slas": []}
-        )
+        mock_http_client.post.return_value = create_mock_response({"slas": []})
 
         service = SlasService(mock_http_client)
         result = service.list()
 
         assert len(result) == 0
         mock_http_client.post.assert_called_once()
-

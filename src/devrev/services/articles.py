@@ -55,9 +55,7 @@ class AsyncArticlesService(AsyncBaseService):
 
     async def create(self, request: ArticlesCreateRequest) -> Article:
         """Create a new article."""
-        response = await self._post(
-            "/articles.create", request, ArticlesCreateResponse
-        )
+        response = await self._post("/articles.create", request, ArticlesCreateResponse)
         return response.article
 
     async def get(self, request: ArticlesGetRequest) -> Article:
@@ -65,9 +63,7 @@ class AsyncArticlesService(AsyncBaseService):
         response = await self._post("/articles.get", request, ArticlesGetResponse)
         return response.article
 
-    async def list(
-        self, request: ArticlesListRequest | None = None
-    ) -> Sequence[Article]:
+    async def list(self, request: ArticlesListRequest | None = None) -> Sequence[Article]:
         """List articles."""
         if request is None:
             request = ArticlesListRequest()
@@ -76,12 +72,9 @@ class AsyncArticlesService(AsyncBaseService):
 
     async def update(self, request: ArticlesUpdateRequest) -> Article:
         """Update an article."""
-        response = await self._post(
-            "/articles.update", request, ArticlesUpdateResponse
-        )
+        response = await self._post("/articles.update", request, ArticlesUpdateResponse)
         return response.article
 
     async def delete(self, request: ArticlesDeleteRequest) -> None:
         """Delete an article."""
         await self._post("/articles.delete", request, ArticlesDeleteResponse)
-

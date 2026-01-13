@@ -25,9 +25,7 @@ class CodeChangesService(BaseService):
 
     def create(self, request: CodeChangesCreateRequest) -> CodeChange:
         """Create a new code change."""
-        response = self._post(
-            "/code-changes.create", request, CodeChangesCreateResponse
-        )
+        response = self._post("/code-changes.create", request, CodeChangesCreateResponse)
         return response.code_change
 
     def get(self, request: CodeChangesGetRequest) -> CodeChange:
@@ -35,9 +33,7 @@ class CodeChangesService(BaseService):
         response = self._post("/code-changes.get", request, CodeChangesGetResponse)
         return response.code_change
 
-    def list(
-        self, request: CodeChangesListRequest | None = None
-    ) -> Sequence[CodeChange]:
+    def list(self, request: CodeChangesListRequest | None = None) -> Sequence[CodeChange]:
         """List code changes."""
         if request is None:
             request = CodeChangesListRequest()
@@ -46,9 +42,7 @@ class CodeChangesService(BaseService):
 
     def update(self, request: CodeChangesUpdateRequest) -> CodeChange:
         """Update a code change."""
-        response = self._post(
-            "/code-changes.update", request, CodeChangesUpdateResponse
-        )
+        response = self._post("/code-changes.update", request, CodeChangesUpdateResponse)
         return response.code_change
 
     def delete(self, request: CodeChangesDeleteRequest) -> None:
@@ -61,37 +55,26 @@ class AsyncCodeChangesService(AsyncBaseService):
 
     async def create(self, request: CodeChangesCreateRequest) -> CodeChange:
         """Create a new code change."""
-        response = await self._post(
-            "/code-changes.create", request, CodeChangesCreateResponse
-        )
+        response = await self._post("/code-changes.create", request, CodeChangesCreateResponse)
         return response.code_change
 
     async def get(self, request: CodeChangesGetRequest) -> CodeChange:
         """Get a code change by ID."""
-        response = await self._post(
-            "/code-changes.get", request, CodeChangesGetResponse
-        )
+        response = await self._post("/code-changes.get", request, CodeChangesGetResponse)
         return response.code_change
 
-    async def list(
-        self, request: CodeChangesListRequest | None = None
-    ) -> Sequence[CodeChange]:
+    async def list(self, request: CodeChangesListRequest | None = None) -> Sequence[CodeChange]:
         """List code changes."""
         if request is None:
             request = CodeChangesListRequest()
-        response = await self._post(
-            "/code-changes.list", request, CodeChangesListResponse
-        )
+        response = await self._post("/code-changes.list", request, CodeChangesListResponse)
         return response.code_changes
 
     async def update(self, request: CodeChangesUpdateRequest) -> CodeChange:
         """Update a code change."""
-        response = await self._post(
-            "/code-changes.update", request, CodeChangesUpdateResponse
-        )
+        response = await self._post("/code-changes.update", request, CodeChangesUpdateResponse)
         return response.code_change
 
     async def delete(self, request: CodeChangesDeleteRequest) -> None:
         """Delete a code change."""
         await self._post("/code-changes.delete", request, CodeChangesDeleteResponse)
-

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 from devrev.models.parts import (
     Part,
     PartsCreateRequest,
@@ -33,12 +31,23 @@ class PartsService(BaseService):
         response = self._post("/parts.get", request, PartsGetResponse)
         return response.part
 
-    def list(self, request: PartsListRequest | None = None) -> Sequence[Part]:
-        """List parts."""
-        if request is None:
-            request = PartsListRequest()
-        response = self._post("/parts.list", request, PartsListResponse)
-        return response.parts
+    def list(
+        self,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> PartsListResponse:
+        """List parts.
+
+        Args:
+            limit: Maximum number of results to return (1-100).
+            cursor: Pagination cursor from previous response.
+
+        Returns:
+            PartsListResponse with parts and next_cursor for pagination.
+        """
+        request = PartsListRequest(limit=limit, cursor=cursor)
+        return self._post("/parts.list", request, PartsListResponse)
 
     def update(self, request: PartsUpdateRequest) -> Part:
         """Update a part."""
@@ -63,12 +72,23 @@ class AsyncPartsService(AsyncBaseService):
         response = await self._post("/parts.get", request, PartsGetResponse)
         return response.part
 
-    async def list(self, request: PartsListRequest | None = None) -> Sequence[Part]:
-        """List parts."""
-        if request is None:
-            request = PartsListRequest()
-        response = await self._post("/parts.list", request, PartsListResponse)
-        return response.parts
+    async def list(
+        self,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> PartsListResponse:
+        """List parts.
+
+        Args:
+            limit: Maximum number of results to return (1-100).
+            cursor: Pagination cursor from previous response.
+
+        Returns:
+            PartsListResponse with parts and next_cursor for pagination.
+        """
+        request = PartsListRequest(limit=limit, cursor=cursor)
+        return await self._post("/parts.list", request, PartsListResponse)
 
     async def update(self, request: PartsUpdateRequest) -> Part:
         """Update a part."""
@@ -78,4 +98,3 @@ class AsyncPartsService(AsyncBaseService):
     async def delete(self, request: PartsDeleteRequest) -> None:
         """Delete a part."""
         await self._post("/parts.delete", request, PartsDeleteResponse)
-

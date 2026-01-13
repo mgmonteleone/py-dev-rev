@@ -25,9 +25,7 @@ class TestLinksService:
         sample_link_data: dict[str, Any],
     ) -> None:
         """Test creating a link."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"link": sample_link_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"link": sample_link_data})
 
         service = LinksService(mock_http_client)
         request = LinksCreateRequest(
@@ -48,9 +46,7 @@ class TestLinksService:
         sample_link_data: dict[str, Any],
     ) -> None:
         """Test getting a link by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"link": sample_link_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"link": sample_link_data})
 
         service = LinksService(mock_http_client)
         request = LinksGetRequest(id="don:core:link:123")
@@ -66,9 +62,7 @@ class TestLinksService:
         sample_link_data: dict[str, Any],
     ) -> None:
         """Test listing links."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"links": [sample_link_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"links": [sample_link_data]})
 
         service = LinksService(mock_http_client)
         result = service.list()
@@ -84,9 +78,7 @@ class TestLinksService:
         sample_link_data: dict[str, Any],
     ) -> None:
         """Test listing links with pagination."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"links": [sample_link_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"links": [sample_link_data]})
 
         service = LinksService(mock_http_client)
         request = LinksListRequest(limit=50, cursor="next-cursor")
@@ -101,9 +93,7 @@ class TestLinksService:
         sample_link_data: dict[str, Any],
     ) -> None:
         """Test listing links filtered by object."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"links": [sample_link_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"links": [sample_link_data]})
 
         service = LinksService(mock_http_client)
         request = LinksListRequest(object="don:core:issue:456")
@@ -131,9 +121,7 @@ class TestLinksService:
         mock_http_client: MagicMock,
     ) -> None:
         """Test listing links returns empty list."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"links": []}
-        )
+        mock_http_client.post.return_value = create_mock_response({"links": []})
 
         service = LinksService(mock_http_client)
         result = service.list()
@@ -152,9 +140,7 @@ class TestLinksService:
             "target": "don:core:issue:200",
             "link_type": "is_related_to",
         }
-        mock_http_client.post.return_value = create_mock_response(
-            {"link": link_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"link": link_data})
 
         service = LinksService(mock_http_client)
         request = LinksCreateRequest(
@@ -166,4 +152,3 @@ class TestLinksService:
 
         assert result.link_type == LinkType.IS_RELATED_TO
         mock_http_client.post.assert_called_once()
-

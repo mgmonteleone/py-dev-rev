@@ -98,4 +98,3 @@ class TimelineEntriesDeleteResponse(DevRevResponseModel):
     """Response from deleting a timeline entry."""
 
     pass
-

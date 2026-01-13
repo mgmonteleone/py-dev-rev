@@ -60,9 +60,7 @@ class GroupsService(BaseService):
 
     def list_members(self, request: GroupMembersListRequest) -> Sequence[GroupMember]:
         """List members of a group."""
-        response = self._post(
-            "/group-members.list", request, GroupMembersListResponse
-        )
+        response = self._post("/group-members.list", request, GroupMembersListResponse)
         return response.members
 
 
@@ -99,12 +97,7 @@ class AsyncGroupsService(AsyncBaseService):
         """Remove a member from a group."""
         await self._post("/group-members.remove", request, GroupMembersRemoveResponse)
 
-    async def list_members(
-        self, request: GroupMembersListRequest
-    ) -> Sequence[GroupMember]:
+    async def list_members(self, request: GroupMembersListRequest) -> Sequence[GroupMember]:
         """List members of a group."""
-        response = await self._post(
-            "/group-members.list", request, GroupMembersListResponse
-        )
+        response = await self._post("/group-members.list", request, GroupMembersListResponse)
         return response.members
-

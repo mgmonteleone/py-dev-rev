@@ -26,9 +26,7 @@ class TestArticlesService:
         sample_article_data: dict[str, Any],
     ) -> None:
         """Test creating an article."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"article": sample_article_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
 
         service = ArticlesService(mock_http_client)
         request = ArticlesCreateRequest(
@@ -49,9 +47,7 @@ class TestArticlesService:
         sample_article_data: dict[str, Any],
     ) -> None:
         """Test getting an article by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"article": sample_article_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
 
         service = ArticlesService(mock_http_client)
         request = ArticlesGetRequest(id="don:core:article:123")
@@ -103,9 +99,7 @@ class TestArticlesService:
     ) -> None:
         """Test updating an article."""
         updated_data = {**sample_article_data, "title": "Updated Title"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"article": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"article": updated_data})
 
         service = ArticlesService(mock_http_client)
         request = ArticlesUpdateRequest(
@@ -137,13 +131,10 @@ class TestArticlesService:
         mock_http_client: MagicMock,
     ) -> None:
         """Test listing articles returns empty list."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"articles": []}
-        )
+        mock_http_client.post.return_value = create_mock_response({"articles": []})
 
         service = ArticlesService(mock_http_client)
         result = service.list()
 
         assert len(result) == 0
         mock_http_client.post.assert_called_once()
-

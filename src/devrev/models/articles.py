@@ -107,4 +107,3 @@ class ArticlesDeleteResponse(DevRevResponseModel):
     """Response from deleting an article."""
 
     pass
-

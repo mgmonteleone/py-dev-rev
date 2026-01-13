@@ -61,8 +61,4 @@ def many_accounts(sample_account_data):
 @pytest.fixture
 def many_works(sample_work_data):
     """Return a list of 100 work data dicts."""
-    return [
-        {**sample_work_data, "id": f"don:core:dvrv-us-1:devo/1:ticket/{i}"}
-        for i in range(100)
-    ]
-
+    return [{**sample_work_data, "id": f"don:core:dvrv-us-1:devo/1:ticket/{i}"} for i in range(100)]

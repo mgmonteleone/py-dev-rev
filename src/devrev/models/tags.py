@@ -88,4 +88,3 @@ class TagsDeleteResponse(DevRevResponseModel):
     """Response from deleting a tag."""
 
     pass
-

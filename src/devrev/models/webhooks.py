@@ -107,4 +107,3 @@ class WebhooksDeleteResponse(DevRevResponseModel):
     """Response from deleting a webhook."""
 
     pass
-

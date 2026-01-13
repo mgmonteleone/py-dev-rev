@@ -103,9 +103,7 @@ class TestCodeChangesService:
     ) -> None:
         """Test updating a code change."""
         updated_data = {**sample_code_change_data, "title": "Updated Title"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"code_change": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"code_change": updated_data})
 
         service = CodeChangesService(mock_http_client)
         request = CodeChangesUpdateRequest(
@@ -137,13 +135,10 @@ class TestCodeChangesService:
         mock_http_client: MagicMock,
     ) -> None:
         """Test listing code changes returns empty list."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"code_changes": []}
-        )
+        mock_http_client.post.return_value = create_mock_response({"code_changes": []})
 
         service = CodeChangesService(mock_http_client)
         result = service.list()
 
         assert len(result) == 0
         mock_http_client.post.assert_called_once()
-

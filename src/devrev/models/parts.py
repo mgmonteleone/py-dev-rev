@@ -108,4 +108,3 @@ class PartsDeleteResponse(DevRevResponseModel):
     """Response from deleting a part."""
 
     pass
-

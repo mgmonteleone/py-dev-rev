@@ -3,8 +3,6 @@
 Run with: pytest benchmarks/bench_models.py --benchmark-only
 """
 
-import pytest
-
 from devrev.models.accounts import Account, AccountsCreateRequest, AccountsListResponse
 from devrev.models.works import Work, WorksCreateRequest, WorksListResponse, WorkType
 
@@ -109,4 +107,3 @@ class TestModelValidationBenchmarks:
             )
 
         benchmark(create_without_validation)
-

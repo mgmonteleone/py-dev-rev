@@ -103,9 +103,7 @@ class TestConversationsService:
     ) -> None:
         """Test updating a conversation."""
         updated_data = {**sample_conversation_data, "title": "Updated Title"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"conversation": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"conversation": updated_data})
 
         service = ConversationsService(mock_http_client)
         request = ConversationsUpdateRequest(
@@ -165,4 +163,3 @@ class TestConversationsService:
 
         assert len(result) == 1
         mock_http_client.post.assert_called_once()
-

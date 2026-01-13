@@ -36,7 +36,7 @@ class TestHttpClientBenchmarks:
 
     def test_list_accounts_overhead(self, benchmark, mock_api, client):
         """Benchmark SDK overhead for list accounts."""
-        mock_api.get("https://api.devrev.ai/accounts.list").mock(
+        mock_api.post("https://api.devrev.ai/accounts.list").mock(
             return_value=Response(
                 200,
                 json={
@@ -59,7 +59,7 @@ class TestHttpClientBenchmarks:
 
     def test_get_work_overhead(self, benchmark, mock_api, client):
         """Benchmark SDK overhead for get work."""
-        mock_api.get("https://api.devrev.ai/works.get").mock(
+        mock_api.post("https://api.devrev.ai/works.get").mock(
             return_value=Response(
                 200,
                 json={
@@ -116,7 +116,7 @@ class TestHttpClientBenchmarks:
             for i in range(100)
         ]
 
-        mock_api.get("https://api.devrev.ai/accounts.list").mock(
+        mock_api.post("https://api.devrev.ai/accounts.list").mock(
             return_value=Response(
                 200,
                 json={"accounts": accounts, "next_cursor": None},
@@ -127,4 +127,3 @@ class TestHttpClientBenchmarks:
             return client.accounts.list(limit=100)
 
         benchmark(make_request)
-

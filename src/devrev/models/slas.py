@@ -110,4 +110,3 @@ class SlasTransitionResponse(DevRevResponseModel):
     """Response from transitioning an SLA."""
 
     sla: Sla = Field(..., description="Transitioned SLA")
-

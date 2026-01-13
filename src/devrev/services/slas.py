@@ -78,8 +78,5 @@ class AsyncSlasService(AsyncBaseService):
 
     async def transition(self, request: SlasTransitionRequest) -> Sla:
         """Transition an SLA status."""
-        response = await self._post(
-            "/slas.transition", request, SlasTransitionResponse
-        )
+        response = await self._post("/slas.transition", request, SlasTransitionResponse)
         return response.sla
-

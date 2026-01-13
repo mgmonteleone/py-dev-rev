@@ -29,9 +29,7 @@ class TestGroupsService:
         sample_group_data: dict[str, Any],
     ) -> None:
         """Test creating a group."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"group": sample_group_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"group": sample_group_data})
 
         service = GroupsService(mock_http_client)
         request = GroupsCreateRequest(
@@ -52,9 +50,7 @@ class TestGroupsService:
         sample_group_data: dict[str, Any],
     ) -> None:
         """Test getting a group by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"group": sample_group_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"group": sample_group_data})
 
         service = GroupsService(mock_http_client)
         request = GroupsGetRequest(id="don:core:group:123")
@@ -70,9 +66,7 @@ class TestGroupsService:
         sample_group_data: dict[str, Any],
     ) -> None:
         """Test listing groups."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"groups": [sample_group_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"groups": [sample_group_data]})
 
         service = GroupsService(mock_http_client)
         result = service.list()
@@ -88,9 +82,7 @@ class TestGroupsService:
         sample_group_data: dict[str, Any],
     ) -> None:
         """Test listing groups with pagination."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"groups": [sample_group_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"groups": [sample_group_data]})
 
         service = GroupsService(mock_http_client)
         request = GroupsListRequest(limit=50, cursor="next-cursor")
@@ -106,9 +98,7 @@ class TestGroupsService:
     ) -> None:
         """Test updating a group."""
         updated_data = {**sample_group_data, "name": "Updated Group"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"group": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"group": updated_data})
 
         service = GroupsService(mock_http_client)
         request = GroupsUpdateRequest(
@@ -164,9 +154,7 @@ class TestGroupsService:
             "id": "don:identity:user:456",
             "member": {"id": "don:identity:user:456", "display_name": "Test User"},
         }
-        mock_http_client.post.return_value = create_mock_response(
-            {"members": [member_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"members": [member_data]})
 
         service = GroupsService(mock_http_client)
         request = GroupMembersListRequest(group="don:core:group:123")
@@ -175,4 +163,3 @@ class TestGroupsService:
         assert len(result) == 1
         assert isinstance(result[0], GroupMember)
         mock_http_client.post.assert_called_once()
-

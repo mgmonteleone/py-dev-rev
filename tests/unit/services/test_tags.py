@@ -25,9 +25,7 @@ class TestTagsService:
         sample_tag_data: dict[str, Any],
     ) -> None:
         """Test creating a tag."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"tag": sample_tag_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"tag": sample_tag_data})
 
         service = TagsService(mock_http_client)
         request = TagsCreateRequest(
@@ -47,9 +45,7 @@ class TestTagsService:
         sample_tag_data: dict[str, Any],
     ) -> None:
         """Test getting a tag by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"tag": sample_tag_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"tag": sample_tag_data})
 
         service = TagsService(mock_http_client)
         request = TagsGetRequest(id="don:core:tag:123")
@@ -65,9 +61,7 @@ class TestTagsService:
         sample_tag_data: dict[str, Any],
     ) -> None:
         """Test listing tags."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"tags": [sample_tag_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"tags": [sample_tag_data]})
 
         service = TagsService(mock_http_client)
         result = service.list()
@@ -83,9 +77,7 @@ class TestTagsService:
         sample_tag_data: dict[str, Any],
     ) -> None:
         """Test listing tags with pagination."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"tags": [sample_tag_data]}
-        )
+        mock_http_client.post.return_value = create_mock_response({"tags": [sample_tag_data]})
 
         service = TagsService(mock_http_client)
         request = TagsListRequest(limit=50, cursor="next-cursor")
@@ -101,9 +93,7 @@ class TestTagsService:
     ) -> None:
         """Test updating a tag."""
         updated_data = {**sample_tag_data, "name": "updated-tag"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"tag": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"tag": updated_data})
 
         service = TagsService(mock_http_client)
         request = TagsUpdateRequest(
@@ -135,13 +125,10 @@ class TestTagsService:
         mock_http_client: MagicMock,
     ) -> None:
         """Test listing tags returns empty list."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"tags": []}
-        )
+        mock_http_client.post.return_value = create_mock_response({"tags": []})
 
         service = TagsService(mock_http_client)
         result = service.list()
 
         assert len(result) == 0
         mock_http_client.post.assert_called_once()
-

@@ -55,9 +55,7 @@ class AsyncWebhooksService(AsyncBaseService):
 
     async def create(self, request: WebhooksCreateRequest) -> Webhook:
         """Create a new webhook."""
-        response = await self._post(
-            "/webhooks.create", request, WebhooksCreateResponse
-        )
+        response = await self._post("/webhooks.create", request, WebhooksCreateResponse)
         return response.webhook
 
     async def get(self, request: WebhooksGetRequest) -> Webhook:
@@ -65,9 +63,7 @@ class AsyncWebhooksService(AsyncBaseService):
         response = await self._post("/webhooks.get", request, WebhooksGetResponse)
         return response.webhook
 
-    async def list(
-        self, request: WebhooksListRequest | None = None
-    ) -> Sequence[Webhook]:
+    async def list(self, request: WebhooksListRequest | None = None) -> Sequence[Webhook]:
         """List webhooks."""
         if request is None:
             request = WebhooksListRequest()
@@ -76,12 +72,9 @@ class AsyncWebhooksService(AsyncBaseService):
 
     async def update(self, request: WebhooksUpdateRequest) -> Webhook:
         """Update a webhook."""
-        response = await self._post(
-            "/webhooks.update", request, WebhooksUpdateResponse
-        )
+        response = await self._post("/webhooks.update", request, WebhooksUpdateResponse)
         return response.webhook
 
     async def delete(self, request: WebhooksDeleteRequest) -> None:
         """Delete a webhook."""
         await self._post("/webhooks.delete", request, WebhooksDeleteResponse)
-

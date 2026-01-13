@@ -158,4 +158,3 @@ def sample_link_data() -> dict[str, Any]:
         "target": "don:core:issue:789",
         "link_type": "is_blocked_by",
     }
-

@@ -101,4 +101,3 @@ class CodeChangesDeleteResponse(DevRevResponseModel):
     """Response from deleting a code change."""
 
     pass
-

@@ -25,9 +25,7 @@ class TestWebhooksService:
         sample_webhook_data: dict[str, Any],
     ) -> None:
         """Test creating a webhook."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"webhook": sample_webhook_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"webhook": sample_webhook_data})
 
         service = WebhooksService(mock_http_client)
         request = WebhooksCreateRequest(
@@ -47,9 +45,7 @@ class TestWebhooksService:
         sample_webhook_data: dict[str, Any],
     ) -> None:
         """Test getting a webhook by ID."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"webhook": sample_webhook_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"webhook": sample_webhook_data})
 
         service = WebhooksService(mock_http_client)
         request = WebhooksGetRequest(id="don:core:webhook:123")
@@ -101,9 +97,7 @@ class TestWebhooksService:
     ) -> None:
         """Test updating a webhook."""
         updated_data = {**sample_webhook_data, "url": "https://new.example.com/webhook"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"webhook": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"webhook": updated_data})
 
         service = WebhooksService(mock_http_client)
         request = WebhooksUpdateRequest(
@@ -135,13 +129,10 @@ class TestWebhooksService:
         mock_http_client: MagicMock,
     ) -> None:
         """Test listing webhooks returns empty list."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"webhooks": []}
-        )
+        mock_http_client.post.return_value = create_mock_response({"webhooks": []})
 
         service = WebhooksService(mock_http_client)
         result = service.list()
 
         assert len(result) == 0
         mock_http_client.post.assert_called_once()
-

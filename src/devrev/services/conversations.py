@@ -27,49 +27,35 @@ class ConversationsService(BaseService):
 
     def create(self, request: ConversationsCreateRequest) -> Conversation:
         """Create a new conversation."""
-        response = self._post(
-            "/conversations.create", request, ConversationsCreateResponse
-        )
+        response = self._post("/conversations.create", request, ConversationsCreateResponse)
         return response.conversation
 
     def get(self, request: ConversationsGetRequest) -> Conversation:
         """Get a conversation by ID."""
-        response = self._post(
-            "/conversations.get", request, ConversationsGetResponse
-        )
+        response = self._post("/conversations.get", request, ConversationsGetResponse)
         return response.conversation
 
-    def list(
-        self, request: ConversationsListRequest | None = None
-    ) -> Sequence[Conversation]:
+    def list(self, request: ConversationsListRequest | None = None) -> Sequence[Conversation]:
         """List conversations."""
         if request is None:
             request = ConversationsListRequest()
-        response = self._post(
-            "/conversations.list", request, ConversationsListResponse
-        )
+        response = self._post("/conversations.list", request, ConversationsListResponse)
         return response.conversations
 
     def update(self, request: ConversationsUpdateRequest) -> Conversation:
         """Update a conversation."""
-        response = self._post(
-            "/conversations.update", request, ConversationsUpdateResponse
-        )
+        response = self._post("/conversations.update", request, ConversationsUpdateResponse)
         return response.conversation
 
     def delete(self, request: ConversationsDeleteRequest) -> None:
         """Delete a conversation."""
         self._post("/conversations.delete", request, ConversationsDeleteResponse)
 
-    def export(
-        self, request: ConversationsExportRequest | None = None
-    ) -> Sequence[Conversation]:
+    def export(self, request: ConversationsExportRequest | None = None) -> Sequence[Conversation]:
         """Export conversations."""
         if request is None:
             request = ConversationsExportRequest()
-        response = self._post(
-            "/conversations.export", request, ConversationsExportResponse
-        )
+        response = self._post("/conversations.export", request, ConversationsExportResponse)
         return response.conversations
 
 
@@ -78,41 +64,29 @@ class AsyncConversationsService(AsyncBaseService):
 
     async def create(self, request: ConversationsCreateRequest) -> Conversation:
         """Create a new conversation."""
-        response = await self._post(
-            "/conversations.create", request, ConversationsCreateResponse
-        )
+        response = await self._post("/conversations.create", request, ConversationsCreateResponse)
         return response.conversation
 
     async def get(self, request: ConversationsGetRequest) -> Conversation:
         """Get a conversation by ID."""
-        response = await self._post(
-            "/conversations.get", request, ConversationsGetResponse
-        )
+        response = await self._post("/conversations.get", request, ConversationsGetResponse)
         return response.conversation
 
-    async def list(
-        self, request: ConversationsListRequest | None = None
-    ) -> Sequence[Conversation]:
+    async def list(self, request: ConversationsListRequest | None = None) -> Sequence[Conversation]:
         """List conversations."""
         if request is None:
             request = ConversationsListRequest()
-        response = await self._post(
-            "/conversations.list", request, ConversationsListResponse
-        )
+        response = await self._post("/conversations.list", request, ConversationsListResponse)
         return response.conversations
 
     async def update(self, request: ConversationsUpdateRequest) -> Conversation:
         """Update a conversation."""
-        response = await self._post(
-            "/conversations.update", request, ConversationsUpdateResponse
-        )
+        response = await self._post("/conversations.update", request, ConversationsUpdateResponse)
         return response.conversation
 
     async def delete(self, request: ConversationsDeleteRequest) -> None:
         """Delete a conversation."""
-        await self._post(
-            "/conversations.delete", request, ConversationsDeleteResponse
-        )
+        await self._post("/conversations.delete", request, ConversationsDeleteResponse)
 
     async def export(
         self, request: ConversationsExportRequest | None = None
@@ -120,8 +94,5 @@ class AsyncConversationsService(AsyncBaseService):
         """Export conversations."""
         if request is None:
             request = ConversationsExportRequest()
-        response = await self._post(
-            "/conversations.export", request, ConversationsExportResponse
-        )
+        response = await self._post("/conversations.export", request, ConversationsExportResponse)
         return response.conversations
-

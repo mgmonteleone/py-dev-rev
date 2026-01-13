@@ -107,9 +107,7 @@ class TestTimelineEntriesService:
     ) -> None:
         """Test updating a timeline entry."""
         updated_data = {**sample_timeline_entry_data, "body": "Updated comment"}
-        mock_http_client.post.return_value = create_mock_response(
-            {"timeline_entry": updated_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"timeline_entry": updated_data})
 
         service = TimelineEntriesService(mock_http_client)
         request = TimelineEntriesUpdateRequest(
@@ -141,9 +139,7 @@ class TestTimelineEntriesService:
         mock_http_client: MagicMock,
     ) -> None:
         """Test listing timeline entries returns empty list."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"timeline_entries": []}
-        )
+        mock_http_client.post.return_value = create_mock_response({"timeline_entries": []})
 
         service = TimelineEntriesService(mock_http_client)
         request = TimelineEntriesListRequest(object="don:core:issue:456")
@@ -151,4 +147,3 @@ class TestTimelineEntriesService:
 
         assert len(result) == 0
         mock_http_client.post.assert_called_once()
-
