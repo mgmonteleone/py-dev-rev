@@ -11,7 +11,15 @@ from devrev.models.base import DevRevBaseModel, DevRevResponseModel, PaginatedRe
 
 
 class SlaStatus(str, Enum):
-    """SLA status enumeration."""
+    """SLA policy status enumeration."""
+
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class SlaTrackerStatus(str, Enum):
+    """SLA tracker status enumeration (for active SLA tracking)."""
 
     ACTIVE = "active"
     PAUSED = "paused"
@@ -25,7 +33,7 @@ class Sla(DevRevResponseModel):
     id: str = Field(..., description="SLA ID")
     name: str = Field(..., description="SLA name")
     description: str | None = Field(default=None, description="SLA description")
-    status: SlaStatus | None = Field(default=None, description="SLA status")
+    status: str | None = Field(default=None, description="SLA status (draft/published/archived)")
     target_time: int | None = Field(default=None, description="Target time in minutes")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")

@@ -29,7 +29,7 @@ class TimelineEntry(DevRevResponseModel):
     id: str = Field(..., description="Timeline entry ID")
     type: TimelineEntryType | None = Field(default=None, description="Entry type")
     body: str | None = Field(default=None, description="Entry content")
-    object_id: str | None = Field(default=None, description="Parent object ID")
+    object: str | None = Field(default=None, description="Parent object ID")
     created_by: UserSummary | None = Field(default=None, description="Creator")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")

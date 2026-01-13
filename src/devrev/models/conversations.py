@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import Field
 
@@ -10,6 +11,7 @@ from devrev.models.base import (
     DevRevBaseModel,
     DevRevResponseModel,
     PaginatedResponse,
+    StageInfo,
     UserSummary,
 )
 
@@ -21,7 +23,7 @@ class Conversation(DevRevResponseModel):
     display_id: str | None = Field(default=None, description="Display ID")
     title: str | None = Field(default=None, description="Title")
     description: str | None = Field(default=None, description="Description")
-    stage: str | None = Field(default=None, description="Current stage")
+    stage: StageInfo | dict[str, Any] | None = Field(default=None, description="Current stage info")
     created_by: UserSummary | None = Field(default=None, description="Creator")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")

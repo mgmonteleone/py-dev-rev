@@ -43,6 +43,7 @@ from devrev.models.base import (
     DateTimeFilter,
     DevRevBaseModel,
     DevRevResponseModel,
+    ObjectSummary,
     OrgSummary,
     PaginatedResponse,
     SetTagWithValue,
@@ -188,6 +189,7 @@ from devrev.models.slas import (
     SlaSummary,
     SlasUpdateRequest,
     SlasUpdateResponse,
+    SlaTrackerStatus,
 )
 from devrev.models.tags import (
     Tag,
@@ -264,6 +266,7 @@ __all__ = [
     "DateTimeFilter",
     "CustomSchemaSpec",
     "UserSummary",
+    "ObjectSummary",
     "OrgSummary",
     "TagWithValue",
     "SetTagWithValue",
@@ -421,6 +424,7 @@ __all__ = [
     "Sla",
     "SlaSummary",
     "SlaStatus",
+    "SlaTrackerStatus",
     "SlasCreateRequest",
     "SlasCreateResponse",
     "SlasGetRequest",
