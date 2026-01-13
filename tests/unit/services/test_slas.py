@@ -8,7 +8,7 @@ from devrev.models.slas import (
     SlasCreateRequest,
     SlasGetRequest,
     SlasListRequest,
-    SlaStatus,
+    SlaTrackerStatus,
     SlasTransitionRequest,
     SlasUpdateRequest,
 )
@@ -132,12 +132,12 @@ class TestSlasService:
         service = SlasService(mock_http_client)
         request = SlasTransitionRequest(
             id="don:core:sla:123",
-            status=SlaStatus.PAUSED,
+            status=SlaTrackerStatus.PAUSED,
         )
         result = service.transition(request)
 
         assert isinstance(result, Sla)
-        assert result.status == SlaStatus.PAUSED
+        assert result.status == "paused"
         mock_http_client.post.assert_called_once()
 
     def test_list_slas_empty(

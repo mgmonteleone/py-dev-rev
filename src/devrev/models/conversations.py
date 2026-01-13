@@ -23,7 +23,7 @@ class Conversation(DevRevResponseModel):
     display_id: str | None = Field(default=None, description="Display ID")
     title: str | None = Field(default=None, description="Title")
     description: str | None = Field(default=None, description="Description")
-    stage: StageInfo | dict[str, Any] | None = Field(default=None, description="Current stage info")
+    stage: StageInfo | dict[str, Any] | str | None = Field(default=None, description="Current stage (string name or structured info)")
     created_by: UserSummary | None = Field(default=None, description="Creator")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")

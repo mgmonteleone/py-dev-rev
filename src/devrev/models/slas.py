@@ -79,7 +79,7 @@ class SlasTransitionRequest(DevRevBaseModel):
     """Request to transition an SLA status."""
 
     id: str = Field(..., description="SLA ID")
-    status: SlaStatus = Field(..., description="New status")
+    status: str | SlaStatus | SlaTrackerStatus = Field(..., description="New status")
 
 
 class SlasCreateResponse(DevRevResponseModel):
