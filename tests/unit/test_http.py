@@ -176,9 +176,7 @@ class TestAsyncHTTPClient:
 
     @pytest.mark.asyncio
     async def test_async_context_manager(self, api_token: SecretStr) -> None:
-        async with AsyncHTTPClient(
-            api_token=api_token, base_url="https://api.devrev.ai"
-        ) as client:
+        async with AsyncHTTPClient(api_token=api_token, base_url="https://api.devrev.ai") as client:
             assert client is not None
 
     def test_async_should_retry(self, client: AsyncHTTPClient) -> None:
@@ -212,4 +210,3 @@ class TestAsyncHTTPClient:
         )
         with pytest.raises(NotFoundError):
             await client.get("/error")
-

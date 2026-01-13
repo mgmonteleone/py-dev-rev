@@ -106,4 +106,3 @@ class TestAsyncPaginatedIterator:
         fetch_page = AsyncMock(return_value=MockPaginatedResponse([], None))
         iterator = AsyncPaginatedIterator(fetch_page, "items")
         assert iterator.__aiter__() is iterator
-

@@ -129,4 +129,3 @@ class TestAsyncBaseService:
         result = await async_service._get("/async.get", {"param": "val"}, SampleResponse)
         assert isinstance(result, SampleResponse)
         assert result.name == "AsyncGet"
-
