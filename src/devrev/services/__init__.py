@@ -1,8 +1,28 @@
 """DevRev SDK Service Classes.
 
 This module contains service classes for interacting with DevRev API endpoints.
-Services will be implemented in Phase 2.
 """
 
-# Services will be added in Phase 2
-__all__: list[str] = []
+from devrev.services.accounts import AccountsService, AsyncAccountsService
+from devrev.services.base import AsyncBaseService, BaseService
+from devrev.services.dev_users import AsyncDevUsersService, DevUsersService
+from devrev.services.rev_users import AsyncRevUsersService, RevUsersService
+from devrev.services.works import AsyncWorksService, WorksService
+
+__all__ = [
+    # Base
+    "BaseService",
+    "AsyncBaseService",
+    # Accounts
+    "AccountsService",
+    "AsyncAccountsService",
+    # Works
+    "WorksService",
+    "AsyncWorksService",
+    # Dev Users
+    "DevUsersService",
+    "AsyncDevUsersService",
+    # Rev Users
+    "RevUsersService",
+    "AsyncRevUsersService",
+]
