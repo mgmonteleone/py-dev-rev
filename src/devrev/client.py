@@ -69,6 +69,7 @@ class DevRevClient:
             base_url=self._config.base_url,
             api_token=self._config.api_token,
             timeout=self._config.timeout,
+            max_retries=self._config.max_retries,
         )
 
         # Initialize services
@@ -164,6 +165,7 @@ class AsyncDevRevClient:
             base_url=self._config.base_url,
             api_token=self._config.api_token,
             timeout=self._config.timeout,
+            max_retries=self._config.max_retries,
         )
 
         # Initialize async services

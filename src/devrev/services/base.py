@@ -70,7 +70,12 @@ class BaseService:
         """
         data = request.model_dump(exclude_none=True, by_alias=True) if request else None
         response = self._http.post(endpoint, data=data)
-        json_data: dict[str, Any] = response.json()
+
+        # Handle empty responses (204 No Content or empty body)
+        if response.status_code == 204 or not response.content:
+            json_data: dict[str, Any] = {}
+        else:
+            json_data = response.json()
 
         if response_type:
             return response_type.model_validate(json_data)
@@ -109,7 +114,12 @@ class BaseService:
             Parsed response model or raw dict if no response_type
         """
         response = self._http.get(endpoint, params=params)
-        json_data: dict[str, Any] = response.json()
+
+        # Handle empty responses (204 No Content or empty body)
+        if response.status_code == 204 or not response.content:
+            json_data: dict[str, Any] = {}
+        else:
+            json_data = response.json()
 
         if response_type:
             return response_type.model_validate(json_data)
@@ -168,7 +178,12 @@ class AsyncBaseService:
         """
         data = request.model_dump(exclude_none=True, by_alias=True) if request else None
         response = await self._http.post(endpoint, data=data)
-        json_data: dict[str, Any] = response.json()
+
+        # Handle empty responses (204 No Content or empty body)
+        if response.status_code == 204 or not response.content:
+            json_data: dict[str, Any] = {}
+        else:
+            json_data = response.json()
 
         if response_type:
             return response_type.model_validate(json_data)
@@ -207,7 +222,12 @@ class AsyncBaseService:
             Parsed response model or raw dict if no response_type
         """
         response = await self._http.get(endpoint, params=params)
-        json_data: dict[str, Any] = response.json()
+
+        # Handle empty responses (204 No Content or empty body)
+        if response.status_code == 204 or not response.content:
+            json_data: dict[str, Any] = {}
+        else:
+            json_data = response.json()
 
         if response_type:
             return response_type.model_validate(json_data)

@@ -22,9 +22,10 @@ class PaginatedIterator(Iterator[T]):
     Example:
         ```python
         from devrev import DevRevClient
+        from devrev.utils.pagination import paginate
 
         client = DevRevClient()
-        for account in client.accounts.list_all():
+        for account in paginate(client.accounts.list, "accounts"):
             print(account.display_name)
         ```
     """
@@ -92,9 +93,10 @@ class AsyncPaginatedIterator(AsyncIterator[T]):
     Example:
         ```python
         from devrev import AsyncDevRevClient
+        from devrev.utils.pagination import async_paginate
 
         async with AsyncDevRevClient() as client:
-            async for account in client.accounts.list_all():
+            async for account in async_paginate(client.accounts.list, "accounts"):
                 print(account.display_name)
         ```
     """

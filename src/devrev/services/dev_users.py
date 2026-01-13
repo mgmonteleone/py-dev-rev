@@ -347,3 +347,55 @@ class AsyncDevUsersService(AsyncBaseService):
         request = DevUsersSelfUpdateRequest(display_name=display_name, full_name=full_name)
         response = await self._post("/dev-users.self.update", request, DevUsersSelfUpdateResponse)
         return response.dev_user
+
+    async def identities_link(
+        self,
+        dev_user: str,
+        id: str,
+        issuer: str,
+    ) -> DevUser:
+        """Link an external identity to a Dev user.
+
+        Args:
+            dev_user: Dev user ID
+            id: External identity ID
+            issuer: Identity issuer
+
+        Returns:
+            The updated DevUser
+        """
+        request = DevUsersIdentitiesLinkRequest(
+            dev_user=dev_user,
+            id=id,
+            issuer=issuer,
+        )
+        response = await self._post(
+            "/dev-users.identities.link", request, DevUsersIdentitiesLinkResponse
+        )
+        return response.dev_user
+
+    async def identities_unlink(
+        self,
+        dev_user: str,
+        id: str,
+        issuer: str,
+    ) -> DevUser:
+        """Unlink an external identity from a Dev user.
+
+        Args:
+            dev_user: Dev user ID
+            id: External identity ID
+            issuer: Identity issuer
+
+        Returns:
+            The updated DevUser
+        """
+        request = DevUsersIdentitiesUnlinkRequest(
+            dev_user=dev_user,
+            id=id,
+            issuer=issuer,
+        )
+        response = await self._post(
+            "/dev-users.identities.unlink", request, DevUsersIdentitiesUnlinkResponse
+        )
+        return response.dev_user
