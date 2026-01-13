@@ -186,9 +186,7 @@ class DevUsersService(BaseService):
             id=id,
             issuer=issuer,
         )
-        response = self._post(
-            "/dev-users.identities.link", request, DevUsersIdentitiesLinkResponse
-        )
+        response = self._post("/dev-users.identities.link", request, DevUsersIdentitiesLinkResponse)
         return response.dev_user
 
     def identities_unlink(
@@ -259,9 +257,7 @@ class DevUsersService(BaseService):
             display_name=display_name,
             full_name=full_name,
         )
-        response = self._post(
-            "/dev-users.self.update", request, DevUsersSelfUpdateResponse
-        )
+        response = self._post("/dev-users.self.update", request, DevUsersSelfUpdateResponse)
         return response.dev_user
 
 

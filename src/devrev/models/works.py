@@ -76,9 +76,13 @@ class Work(DevRevResponseModel):
     created_date: datetime | None = Field(default=None, description="Creation timestamp")
     modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
     created_by: UserSummary | None = Field(default=None, description="User who created the work")
-    modified_by: UserSummary | None = Field(default=None, description="User who last modified the work")
+    modified_by: UserSummary | None = Field(
+        default=None, description="User who last modified the work"
+    )
     owned_by: list[UserSummary] | None = Field(default=None, description="Work owners")
-    reported_by: list[UserSummary] | None = Field(default=None, description="Users who reported this work")
+    reported_by: list[UserSummary] | None = Field(
+        default=None, description="Users who reported this work"
+    )
     applies_to_part: str | None = Field(default=None, description="Part this work applies to")
     stage: StageInfo | None = Field(default=None, description="Work stage")
     tags: list[TagWithValue] | None = Field(default=None, description="Work tags")
@@ -108,7 +112,9 @@ class WorksCreateRequestIssue(DevRevBaseModel):
     priority: IssuePriority | None = Field(default=None, description="Issue priority")
     priority_v2: int | None = Field(default=None, description="Priority enum ID")
     target_start_date: datetime | None = Field(default=None, description="Target start date")
-    developed_with: list[str] | None = Field(default=None, description="Part IDs associated with issue")
+    developed_with: list[str] | None = Field(
+        default=None, description="Part IDs associated with issue"
+    )
 
 
 class WorksCreateRequestTicket(DevRevBaseModel):
@@ -134,11 +140,15 @@ class WorksCreateRequest(DevRevBaseModel):
     external_ref: str | None = Field(default=None, description="External reference")
     target_close_date: datetime | None = Field(default=None, description="Target close date")
     custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
-    custom_schema_spec: CustomSchemaSpec | None = Field(default=None, description="Custom schema spec")
+    custom_schema_spec: CustomSchemaSpec | None = Field(
+        default=None, description="Custom schema spec"
+    )
     # Issue-specific
     priority: IssuePriority | None = Field(default=None, description="Issue priority (for issues)")
     # Ticket-specific
-    severity: TicketSeverity | None = Field(default=None, description="Ticket severity (for tickets)")
+    severity: TicketSeverity | None = Field(
+        default=None, description="Ticket severity (for tickets)"
+    )
 
 
 class WorksGetRequest(DevRevBaseModel):
@@ -157,11 +167,15 @@ class WorksListRequest(DevRevBaseModel):
     cursor: str | None = Field(default=None, description="Pagination cursor")
     external_ref: list[str] | None = Field(default=None, description="Filter by external refs")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
-    modified_date: DateFilter | None = Field(default=None, description="Filter by modification date")
+    modified_date: DateFilter | None = Field(
+        default=None, description="Filter by modification date"
+    )
     owned_by: list[str] | None = Field(default=None, description="Filter by owner user IDs")
     sort_by: list[str] | None = Field(default=None, description="Sort order")
     stage_name: list[str] | None = Field(default=None, description="Filter by stage names")
-    target_close_date: DateFilter | None = Field(default=None, description="Filter by target close date")
+    target_close_date: DateFilter | None = Field(
+        default=None, description="Filter by target close date"
+    )
 
 
 class WorksUpdateRequestOwnedBy(DevRevBaseModel):
@@ -187,7 +201,9 @@ class WorksUpdateRequest(DevRevBaseModel):
     stage: StageUpdate | None = Field(default=None, description="New stage")
     tags: WorksUpdateRequestTags | None = Field(default=None, description="New tags")
     target_close_date: datetime | None = Field(default=None, description="New target close date")
-    custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields to update")
+    custom_fields: dict[str, Any] | None = Field(
+        default=None, description="Custom fields to update"
+    )
     # Issue-specific
     priority: IssuePriority | None = Field(default=None, description="New priority")
     # Ticket-specific
@@ -262,4 +278,3 @@ class WorksCountResponse(DevRevResponseModel):
     """Response from counting work items."""
 
     count: int = Field(..., description="Number of matching work items")
-

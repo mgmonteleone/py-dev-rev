@@ -137,4 +137,3 @@ class CustomSchemaSpec(DevRevBaseModel):
 
 # Common ID patterns for DevRev resources
 # Format: PREFIX-XXXXX (e.g., ACC-12345, ISS-12345, DEVU-12345)
-

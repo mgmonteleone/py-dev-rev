@@ -46,8 +46,12 @@ class RevUser(DevRevResponseModel):
     state: RevUserState | None = Field(default=None, description="User state")
     created_date: datetime | None = Field(default=None, description="Creation timestamp")
     modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
-    created_by: UserSummary | None = Field(default=None, description="User who created this rev user")
-    modified_by: UserSummary | None = Field(default=None, description="User who last modified this rev user")
+    created_by: UserSummary | None = Field(
+        default=None, description="User who created this rev user"
+    )
+    modified_by: UserSummary | None = Field(
+        default=None, description="User who last modified this rev user"
+    )
     rev_org: OrgSummary | None = Field(default=None, description="Associated Rev organization")
     external_ref: str | None = Field(default=None, description="External reference identifier")
     custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
@@ -76,7 +80,9 @@ class RevUsersCreateRequest(DevRevBaseModel):
     email: str | None = Field(default=None, description="Email address")
     external_ref: str | None = Field(default=None, description="External reference identifier")
     phone_numbers: list[str] | None = Field(default=None, description="Phone numbers")
-    custom_schema_spec: CustomSchemaSpec | None = Field(default=None, description="Custom schema spec")
+    custom_schema_spec: CustomSchemaSpec | None = Field(
+        default=None, description="Custom schema spec"
+    )
 
 
 class RevUsersGetRequest(DevRevBaseModel):
@@ -88,14 +94,18 @@ class RevUsersGetRequest(DevRevBaseModel):
 class RevUsersListRequest(DevRevBaseModel):
     """Request to list Rev users."""
 
-    associations: list[str] | None = Field(default=None, description="Filter by account/workspace IDs")
+    associations: list[str] | None = Field(
+        default=None, description="Filter by account/workspace IDs"
+    )
     created_by: list[str] | None = Field(default=None, description="Filter by creator user IDs")
     created_date: DateTimeFilter | None = Field(default=None, description="Filter by creation date")
     cursor: str | None = Field(default=None, description="Pagination cursor")
     email: list[str] | None = Field(default=None, description="Filter by emails")
     external_ref: list[str] | None = Field(default=None, description="Filter by external refs")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
-    modified_date: DateTimeFilter | None = Field(default=None, description="Filter by modification date")
+    modified_date: DateTimeFilter | None = Field(
+        default=None, description="Filter by modification date"
+    )
     rev_org: list[str] | None = Field(default=None, description="Filter by Rev org IDs")
     sort_by: list[str] | None = Field(default=None, description="Sort order")
 
@@ -110,7 +120,9 @@ class RevUsersUpdateRequest(DevRevBaseModel):
     email: str | None = Field(default=None, description="New email address")
     external_ref: str | None = Field(default=None, description="New external reference")
     phone_numbers: list[str] | None = Field(default=None, description="New phone numbers")
-    custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields to update")
+    custom_fields: dict[str, Any] | None = Field(
+        default=None, description="Custom fields to update"
+    )
 
 
 class RevUsersDeleteRequest(DevRevBaseModel):
@@ -163,4 +175,3 @@ class RevUsersMergeResponse(DevRevResponseModel):
     """Response from merging Rev users."""
 
     pass  # Empty response body (async processing)
-

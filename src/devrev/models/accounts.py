@@ -44,7 +44,9 @@ class Account(DevRevResponseModel):
     created_date: datetime | None = Field(default=None, description="Creation timestamp")
     modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
     created_by: UserSummary | None = Field(default=None, description="User who created the account")
-    modified_by: UserSummary | None = Field(default=None, description="User who last modified the account")
+    modified_by: UserSummary | None = Field(
+        default=None, description="User who last modified the account"
+    )
     owned_by: list[UserSummary] | None = Field(default=None, description="Account owners")
     domains: list[str] | None = Field(default=None, description="Associated domains")
     external_refs: list[str] | None = Field(default=None, description="External references")
@@ -69,13 +71,17 @@ class AccountsCreateRequest(DevRevBaseModel):
     """Request to create an account."""
 
     display_name: str = Field(..., description="Account display name", min_length=1, max_length=256)
-    description: str | None = Field(default=None, description="Account description", max_length=65536)
+    description: str | None = Field(
+        default=None, description="Account description", max_length=65536
+    )
     domains: list[str] | None = Field(default=None, description="Associated domains")
     external_refs: list[str] | None = Field(default=None, description="External references")
     owned_by: list[str] | None = Field(default=None, description="Owner user IDs")
     tier: str | None = Field(default=None, description="Account tier")
     custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
-    custom_schema_spec: CustomSchemaSpec | None = Field(default=None, description="Custom schema spec")
+    custom_schema_spec: CustomSchemaSpec | None = Field(
+        default=None, description="Custom schema spec"
+    )
 
 
 class AccountsGetRequest(DevRevBaseModel):
@@ -94,7 +100,9 @@ class AccountsListRequest(DevRevBaseModel):
     domains: list[str] | None = Field(default=None, description="Filter by domains")
     external_refs: list[str] | None = Field(default=None, description="Filter by external refs")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
-    modified_date: DateFilter | None = Field(default=None, description="Filter by modification date")
+    modified_date: DateFilter | None = Field(
+        default=None, description="Filter by modification date"
+    )
     owned_by: list[str] | None = Field(default=None, description="Filter by owner user IDs")
     sort_by: list[str] | None = Field(default=None, description="Sort order")
     stage_name: list[str] | None = Field(default=None, description="Filter by stage names")
@@ -108,7 +116,9 @@ class AccountsUpdateRequest(DevRevBaseModel):
     display_name: str | None = Field(default=None, description="New display name")
     description: str | None = Field(default=None, description="New description")
     tier: str | None = Field(default=None, description="New tier")
-    custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields to update")
+    custom_fields: dict[str, Any] | None = Field(
+        default=None, description="Custom fields to update"
+    )
 
 
 class AccountsDeleteRequest(DevRevBaseModel):
@@ -175,4 +185,3 @@ class AccountsExportResponse(DevRevResponseModel):
     """Response from exporting accounts."""
 
     accounts: list[Account] = Field(..., description="Exported accounts")
-

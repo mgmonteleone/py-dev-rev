@@ -282,7 +282,9 @@ class HTTPClient:
 
         # Should not reach here, but just in case
         if last_exception:
-            raise NetworkError(f"Request failed after {self._max_retries + 1} attempts") from last_exception
+            raise NetworkError(
+                f"Request failed after {self._max_retries + 1} attempts"
+            ) from last_exception
         raise DevRevError("Request failed unexpectedly")
 
     def post(
@@ -481,7 +483,9 @@ class AsyncHTTPClient:
                 await asyncio.sleep(wait_time)
 
         if last_exception:
-            raise NetworkError(f"Request failed after {self._max_retries + 1} attempts") from last_exception
+            raise NetworkError(
+                f"Request failed after {self._max_retries + 1} attempts"
+            ) from last_exception
         raise DevRevError("Request failed unexpectedly")
 
     async def post(

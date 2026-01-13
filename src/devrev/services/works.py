@@ -274,9 +274,15 @@ class AsyncWorksService(AsyncBaseService):
     ) -> Work:
         """Create a new work item."""
         request = WorksCreateRequest(
-            title=title, applies_to_part=applies_to_part, type=type, body=body,
-            owned_by=owned_by, priority=priority, severity=severity,
-            target_close_date=target_close_date, custom_fields=custom_fields,
+            title=title,
+            applies_to_part=applies_to_part,
+            type=type,
+            body=body,
+            owned_by=owned_by,
+            priority=priority,
+            severity=severity,
+            target_close_date=target_close_date,
+            custom_fields=custom_fields,
         )
         response = await self._post("/works.create", request, WorksCreateResponse)
         return response.work
@@ -298,8 +304,11 @@ class AsyncWorksService(AsyncBaseService):
     ) -> WorksListResponse:
         """List work items."""
         request = WorksListRequest(
-            type=type, applies_to_part=applies_to_part,
-            cursor=cursor, limit=limit, owned_by=owned_by,
+            type=type,
+            applies_to_part=applies_to_part,
+            cursor=cursor,
+            limit=limit,
+            owned_by=owned_by,
         )
         return await self._post("/works.list", request, WorksListResponse)
 
@@ -316,8 +325,12 @@ class AsyncWorksService(AsyncBaseService):
         """Update a work item."""
         owned_by_update = WorksUpdateRequestOwnedBy(set=owned_by) if owned_by else None
         request = WorksUpdateRequest(
-            id=id, title=title, body=body, owned_by=owned_by_update,
-            priority=priority, severity=severity,
+            id=id,
+            title=title,
+            body=body,
+            owned_by=owned_by_update,
+            priority=priority,
+            severity=severity,
         )
         response = await self._post("/works.update", request, WorksUpdateResponse)
         return response.work

@@ -206,9 +206,7 @@ class AsyncRevUsersService(AsyncBaseService):
         rev_org: list[str] | None = None,
     ) -> RevUsersListResponse:
         """List Rev users."""
-        request = RevUsersListRequest(
-            cursor=cursor, email=email, limit=limit, rev_org=rev_org
-        )
+        request = RevUsersListRequest(cursor=cursor, email=email, limit=limit, rev_org=rev_org)
         return await self._post("/rev-users.list", request, RevUsersListResponse)
 
     async def update(
@@ -233,7 +231,5 @@ class AsyncRevUsersService(AsyncBaseService):
 
     async def merge(self, primary_user: str, secondary_user: str) -> None:
         """Merge two Rev users."""
-        request = RevUsersMergeRequest(
-            primary_user=primary_user, secondary_user=secondary_user
-        )
+        request = RevUsersMergeRequest(primary_user=primary_user, secondary_user=secondary_user)
         await self._post("/rev-users.merge", request, RevUsersMergeResponse)

@@ -90,12 +90,16 @@ class DevUsersCreateRequest(DevRevBaseModel):
     """Request to create a Dev user."""
 
     email: str = Field(..., description="Email address")
-    state: DevUsersCreateRequestStateEnum = Field(..., description="Initial user state (must be shadow)")
+    state: DevUsersCreateRequestStateEnum = Field(
+        ..., description="Initial user state (must be shadow)"
+    )
     display_name: str | None = Field(default=None, description="Display name")
     full_name: str | None = Field(default=None, description="Full name")
     reports_to: str | None = Field(default=None, description="Manager user ID")
     custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
-    custom_schema_spec: CustomSchemaSpec | None = Field(default=None, description="Custom schema spec")
+    custom_schema_spec: CustomSchemaSpec | None = Field(
+        default=None, description="Custom schema spec"
+    )
 
 
 class DevUsersGetRequest(DevRevBaseModel):
@@ -114,7 +118,9 @@ class DevUsersListRequest(DevRevBaseModel):
         default=None, description="Filter by external identity"
     )
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
-    modified_date: DateFilter | None = Field(default=None, description="Filter by modification date")
+    modified_date: DateFilter | None = Field(
+        default=None, description="Filter by modification date"
+    )
     phone_numbers: list[str] | None = Field(default=None, description="Filter by phone numbers")
     sort_by: list[str] | None = Field(default=None, description="Sort order")
     state: list[DevUserState] | None = Field(default=None, description="Filter by states")
@@ -128,7 +134,9 @@ class DevUsersUpdateRequest(DevRevBaseModel):
     display_picture: str | None = Field(default=None, description="New profile picture artifact ID")
     full_name: str | None = Field(default=None, description="New full name")
     reports_to: str | None = Field(default=None, description="New manager user ID")
-    custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields to update")
+    custom_fields: dict[str, Any] | None = Field(
+        default=None, description="Custom fields to update"
+    )
 
 
 class DevUsersActivateRequest(DevRevBaseModel):
@@ -248,4 +256,3 @@ class DevUsersSelfUpdateResponse(DevRevResponseModel):
     """Response from updating the authenticated user."""
 
     dev_user: DevUser = Field(..., description="Updated Dev user")
-
