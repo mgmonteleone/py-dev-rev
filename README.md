@@ -2,10 +2,13 @@
 
 A modern, type-safe Python SDK for the DevRev API.
 
+[![PyPI Version](https://img.shields.io/pypi/v/py-devrev.svg)](https://pypi.org/project/py-devrev/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)](https://mypy-lang.org/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Test Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)](https://github.com/mgmonteleone/py-dev-rev)
+<!-- Note: Coverage badge should be updated manually or replaced with dynamic badge from codecov/coveralls -->
 
 ---
 
@@ -644,27 +647,29 @@ On tagged releases (`v*`), the package is automatically published to Google Arti
 - [x] OpenAPI specification integration
 - [x] Development standards documentation
 
-### Phase 2: Core Implementation 🔄
-- [ ] Base client with authentication
-- [ ] HTTP layer with retry logic
-- [ ] Pydantic models generation
-- [ ] Core services (Accounts, Works, Users)
+### Phase 2: Core Implementation ✅
+- [x] Base client with authentication
+- [x] HTTP layer with retry logic
+- [x] Pydantic models generation
+- [x] Core services (Accounts, Works, Users)
 
-### Phase 3: Full API Coverage
-- [ ] All 209 endpoints implemented
-- [ ] Pagination helpers
-- [ ] Async client support
+### Phase 3: Full API Coverage ✅
+- [x] All 209 endpoints implemented
+- [x] Pagination helpers
+- [x] Async client support
 
-### Phase 4: Polish & Production
-- [ ] Comprehensive test suite
-- [ ] Performance optimization
-- [ ] Documentation site
-- [ ] Example applications
+### Phase 4: Polish & Production ✅
+- [x] Comprehensive test suite (80%+ coverage)
+- [x] Performance benchmarking
+- [x] Documentation site
+- [x] Example applications
+- [x] Security audit passed
 
-### Phase 5: Maintenance
-- [ ] Automated OpenAPI sync
-- [ ] Dependency updates
+### Phase 5: Maintenance 🔄
+- [x] Automated release workflow
+- [x] Dependency updates (Dependabot)
 - [ ] Community contributions
+- [ ] Automated OpenAPI sync
 
 ---
 
