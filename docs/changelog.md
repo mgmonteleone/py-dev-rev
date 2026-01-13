@@ -5,6 +5,10 @@ All notable changes to the DevRev Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+No unreleased changes yet.
+
 ## [1.0.0] - 2026-01-13
 
 🎉 **First Stable Release** of the DevRev Python SDK!
@@ -147,13 +151,13 @@ This release marks the completion of all four development phases, providing a pr
 
 ### From 0.1.0 to 1.0.0
 
-The v1.0.0 release is backwards compatible with v0.1.0. Key changes:
+The v1.0.0 release includes one breaking change and several enhancements:
 
-- **HTTPS Required**: The SDK now enforces HTTPS URLs for `base_url`. If you were using HTTP URLs (e.g., for local testing), you will need to update to HTTPS.
+- **HTTPS Required (Breaking Change)**: The SDK now enforces HTTPS URLs for `base_url`. If you were using HTTP URLs (e.g., for local testing), you will need to update to HTTPS. Note that the official DevRev API only supports HTTPS, so this should not affect production usage.
 - **New Services**: 10 additional service classes are now available
 - **Enhanced Error Messages**: More detailed error information is provided
 
-No breaking changes to existing API calls.
+All existing API calls remain compatible - only the HTTPS enforcement may require configuration changes for non-production environments.
 
 ## Reporting Issues
 

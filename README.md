@@ -2,12 +2,13 @@
 
 A modern, type-safe Python SDK for the DevRev API.
 
-[![PyPI Version](https://img.shields.io/badge/pypi-v1.0.0-blue.svg)](https://pypi.org/project/py-devrev/)
+[![PyPI Version](https://img.shields.io/pypi/v/py-devrev.svg)](https://pypi.org/project/py-devrev/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)](https://mypy-lang.org/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)](https://github.com/mgmonteleone/py-dev-rev)
+<!-- Note: Coverage badge should be updated manually or replaced with dynamic badge from codecov/coveralls -->
 
 ---
 
