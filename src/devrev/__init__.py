@@ -3,6 +3,7 @@
 A modern, type-safe Python SDK for the DevRev API.
 """
 
+from devrev.client import AsyncDevRevClient, DevRevClient
 from devrev.config import DevRevConfig, configure, get_config
 from devrev.exceptions import (
     AuthenticationError,
@@ -23,6 +24,9 @@ __version__ = "0.1.0"
 __all__ = [
     # Version
     "__version__",
+    # Clients
+    "DevRevClient",
+    "AsyncDevRevClient",
     # Configuration
     "DevRevConfig",
     "get_config",
