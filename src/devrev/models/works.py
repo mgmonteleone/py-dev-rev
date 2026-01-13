@@ -134,7 +134,7 @@ class WorksCreateRequest(DevRevBaseModel):
     type: WorkType = Field(..., description="Work item type")
     title: str = Field(..., description="Work title", min_length=1, max_length=256)
     applies_to_part: str = Field(..., description="Part ID this work applies to")
-    owned_by: list[str] = Field(..., description="Owner user IDs")
+    owned_by: list[str] | None = Field(default=None, description="Owner user IDs")
     body: str | None = Field(default=None, description="Work body", max_length=65536)
     artifacts: list[str] | None = Field(default=None, description="Artifact IDs")
     external_ref: str | None = Field(default=None, description="External reference")
