@@ -1,0 +1,126 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "py-devrev"
+version = "0.1.0"
+description = "A modern, type-safe Python SDK for the DevRev API"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+    { name = "Matthew G. Monteleone", email = "matthewm@augmentcode.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+    "Operating System :: OS Independent",
+]
+keywords = ["devrev", "sdk", "api", "client"]
+
+dependencies = [
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "httpx>=0.25.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.12.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "pre-commit>=3.6.0",
+    "respx>=0.20.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mgmonteleone/py-dev-rev"
+Documentation = "https://github.com/mgmonteleone/py-dev-rev"
+Repository = "https://github.com/mgmonteleone/py-dev-rev.git"
+Issues = "https://github.com/mgmonteleone/py-dev-rev/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/devrev"]
+
+# Ruff Configuration
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["devrev"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ARG001", "ARG002"]  # Fixtures may be unused but needed for side effects
+
+# mypy Configuration
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+# pytest Configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+python_classes = ["Test*"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+markers = [
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow",
+]
+
+# Coverage Configuration
+[tool.coverage.run]
+source = ["src/devrev"]
+branch = true
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+

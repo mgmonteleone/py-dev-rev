@@ -1,0 +1,51 @@
+# Google Cloud Build Configuration for py-devrev
+# This pipeline runs on every push and pull request
+
+steps:
+  # Install dependencies
+  - name: 'python:3.12'
+    id: 'install'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install --upgrade pip
+        pip install -e ".[dev]"
+
+  # Run linting
+  - name: 'python:3.12'
+    id: 'lint'
+    entrypoint: 'ruff'
+    args: ['check', '.']
+    waitFor: ['install']
+
+  # Check formatting
+  - name: 'python:3.12'
+    id: 'format'
+    entrypoint: 'ruff'
+    args: ['format', '--check', '.']
+    waitFor: ['install']
+
+  # Type checking
+  - name: 'python:3.12'
+    id: 'typecheck'
+    entrypoint: 'mypy'
+    args: ['src/']
+    waitFor: ['install']
+
+  # Run tests with coverage
+  - name: 'python:3.12'
+    id: 'test'
+    entrypoint: 'pytest'
+    args:
+      - '--cov=src/devrev'
+      - '--cov-report=term-missing'
+      - '--cov-fail-under=80'
+      - '-v'
+    waitFor: ['install']
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '600s'
+
