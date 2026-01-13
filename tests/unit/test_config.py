@@ -101,6 +101,83 @@ class TestDevRevConfig:
             DevRevConfig()
 
 
+class TestSecurityFeatures:
+    """Security-focused tests for configuration."""
+
+    def test_https_required_rejects_http(self, mock_env_vars: dict[str, str]) -> None:
+        """Test that HTTP URLs are rejected for security.
+
+        Args:
+            mock_env_vars: Fixture that sets up environment variables.
+        """
+        with (
+            patch.dict(os.environ, {"DEVREV_BASE_URL": "http://api.devrev.ai"}),
+            pytest.raises(ValidationError) as exc_info,
+        ):
+            DevRevConfig()
+        assert "Insecure HTTP URLs are not allowed" in str(exc_info.value)
+
+    def test_https_required_accepts_https(self, mock_env_vars: dict[str, str]) -> None:
+        """Test that HTTPS URLs are accepted.
+
+        Args:
+            mock_env_vars: Fixture that sets up environment variables.
+        """
+        with patch.dict(os.environ, {"DEVREV_BASE_URL": "https://api.devrev.ai"}):
+            config = DevRevConfig()
+            assert config.base_url == "https://api.devrev.ai"
+
+    def test_base_url_rejects_invalid_schemes(
+        self, mock_env_vars: dict[str, str]
+    ) -> None:
+        """Test that non-HTTPS schemes are rejected.
+
+        Args:
+            mock_env_vars: Fixture that sets up environment variables.
+        """
+        invalid_urls = [
+            "ftp://api.devrev.ai",
+            "file:///etc/passwd",
+            "api.devrev.ai",  # No scheme
+        ]
+        for url in invalid_urls:
+            with (
+                patch.dict(os.environ, {"DEVREV_BASE_URL": url}),
+                pytest.raises(ValidationError),
+            ):
+                DevRevConfig()
+
+    def test_api_token_not_in_str_repr(self, mock_env_vars: dict[str, str]) -> None:
+        """Test that API token is not exposed in string representations.
+
+        Args:
+            mock_env_vars: Fixture that sets up environment variables.
+        """
+        config = DevRevConfig()
+        token = "test-token-12345"
+
+        # Token should not appear in any string representation
+        assert token not in str(config)
+        assert token not in repr(config)
+        assert token not in f"{config}"
+
+    def test_api_token_accessible_via_secret_value(
+        self, mock_env_vars: dict[str, str]
+    ) -> None:
+        """Test that token is accessible only through get_secret_value.
+
+        Args:
+            mock_env_vars: Fixture that sets up environment variables.
+        """
+        config = DevRevConfig()
+
+        # Direct access should return SecretStr, not the value
+        assert str(config.api_token) == "**********"
+
+        # Explicit access via get_secret_value should work
+        assert config.api_token.get_secret_value() == "test-token-12345"
+
+
 class TestConfigFunctions:
     """Tests for configuration helper functions."""
 

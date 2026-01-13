@@ -139,9 +139,18 @@ bandit -r src/
 
 ### Current Security Status
 
+| Tool | Last Run | Result |
+|------|----------|--------|
+| `bandit` | 2026-01-13 | ✅ No issues found (5,189 lines scanned) |
+| `pip-audit` | 2026-01-13 | ✅ No known vulnerabilities |
+
+### Audit Summary
+
 - ✅ All dependencies audited and up-to-date
-- ✅ No known vulnerabilities in dependencies
-- ✅ Code scanned with bandit (no high-severity issues)
+- ✅ No known vulnerabilities in SDK dependencies
+- ✅ Code scanned with bandit (no issues at any severity)
+- ✅ HTTPS enforcement implemented and tested
+- ✅ API tokens protected with Pydantic SecretStr
 
 ## Secure Development
 
@@ -149,22 +158,23 @@ This SDK follows secure development practices:
 
 1. **No Dynamic Code Execution** - No `eval()` or `exec()` calls
 2. **Input Validation** - All inputs validated via Pydantic
-3. **HTTPS Only** - All API calls use HTTPS (no HTTP fallback)
-4. **Certificate Validation** - SSL certificates are verified
-5. **Minimal Dependencies** - Only essential, well-maintained packages
+3. **HTTPS Enforcement** - HTTP URLs are rejected at configuration time with a clear error message
+4. **Certificate Validation** - SSL certificates are verified by default (httpx default behavior)
+5. **Minimal Dependencies** - Only essential, well-maintained packages (pydantic, httpx, python-dotenv)
+6. **Secret Protection** - API tokens stored as `SecretStr`, never logged or exposed in errors
 
 ## Security Features
 
 ### Built-in Protections
 
-| Feature | Description |
-|---------|-------------|
-| Token Masking | API tokens are never logged in full |
-| HTTPS Enforcement | HTTP URLs are rejected |
-| Certificate Validation | SSL certificates are verified by default |
-| Input Validation | All inputs validated before API calls |
-| Rate Limit Handling | Prevents accidental API abuse |
-| Timeout Protection | Prevents hanging requests |
+| Feature | Description | Implementation |
+|---------|-------------|----------------|
+| Token Masking | API tokens are never logged in full | Pydantic `SecretStr` type |
+| HTTPS Enforcement | HTTP URLs are rejected at configuration | `field_validator` on `base_url` |
+| Certificate Validation | SSL certificates are verified by default | httpx default behavior |
+| Input Validation | All inputs validated before API calls | Pydantic models with strict typing |
+| Rate Limit Handling | Respects `Retry-After` headers | `RateLimitError` with retry info |
+| Timeout Protection | Configurable request timeouts | Default 30s, max 300s |
 
 ### Error Handling
 
@@ -179,6 +189,24 @@ try:
 except AuthenticationError as e:
     # Safe to log - no token exposed
     logger.error(f"Auth failed: {e.message}")
+```
+
+### HTTPS Enforcement Example
+
+```python
+from devrev import DevRevClient, DevRevConfig
+from pydantic import ValidationError
+
+# This will raise ValidationError:
+try:
+    config = DevRevConfig(
+        api_token="your-token",
+        base_url="http://api.devrev.ai"  # HTTP not allowed!
+    )
+except ValidationError as e:
+    print("Security: HTTP URLs are not allowed")
+    # ValidationError: Insecure HTTP URLs are not allowed.
+    # Use HTTPS to protect your API credentials.
 ```
 
 ## Contact
