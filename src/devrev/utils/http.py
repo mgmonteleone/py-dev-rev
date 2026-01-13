@@ -459,7 +459,9 @@ class HTTPClient:
 
         # Prepare headers with ETag support
         request_headers = dict(headers) if headers else {}
-        cache_key = f"{method}:{endpoint}"
+        # Include params in cache key to avoid ETag collisions for different query params
+        params_str = "&".join(f"{k}={v}" for k, v in sorted(params.items())) if params else ""
+        cache_key = f"{method}:{endpoint}?{params_str}" if params_str else f"{method}:{endpoint}"
 
         if use_etag and method == "GET" and cache_key in self._etag_cache:
             request_headers["If-None-Match"] = self._etag_cache[cache_key]
@@ -493,10 +495,17 @@ class HTTPClient:
 
                     return response
 
-                # Handle 304 Not Modified
+                # Handle 304 Not Modified - return a synthetic 200 response
+                # to avoid downstream callers failing on response.json()
                 if response.status_code == 304:
                     self._circuit_breaker_state.record_success()
-                    return response
+                    # Return a 200 response with empty body for 304
+                    # This allows callers to handle it uniformly
+                    return httpx.Response(
+                        status_code=200,
+                        headers=response.headers,
+                        json={"_not_modified": True},
+                    )
 
                 if not self._should_retry(response) or attempt >= self._max_retries:
                     self._circuit_breaker_state.record_failure(self._circuit_breaker_config)
@@ -588,16 +597,9 @@ class HTTPClient:
             return False
 
         try:
-            # Use a short timeout for health checks
-            original_timeout = self._client.timeout
-            self._client.timeout = httpx.Timeout(timeout)
-
-            # Make a lightweight request - typically to a health endpoint
-            # or just verify we can connect
-            response = self._client.get("/health", timeout=timeout)
-
-            # Restore original timeout
-            self._client.timeout = original_timeout
+            # Use a dedicated timeout for health checks without mutating client state
+            # Use relative path without leading slash to properly join with base_url
+            response = self._client.get("health", timeout=httpx.Timeout(timeout))
 
             return response.is_success or response.status_code == 404
 
@@ -796,7 +798,9 @@ class AsyncHTTPClient:
 
         # Prepare headers with ETag support
         request_headers = dict(headers) if headers else {}
-        cache_key = f"{method}:{endpoint}"
+        # Include params in cache key to avoid ETag collisions for different query params
+        params_str = "&".join(f"{k}={v}" for k, v in sorted(params.items())) if params else ""
+        cache_key = f"{method}:{endpoint}?{params_str}" if params_str else f"{method}:{endpoint}"
 
         if use_etag and method == "GET" and cache_key in self._etag_cache:
             request_headers["If-None-Match"] = self._etag_cache[cache_key]
@@ -830,10 +834,17 @@ class AsyncHTTPClient:
 
                     return response
 
-                # Handle 304 Not Modified
+                # Handle 304 Not Modified - return a synthetic 200 response
+                # to avoid downstream callers failing on response.json()
                 if response.status_code == 304:
                     self._circuit_breaker_state.record_success()
-                    return response
+                    # Return a 200 response with empty body for 304
+                    # This allows callers to handle it uniformly
+                    return httpx.Response(
+                        status_code=200,
+                        headers=response.headers,
+                        json={"_not_modified": True},
+                    )
 
                 if not self._should_retry(response) or attempt >= self._max_retries:
                     self._circuit_breaker_state.record_failure(self._circuit_breaker_config)
@@ -921,7 +932,8 @@ class AsyncHTTPClient:
             return False
 
         try:
-            response = await self._client.get("/health", timeout=timeout)
+            # Use relative path without leading slash to properly join with base_url
+            response = await self._client.get("health", timeout=httpx.Timeout(timeout))
             return response.is_success or response.status_code == 404
         except Exception as e:
             logger.debug("Health check failed: %s", str(e))

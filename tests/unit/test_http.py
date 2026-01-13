@@ -358,9 +358,7 @@ class TestHTTPClientWithConfiguration:
         )
         # First request returns ETag
         respx.get("https://api.devrev.ai/resource").mock(
-            return_value=httpx.Response(
-                200, json={"data": "initial"}, headers={"ETag": '"abc123"'}
-            )
+            return_value=httpx.Response(200, json={"data": "initial"}, headers={"ETag": '"abc123"'})
         )
         response = client.get("/resource")
         assert response.status_code == 200

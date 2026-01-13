@@ -70,8 +70,9 @@ class JSONFormatter(logging.Formatter):
         # Add extra fields
         log_data.update(self.extra_fields)
 
-        # Add location info for debugging
-        if record.levelno >= logging.DEBUG:
+        # Add location info only for DEBUG level to minimize log volume
+        # and avoid exposing file path details in production logs
+        if record.levelno == logging.DEBUG:
             log_data["source"] = {
                 "file": record.filename,
                 "line": record.lineno,

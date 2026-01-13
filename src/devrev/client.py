@@ -26,7 +26,12 @@ from devrev.services.timeline_entries import (
 )
 from devrev.services.webhooks import AsyncWebhooksService, WebhooksService
 from devrev.services.works import AsyncWorksService, WorksService
-from devrev.utils.http import AsyncHTTPClient, HTTPClient
+from devrev.utils.http import (
+    AsyncHTTPClient,
+    CircuitBreakerConfig,
+    ConnectionPoolConfig,
+    HTTPClient,
+)
 
 
 class DevRevClient:
@@ -80,12 +85,30 @@ class DevRevClient:
             else:
                 self._config = get_config()
 
-        # Initialize HTTP client
+        # Build pool config from settings
+        pool_config = ConnectionPoolConfig(
+            max_connections=self._config.max_connections,
+            max_keepalive_connections=self._config.max_keepalive_connections,
+            keepalive_expiry=self._config.keepalive_expiry,
+            http2=self._config.http2,
+        )
+
+        # Build circuit breaker config from settings
+        circuit_breaker_config = CircuitBreakerConfig(
+            failure_threshold=self._config.circuit_breaker_threshold,
+            recovery_timeout=self._config.circuit_breaker_recovery_timeout,
+            half_open_max_calls=self._config.circuit_breaker_half_open_max_calls,
+            enabled=self._config.circuit_breaker_enabled,
+        )
+
+        # Initialize HTTP client with all config options
         self._http = HTTPClient(
             base_url=self._config.base_url,
             api_token=self._config.api_token,
             timeout=self._config.timeout,
             max_retries=self._config.max_retries,
+            pool_config=pool_config,
+            circuit_breaker_config=circuit_breaker_config,
         )
 
         # Initialize services
@@ -236,12 +259,30 @@ class AsyncDevRevClient:
             else:
                 self._config = get_config()
 
-        # Initialize async HTTP client
+        # Build pool config from settings
+        pool_config = ConnectionPoolConfig(
+            max_connections=self._config.max_connections,
+            max_keepalive_connections=self._config.max_keepalive_connections,
+            keepalive_expiry=self._config.keepalive_expiry,
+            http2=self._config.http2,
+        )
+
+        # Build circuit breaker config from settings
+        circuit_breaker_config = CircuitBreakerConfig(
+            failure_threshold=self._config.circuit_breaker_threshold,
+            recovery_timeout=self._config.circuit_breaker_recovery_timeout,
+            half_open_max_calls=self._config.circuit_breaker_half_open_max_calls,
+            enabled=self._config.circuit_breaker_enabled,
+        )
+
+        # Initialize async HTTP client with all config options
         self._http = AsyncHTTPClient(
             base_url=self._config.base_url,
             api_token=self._config.api_token,
             timeout=self._config.timeout,
             max_retries=self._config.max_retries,
+            pool_config=pool_config,
+            circuit_breaker_config=circuit_breaker_config,
         )
 
         # Initialize async services
