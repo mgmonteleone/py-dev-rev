@@ -52,9 +52,9 @@ class WorksService(BaseService):
         title: str,
         applies_to_part: str,
         type: WorkType,
+        owned_by: Sequence[str],
         *,
         body: str | None = None,
-        owned_by: Sequence[str] | None = None,
         priority: IssuePriority | None = None,
         severity: TicketSeverity | None = None,
         target_close_date: datetime | None = None,
@@ -66,8 +66,8 @@ class WorksService(BaseService):
             title: Work item title
             applies_to_part: Part ID this work applies to
             type: Work type (issue or ticket)
+            owned_by: Owner user IDs (required)
             body: Work item body/description
-            owned_by: Owner user IDs
             priority: Issue priority (for issues)
             severity: Ticket severity (for tickets)
             target_close_date: Target close date
@@ -80,8 +80,8 @@ class WorksService(BaseService):
             title=title,
             applies_to_part=applies_to_part,
             type=type,
+            owned_by=list(owned_by),
             body=body,
-            owned_by=owned_by,
             priority=priority,
             severity=severity,
             target_close_date=target_close_date,
@@ -264,9 +264,9 @@ class AsyncWorksService(AsyncBaseService):
         title: str,
         applies_to_part: str,
         type: WorkType,
+        owned_by: Sequence[str],
         *,
         body: str | None = None,
-        owned_by: Sequence[str] | None = None,
         priority: IssuePriority | None = None,
         severity: TicketSeverity | None = None,
         target_close_date: datetime | None = None,
@@ -277,8 +277,8 @@ class AsyncWorksService(AsyncBaseService):
             title=title,
             applies_to_part=applies_to_part,
             type=type,
+            owned_by=list(owned_by),
             body=body,
-            owned_by=owned_by,
             priority=priority,
             severity=severity,
             target_close_date=target_close_date,
