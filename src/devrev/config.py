@@ -4,9 +4,11 @@ This module provides configuration loading from environment variables
 with optional .env file support for local development.
 """
 
+from __future__ import annotations
+
 from typing import Any, Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +24,12 @@ class DevRevConfig(BaseSettings):
         DEVREV_TIMEOUT: Request timeout in seconds (default: 30)
         DEVREV_MAX_RETRIES: Maximum retry attempts (default: 3)
         DEVREV_LOG_LEVEL: Logging level (default: WARN)
+        DEVREV_LOG_FORMAT: Log format - text or json (default: text)
+        DEVREV_MAX_CONNECTIONS: Maximum connection pool size (default: 100)
+        DEVREV_HTTP2: Enable HTTP/2 support (default: false)
+        DEVREV_CIRCUIT_BREAKER_ENABLED: Enable circuit breaker (default: true)
+        DEVREV_CIRCUIT_BREAKER_THRESHOLD: Failure threshold (default: 5)
+        DEVREV_CIRCUIT_BREAKER_RECOVERY_TIMEOUT: Recovery timeout in seconds (default: 30)
 
     Example:
         ```python
@@ -30,10 +38,12 @@ class DevRevConfig(BaseSettings):
         # Load from environment
         config = DevRevConfig()
 
-        # Or with explicit values
+        # Or with explicit values for production
         config = DevRevConfig(
             api_token="your-token",
-            log_level="DEBUG",
+            log_level="INFO",
+            log_format="json",
+            circuit_breaker_enabled=True,
         )
         ```
     """
@@ -71,10 +81,62 @@ class DevRevConfig(BaseSettings):
         description="Maximum number of retry attempts",
     )
 
+    # Connection Pool Settings (Performance)
+    max_connections: int = Field(
+        default=100,
+        ge=1,
+        le=1000,
+        description="Maximum number of connections in the pool",
+    )
+    max_keepalive_connections: int = Field(
+        default=20,
+        ge=0,
+        le=100,
+        description="Maximum number of keep-alive connections",
+    )
+    keepalive_expiry: float = Field(
+        default=30.0,
+        ge=1.0,
+        le=300.0,
+        description="Keep-alive connection expiry in seconds",
+    )
+    http2: bool = Field(
+        default=False,
+        description="Enable HTTP/2 support for improved performance",
+    )
+
+    # Circuit Breaker Settings (Reliability)
+    circuit_breaker_enabled: bool = Field(
+        default=True,
+        description="Enable circuit breaker pattern for reliability",
+    )
+    circuit_breaker_threshold: int = Field(
+        default=5,
+        ge=1,
+        le=100,
+        description="Number of failures before opening the circuit",
+    )
+    circuit_breaker_recovery_timeout: float = Field(
+        default=30.0,
+        ge=1.0,
+        le=600.0,
+        description="Seconds to wait before attempting recovery",
+    )
+    circuit_breaker_half_open_max_calls: int = Field(
+        default=3,
+        ge=1,
+        le=20,
+        description="Number of test requests in half-open state",
+    )
+
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARN", "WARNING", "ERROR"] = Field(
         default="WARN",
         description="Logging level",
+    )
+    log_format: Literal["text", "json"] = Field(
+        default="text",
+        description="Log output format - 'text' for development, 'json' for production",
     )
 
     @field_validator("base_url")
@@ -116,6 +178,19 @@ class DevRevConfig(BaseSettings):
             return "WARN"
         return v
 
+    @model_validator(mode="after")
+    def validate_connection_pool(self) -> DevRevConfig:
+        """Validate connection pool configuration.
+
+        Ensures keepalive connections don't exceed max connections.
+        """
+        if self.max_keepalive_connections > self.max_connections:
+            raise ValueError(
+                f"max_keepalive_connections ({self.max_keepalive_connections}) "
+                f"cannot exceed max_connections ({self.max_connections})"
+            )
+        return self
+
 
 # Global configuration instance
 _config: DevRevConfig | None = None
@@ -141,7 +216,7 @@ def get_config() -> DevRevConfig:
         # Auto-configure logging based on config
         from devrev.utils.logging import configure_logging
 
-        configure_logging(level=_config.log_level)
+        configure_logging(level=_config.log_level, log_format=_config.log_format)
     return _config
 
 
@@ -158,10 +233,19 @@ def configure(**kwargs: Any) -> DevRevConfig:
         ```python
         from devrev import configure
 
+        # Development
         config = configure(
             api_token="your-token",
             log_level="DEBUG",
             timeout=60,
+        )
+
+        # Production
+        config = configure(
+            api_token="your-token",
+            log_level="INFO",
+            log_format="json",
+            circuit_breaker_enabled=True,
         )
         ```
     """
@@ -170,7 +254,7 @@ def configure(**kwargs: Any) -> DevRevConfig:
     # Auto-configure logging based on config
     from devrev.utils.logging import configure_logging
 
-    configure_logging(level=_config.log_level)
+    configure_logging(level=_config.log_level, log_format=_config.log_format)
     return _config
 
 

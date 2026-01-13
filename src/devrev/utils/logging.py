@@ -1,14 +1,118 @@
 """Logging configuration for DevRev SDK.
 
 This module provides structured logging with optional color support
-for development environments.
+for development environments and JSON formatting for production.
 """
 
+from __future__ import annotations
+
+import json
 import logging
 import sys
-from typing import Literal
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    pass
 
 LogLevel = Literal["DEBUG", "INFO", "WARN", "WARNING", "ERROR"]
+LogFormat = Literal["text", "json"]
+
+
+class JSONFormatter(logging.Formatter):
+    """Formatter that outputs logs as JSON for production environments.
+
+    Produces structured JSON logs compatible with cloud logging services
+    like Google Cloud Logging, AWS CloudWatch, and ELK stack.
+
+    Attributes:
+        service_name: Name of the service for log correlation
+        include_timestamp: Whether to include ISO timestamp
+    """
+
+    def __init__(
+        self,
+        service_name: str = "devrev-sdk",
+        include_timestamp: bool = True,
+        extra_fields: dict[str, Any] | None = None,
+    ) -> None:
+        """Initialize the JSON formatter.
+
+        Args:
+            service_name: Name of the service for log correlation
+            include_timestamp: Whether to include ISO timestamp
+            extra_fields: Additional fields to include in every log entry
+        """
+        super().__init__()
+        self.service_name = service_name
+        self.include_timestamp = include_timestamp
+        self.extra_fields = extra_fields or {}
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format the log record as JSON.
+
+        Args:
+            record: Log record to format
+
+        Returns:
+            JSON-formatted log string
+        """
+        log_data: dict[str, Any] = {
+            "severity": record.levelname,
+            "message": record.getMessage(),
+            "logger": record.name,
+            "service": self.service_name,
+        }
+
+        if self.include_timestamp:
+            log_data["timestamp"] = datetime.now(UTC).isoformat()
+
+        # Add extra fields
+        log_data.update(self.extra_fields)
+
+        # Add location info for debugging
+        if record.levelno >= logging.DEBUG:
+            log_data["source"] = {
+                "file": record.filename,
+                "line": record.lineno,
+                "function": record.funcName,
+            }
+
+        # Add exception info if present
+        if record.exc_info:
+            log_data["exception"] = self.formatException(record.exc_info)
+
+        # Include any extra attributes from the record
+        # Filter out standard LogRecord attributes
+        standard_attrs = {
+            "name",
+            "msg",
+            "args",
+            "created",
+            "filename",
+            "funcName",
+            "levelname",
+            "levelno",
+            "lineno",
+            "module",
+            "msecs",
+            "pathname",
+            "process",
+            "processName",
+            "relativeCreated",
+            "stack_info",
+            "exc_info",
+            "exc_text",
+            "thread",
+            "threadName",
+            "taskName",
+            "message",
+        }
+        for key, value in record.__dict__.items():
+            if key not in standard_attrs and not key.startswith("_"):
+                log_data[key] = value
+
+        return json.dumps(log_data, default=str)
 
 
 class ColoredFormatter(logging.Formatter):
@@ -109,18 +213,33 @@ def get_logger(
 def configure_logging(
     level: LogLevel = "WARN",
     use_colors: bool = True,
+    log_format: LogFormat = "text",
+    service_name: str = "devrev-sdk",
+    extra_fields: dict[str, Any] | None = None,
 ) -> None:
     """Configure SDK-wide logging.
 
     Args:
         level: Logging level
-        use_colors: Whether to use colored output
+        use_colors: Whether to use colored output (only for text format)
+        log_format: Output format - "text" for human-readable, "json" for structured
+        service_name: Service name for JSON logs (useful for log correlation)
+        extra_fields: Additional fields to include in every JSON log entry
 
     Example:
         ```python
         from devrev.utils.logging import configure_logging
 
+        # Development mode with colors
         configure_logging(level="DEBUG", use_colors=True)
+
+        # Production mode with JSON logging
+        configure_logging(
+            level="INFO",
+            log_format="json",
+            service_name="my-app",
+            extra_fields={"environment": "production"},
+        )
         ```
     """
     normalized_level = "WARNING" if level == "WARN" else level
@@ -132,7 +251,17 @@ def configure_logging(
     logger.handlers.clear()
 
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(ColoredFormatter(use_colors=use_colors))
+
+    if log_format == "json":
+        handler.setFormatter(
+            JSONFormatter(
+                service_name=service_name,
+                extra_fields=extra_fields,
+            )
+        )
+    else:
+        handler.setFormatter(ColoredFormatter(use_colors=use_colors))
+
     logger.addHandler(handler)
 
     # Prevent propagation to root logger
