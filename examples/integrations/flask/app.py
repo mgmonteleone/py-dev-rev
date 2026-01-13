@@ -8,11 +8,12 @@ Run:
     flask run
 """
 
+import logging
+
 from flask import Flask, g, jsonify, request
 
 from devrev import DevRevClient
 from devrev.exceptions import DevRevError, NotFoundError
-import logging
 
 app = Flask(__name__)
 
@@ -87,7 +88,7 @@ def create_ticket():
         )
     except DevRevError as e:
         return jsonify({"error": str(e)}), 400
-    except KeyError as e:
+    except KeyError:
         logging.exception("Missing required field in ticket creation request")
         return jsonify({"error": "Missing required field in request body"}), 400
 
