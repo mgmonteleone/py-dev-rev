@@ -31,7 +31,8 @@
 
 - Target Python 3.11+ for compatibility with modern features
 - Use type hints for all function signatures and class attributes
-- Leverage `typing` module features: `Optional`, `Union`, `TypeVar`, `Generic`
+- Use modern Python union syntax (`str | None` instead of `Optional[str]`)
+- Leverage `typing` module features: `TypeVar`, `Generic` for advanced typing patterns
 - If necessary, use `from __future__ import annotations` for forward references; we do not need to plan for legacy Python support (3.11 is the minimum)
 - Enable strict type checking with tools like mypy
 

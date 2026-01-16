@@ -33,7 +33,7 @@ the human to create an issue. You can not work on a feature without a github iss
    - Find similar implementations to use as templates
    - Try to reuse code as much as possible
    - Map dependencies between components
-   - Note which componments can be built in parallel and which need to be sequenced.
+   - Note which components can be built in parallel and which need to be sequenced.
    - Use all of this information to build a plan and sequencing to utilize as many parallel builder sub agents as possible.
 
 3. **Create Implementation Plan**:

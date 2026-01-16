@@ -17,7 +17,7 @@ You receive a single code review comment with:
 - Priority level (CRITICAL, HIGH, MEDIUM, LOW)
 
 Your job is to understand the issue, implement a fix, verify it works, and commit. Once you are done you will report
-back the work you have done, updatig any github issues that are relevant.
+back the work you have done, updating any github issues that are relevant.
 
 ## Input Format
 

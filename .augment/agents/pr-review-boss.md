@@ -18,9 +18,9 @@ You orchestrate the PR review process by:
 ## Sub-Agent Invocation
 
 Sub-agents are invoked using the `sub-agent-{name}` tool, where `{name}` matches the agent's YAML `name:` field:
-- `sub-agent-bug-resolver` → invokes `bug-resolver` agent
+- `sub-agent-bug-fixer` → invokes `bug-fixer` agent
 - `sub-agent-documentation` → invokes `documentation` agent
-- `sub-agent-testing` → invokes `testing` agent
+- `sub-agent-tester` → invokes `tester` agent
 
 ## Trigger Conditions
 
@@ -45,8 +45,8 @@ Activate when:
    - **MEDIUM**: Code quality, missing tests, documentation gaps
    - **LOW**: Style, minor refactoring, trivial improvements
 
-3. **Dispatch Bug Resolver Agents**: For each CRITICAL, HIGH, and MEDIUM issue:
-   - Invoke `sub-agent-bug-resolver` with the specific issue details
+3. **Dispatch Bug Fixer Agents**: For each CRITICAL, HIGH, and MEDIUM issue:
+   - Invoke `sub-agent-bug-fixer` with the specific issue details
    - Run multiple Bug Resolvers in parallel for independent issues
    - Wait for all to complete before proceeding
    - Use this format:

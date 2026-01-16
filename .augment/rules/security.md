@@ -17,17 +17,18 @@
 ### Configuration Pattern
 
 ```python
+from pydantic import ConfigDict, SecretStr
 from pydantic_settings import BaseSettings
-from pydantic import SecretStr
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8"
+    )
+
     api_key: SecretStr
     database_url: SecretStr
     debug: bool = False
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 ```
 
 ### Secrets to Never Commit

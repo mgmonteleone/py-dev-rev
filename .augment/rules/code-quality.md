@@ -25,7 +25,7 @@ Ruff is a fast, comprehensive Python linter that replaces multiple tools.
 ```toml
 # pyproject.toml
 [tool.ruff]
-target-version = "py39"
+target-version = "py311"
 line-length = 88
 select = [
     "E",      # pycodestyle errors
@@ -99,7 +99,7 @@ per-file-ignores =
 ```toml
 # pyproject.toml
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
