@@ -19,6 +19,7 @@ class APIVersion(str, Enum):
     PUBLIC: Stable public API (default)
     BETA: Beta API with new features (may change)
     """
+
     PUBLIC = "public"
     BETA = "beta"
 
