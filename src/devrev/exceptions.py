@@ -228,6 +228,7 @@ class BetaAPIRequiredError(DevRevError):
     the client is configured to use the public API version.
     """
 
+
 # Status code to exception mapping for use in HTTP layer
 STATUS_CODE_TO_EXCEPTION: dict[int, type[DevRevError]] = {
     400: ValidationError,
