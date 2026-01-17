@@ -256,11 +256,18 @@ from devrev.models.rev_users import (
     RevUsersUpdateResponse,
 )
 from devrev.models.search import (
+    AccountSearchSummary,
+    ArticleSearchSummary,
+    ConversationSearchSummary,
     CoreSearchRequest,
     HybridSearchRequest,
+    PartSearchSummary,
     SearchNamespace,
     SearchResponse,
     SearchResult,
+    TagSearchSummary,
+    UserSearchSummary,
+    WorkSearchSummary,
 )
 from devrev.models.slas import (
     Sla,
@@ -278,6 +285,18 @@ from devrev.models.slas import (
     SlasUpdateResponse,
     SlaTrackerStatus,
 )
+from devrev.models.sync import (
+    ExternalRef,
+    StagedInfo,
+    SyncDirection,
+    SyncMetadata,
+    SyncStatus,
+    SyncUnit,
+    SyncUnitsGetRequest,
+    SyncUnitsGetResponse,
+    SyncUnitsListRequest,
+    SyncUnitsListResponse,
+)
 from devrev.models.tags import (
     Tag,
     TagsCreateRequest,
@@ -292,6 +311,21 @@ from devrev.models.tags import (
     TagsUpdateRequest,
     TagsUpdateResponse,
 )
+from devrev.models.tasks import (
+    Task,
+    TaskPriority,
+    TasksCreateRequest,
+    TasksCreateResponse,
+    TasksDeleteRequest,
+    TasksDeleteResponse,
+    TasksGetRequest,
+    TasksGetResponse,
+    TasksListRequest,
+    TasksListResponse,
+    TaskStatus,
+    TasksUpdateRequest,
+    TasksUpdateResponse,
+)
 from devrev.models.timeline_entries import (
     TimelineEntriesCreateRequest,
     TimelineEntriesCreateResponse,
@@ -305,6 +339,15 @@ from devrev.models.timeline_entries import (
     TimelineEntriesUpdateResponse,
     TimelineEntry,
     TimelineEntryType,
+)
+from devrev.models.timeline_events import (
+    FieldChange,
+    TimelineChangeEvent,
+    TimelineEventsGetRequest,
+    TimelineEventsGetResponse,
+    TimelineEventsListRequest,
+    TimelineEventsListResponse,
+    TimelineEventType,
 )
 from devrev.models.track_events import (
     TrackEvent,
@@ -342,6 +385,19 @@ from devrev.models.webhooks import (
     WebhookSummary,
     WebhooksUpdateRequest,
     WebhooksUpdateResponse,
+)
+from devrev.models.widgets import (
+    Widget,
+    WidgetAggregationType,
+    WidgetDataSource,
+    WidgetDataSourceType,
+    WidgetGroupByConfig,
+    WidgetQuery,
+    WidgetsGetRequest,
+    WidgetsGetResponse,
+    WidgetsListRequest,
+    WidgetsListResponse,
+    WidgetVisualizationType,
 )
 from devrev.models.works import (
     IssuePriority,
@@ -608,6 +664,24 @@ __all__ = [
     "CoreSearchRequest",
     "HybridSearchRequest",
     "SearchResponse",
+    "AccountSearchSummary",
+    "ArticleSearchSummary",
+    "WorkSearchSummary",
+    "UserSearchSummary",
+    "ConversationSearchSummary",
+    "PartSearchSummary",
+    "TagSearchSummary",
+    # Sync
+    "SyncStatus",
+    "SyncDirection",
+    "SyncMetadata",
+    "StagedInfo",
+    "ExternalRef",
+    "SyncUnit",
+    "SyncUnitsGetRequest",
+    "SyncUnitsGetResponse",
+    "SyncUnitsListRequest",
+    "SyncUnitsListResponse",
     # SLAs
     "Sla",
     "SlaSummary",
@@ -636,6 +710,20 @@ __all__ = [
     "TagsUpdateResponse",
     "TagsDeleteRequest",
     "TagsDeleteResponse",
+    # Tasks
+    "Task",
+    "TaskPriority",
+    "TaskStatus",
+    "TasksCreateRequest",
+    "TasksCreateResponse",
+    "TasksGetRequest",
+    "TasksGetResponse",
+    "TasksListRequest",
+    "TasksListResponse",
+    "TasksUpdateRequest",
+    "TasksUpdateResponse",
+    "TasksDeleteRequest",
+    "TasksDeleteResponse",
     # Track Events
     "TrackEvent",
     "TrackEventsPublishRequest",
@@ -653,6 +741,14 @@ __all__ = [
     "TimelineEntriesUpdateResponse",
     "TimelineEntriesDeleteRequest",
     "TimelineEntriesDeleteResponse",
+    # Timeline Events
+    "TimelineEventType",
+    "FieldChange",
+    "TimelineChangeEvent",
+    "TimelineEventsGetRequest",
+    "TimelineEventsGetResponse",
+    "TimelineEventsListRequest",
+    "TimelineEventsListResponse",
     # Webhooks
     "Webhook",
     "WebhookSummary",
@@ -704,4 +800,16 @@ __all__ = [
     "UomsDeleteResponse",
     "UomsCountRequest",
     "UomsCountResponse",
+    # Widgets
+    "WidgetVisualizationType",
+    "WidgetDataSourceType",
+    "WidgetAggregationType",
+    "WidgetDataSource",
+    "WidgetGroupByConfig",
+    "WidgetQuery",
+    "Widget",
+    "WidgetsGetRequest",
+    "WidgetsGetResponse",
+    "WidgetsListRequest",
+    "WidgetsListResponse",
 ]
