@@ -4,9 +4,10 @@ A modern, type-safe Python SDK for the DevRev API.
 """
 
 from devrev.client import AsyncDevRevClient, DevRevClient
-from devrev.config import DevRevConfig, configure, get_config
+from devrev.config import APIVersion, DevRevConfig, configure, get_config
 from devrev.exceptions import (
     AuthenticationError,
+    BetaAPIRequiredError,
     CircuitBreakerError,
     ConfigurationError,
     ConflictError,
@@ -39,6 +40,7 @@ __all__ = [
     "DevRevConfig",
     "get_config",
     "configure",
+    "APIVersion",
     # HTTP Configuration
     "TimeoutConfig",
     "ConnectionPoolConfig",
@@ -61,4 +63,5 @@ __all__ = [
     "TimeoutError",
     "NetworkError",
     "CircuitBreakerError",
+    "BetaAPIRequiredError",
 ]

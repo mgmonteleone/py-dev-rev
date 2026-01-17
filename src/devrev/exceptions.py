@@ -15,7 +15,8 @@ Exception Hierarchy:
     ├── ServiceUnavailableError (503)
     ├── ConfigurationError
     ├── TimeoutError
-    └── NetworkError
+    ├── NetworkError
+    └── BetaAPIRequiredError
 """
 
 from typing import Any
@@ -218,6 +219,43 @@ class CircuitBreakerError(DevRevError):
         """
         super().__init__(message, **kwargs)
         self.recovery_timeout = recovery_timeout
+
+
+class BetaAPIRequiredError(DevRevError):
+    """Raised when accessing beta-only features without beta API.
+
+    This error occurs when attempting to use beta API features while
+    the client is configured to use the public API version.
+
+    Attributes:
+        feature_name: Optional name of the beta feature that was accessed.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        feature_name: str | None = None,
+        status_code: int | None = None,
+        request_id: str | None = None,
+        response_body: dict[str, Any] | None = None,
+    ) -> None:
+        """Initialize the exception.
+
+        Args:
+            message: The error message.
+            feature_name: Optional name of the beta feature that was accessed.
+            status_code: HTTP status code (if applicable).
+            request_id: DevRev request ID for debugging.
+            response_body: Raw API response body.
+        """
+        super().__init__(
+            message,
+            status_code=status_code,
+            request_id=request_id,
+            response_body=response_body,
+        )
+        self.feature_name = feature_name
 
 
 # Status code to exception mapping for use in HTTP layer

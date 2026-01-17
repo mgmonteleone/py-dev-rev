@@ -5,6 +5,8 @@ import pytest
 from devrev.exceptions import (
     STATUS_CODE_TO_EXCEPTION,
     AuthenticationError,
+    BetaAPIRequiredError,
+    CircuitBreakerError,
     ConfigurationError,
     ConflictError,
     DevRevError,
@@ -104,6 +106,8 @@ class TestExceptionHierarchy:
         """Test that all exceptions inherit from DevRevError."""
         exceptions = [
             AuthenticationError,
+            BetaAPIRequiredError,
+            CircuitBreakerError,
             ForbiddenError,
             NotFoundError,
             ValidationError,
@@ -140,3 +144,57 @@ class TestStatusCodeMapping:
         assert STATUS_CODE_TO_EXCEPTION[429] == RateLimitError
         assert STATUS_CODE_TO_EXCEPTION[500] == ServerError
         assert STATUS_CODE_TO_EXCEPTION[503] == ServiceUnavailableError
+
+
+class TestBetaAPIRequiredError:
+    """Tests for BetaAPIRequiredError class."""
+
+    def test_basic_error(self) -> None:
+        """Test basic BetaAPIRequiredError creation."""
+        error = BetaAPIRequiredError("Feature requires beta API")
+        assert str(error) == "Feature requires beta API"
+        assert error.message == "Feature requires beta API"
+
+    def test_error_with_feature_name(self) -> None:
+        """Test BetaAPIRequiredError with feature name attribute."""
+        error = BetaAPIRequiredError(
+            "Feature 'conversations' requires beta API access",
+            feature_name="conversations",
+        )
+        assert error.feature_name == "conversations"
+        assert "conversations" in str(error)
+
+    def test_error_default_feature_name(self) -> None:
+        """Test that feature_name defaults to None."""
+        error = BetaAPIRequiredError("Beta required")
+        assert error.feature_name is None
+
+    def test_catching_as_devrev_error(self) -> None:
+        """Test that BetaAPIRequiredError can be caught as DevRevError."""
+        with pytest.raises(DevRevError):
+            raise BetaAPIRequiredError("Beta required")
+
+    def test_catching_specific_exception(self) -> None:
+        """Test catching BetaAPIRequiredError specifically."""
+        with pytest.raises(BetaAPIRequiredError):
+            raise BetaAPIRequiredError("Beta access required for this endpoint")
+
+
+class TestCircuitBreakerError:
+    """Tests for CircuitBreakerError class."""
+
+    def test_basic_error(self) -> None:
+        """Test basic CircuitBreakerError creation."""
+        error = CircuitBreakerError("Service unavailable")
+        assert str(error) == "Service unavailable"
+        assert error.message == "Service unavailable"
+
+    def test_catching_as_devrev_error(self) -> None:
+        """Test that CircuitBreakerError can be caught as DevRevError."""
+        with pytest.raises(DevRevError):
+            raise CircuitBreakerError("Circuit breaker open")
+
+    def test_catching_specific_exception(self) -> None:
+        """Test catching CircuitBreakerError specifically."""
+        with pytest.raises(CircuitBreakerError):
+            raise CircuitBreakerError("Circuit is open - too many failures")
