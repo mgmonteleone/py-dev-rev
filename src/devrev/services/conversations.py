@@ -6,7 +6,6 @@ from collections.abc import Sequence
 
 from devrev.models.conversations import (
     Conversation,
-    ConversationExportItem,
     ConversationsCreateRequest,
     ConversationsCreateResponse,
     ConversationsDeleteRequest,
