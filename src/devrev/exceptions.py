@@ -226,7 +226,27 @@ class BetaAPIRequiredError(DevRevError):
 
     This error occurs when attempting to use beta API features while
     the client is configured to use the public API version.
+
+    Attributes:
+        feature_name: Optional name of the beta feature that was accessed.
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        feature_name: str | None = None,
+        **kwargs: object,
+    ) -> None:
+        """Initialize the exception.
+
+        Args:
+            message: The error message.
+            feature_name: Optional name of the beta feature that was accessed.
+            **kwargs: Additional arguments passed to parent class.
+        """
+        super().__init__(message, **kwargs)
+        self.feature_name = feature_name
 
 
 # Status code to exception mapping for use in HTTP layer

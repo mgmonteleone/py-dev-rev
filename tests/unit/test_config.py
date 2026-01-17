@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from devrev.config import DevRevConfig, configure, get_config, reset_config
+from devrev.config import APIVersion, DevRevConfig, configure, get_config, reset_config
 
 
 class TestDevRevConfig:
@@ -52,6 +52,7 @@ class TestDevRevConfig:
         assert config.timeout == 30
         assert config.max_retries == 3
         assert config.log_level == "WARN"
+        assert config.api_version == APIVersion.PUBLIC
 
     def test_log_level_normalization(self, mock_env_vars: dict[str, str]) -> None:
         """Test that WARNING is normalized to WARN.
@@ -212,3 +213,64 @@ class TestConfigFunctions:
 
         # Should be different instances (singleton was reset)
         assert config1 is not config2
+
+
+class TestAPIVersion:
+    """Tests for APIVersion enum and configuration."""
+
+    def test_api_version_enum_values(self) -> None:
+        """Test APIVersion enum has expected values."""
+        assert APIVersion.PUBLIC.value == "public"
+        assert APIVersion.BETA.value == "beta"
+
+    def test_api_version_is_string_enum(self) -> None:
+        """Test APIVersion can be used as string."""
+        assert str(APIVersion.PUBLIC) == "APIVersion.PUBLIC"
+        assert APIVersion.PUBLIC == "public"
+        assert APIVersion.BETA == "beta"
+
+    def test_config_default_api_version(self, minimal_env_vars: dict[str, str]) -> None:
+        """Test that default API version is PUBLIC.
+
+        Args:
+            minimal_env_vars: Fixture that sets up minimal environment variables.
+        """
+        config = DevRevConfig()
+        assert config.api_version == APIVersion.PUBLIC
+
+    def test_config_api_version_from_env(self, mock_env_vars: dict[str, str]) -> None:
+        """Test API version can be set via environment variable.
+
+        Args:
+            mock_env_vars: Fixture that sets up environment variables.
+        """
+        with patch.dict(os.environ, {"DEVREV_API_VERSION": "beta"}):
+            config = DevRevConfig()
+            assert config.api_version == APIVersion.BETA
+
+    def test_config_api_version_explicit(self, minimal_env_vars: dict[str, str]) -> None:
+        """Test API version can be set explicitly.
+
+        Args:
+            minimal_env_vars: Fixture that sets up minimal environment variables.
+        """
+        config = DevRevConfig(api_version=APIVersion.BETA)
+        assert config.api_version == APIVersion.BETA
+
+    def test_config_api_version_string_value(self, minimal_env_vars: dict[str, str]) -> None:
+        """Test API version can be set with string value.
+
+        Args:
+            minimal_env_vars: Fixture that sets up minimal environment variables.
+        """
+        config = DevRevConfig(api_version="beta")  # type: ignore[arg-type]
+        assert config.api_version == APIVersion.BETA
+
+    def test_configure_with_api_version(self, mock_env_vars: dict[str, str]) -> None:
+        """Test configure function accepts api_version.
+
+        Args:
+            mock_env_vars: Fixture that sets up environment variables.
+        """
+        config = configure(api_token="test-token", api_version=APIVersion.BETA)
+        assert config.api_version == APIVersion.BETA
