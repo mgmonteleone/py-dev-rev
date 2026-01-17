@@ -27,8 +27,11 @@ class SearchNamespace(str, Enum):
     DEV_USER = "dev_user"
 
 
-class SearchResult(DevRevBaseModel):
-    """Search result model."""
+class SearchResult(DevRevResponseModel):
+    """Search result model.
+
+    Inherits from DevRevResponseModel to allow extra fields from API responses.
+    """
 
     id: str = Field(..., description="Result ID")
     type: str = Field(..., description="Result type")

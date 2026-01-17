@@ -5,8 +5,10 @@ from __future__ import annotations
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
-class Preferences(DevRevBaseModel):
+class Preferences(DevRevResponseModel):
     """User preferences model.
+
+    Inherits from DevRevResponseModel to allow extra fields from API responses.
 
     Attributes:
         id: Preferences ID

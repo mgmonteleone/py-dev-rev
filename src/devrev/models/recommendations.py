@@ -20,23 +20,32 @@ class MessageRole(str, Enum):
     ASSISTANT = "assistant"
 
 
-class ChatMessage(DevRevBaseModel):
-    """Chat message model."""
+class ChatMessage(DevRevResponseModel):
+    """Chat message model.
+
+    Inherits from DevRevResponseModel to allow extra fields from API responses.
+    """
 
     role: MessageRole = Field(..., description="Message role")
     content: str = Field(..., description="Message content")
 
 
-class TokenUsage(DevRevBaseModel):
-    """Token usage statistics."""
+class TokenUsage(DevRevResponseModel):
+    """Token usage statistics.
+
+    Inherits from DevRevResponseModel to allow extra fields from API responses.
+    """
 
     prompt_tokens: int | None = Field(default=None, description="Number of prompt tokens")
     completion_tokens: int | None = Field(default=None, description="Number of completion tokens")
     total_tokens: int | None = Field(default=None, description="Total number of tokens")
 
 
-class ChatChoice(DevRevBaseModel):
-    """Chat completion choice."""
+class ChatChoice(DevRevResponseModel):
+    """Chat completion choice.
+
+    Inherits from DevRevResponseModel to allow extra fields from API responses.
+    """
 
     index: int = Field(..., description="Choice index")
     message: ChatMessage = Field(..., description="Message content")
