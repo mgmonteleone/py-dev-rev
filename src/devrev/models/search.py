@@ -41,7 +41,9 @@ class CoreSearchRequest(DevRevBaseModel):
     """Request model for core search."""
 
     query: str = Field(..., description="Search query")
-    namespaces: list[SearchNamespace] | None = Field(default=None, description="Namespaces to search")
+    namespaces: list[SearchNamespace] | None = Field(
+        default=None, description="Namespaces to search"
+    )
     limit: int | None = Field(default=None, description="Maximum number of results")
     cursor: str | None = Field(default=None, description="Pagination cursor")
 
@@ -50,8 +52,12 @@ class HybridSearchRequest(DevRevBaseModel):
     """Request model for hybrid search."""
 
     query: str = Field(..., description="Search query")
-    namespaces: list[SearchNamespace] | None = Field(default=None, description="Namespaces to search")
-    semantic_weight: float | None = Field(default=None, description="Weight for semantic search (0-1)")
+    namespaces: list[SearchNamespace] | None = Field(
+        default=None, description="Namespaces to search"
+    )
+    semantic_weight: float | None = Field(
+        default=None, description="Weight for semantic search (0-1)"
+    )
     limit: int | None = Field(default=None, description="Maximum number of results")
     cursor: str | None = Field(default=None, description="Pagination cursor")
 
@@ -62,4 +68,3 @@ class SearchResponse(DevRevResponseModel):
     results: list[SearchResult] = Field(..., description="Search results")
     next_cursor: str | None = Field(default=None, description="Next pagination cursor")
     total_count: int | None = Field(default=None, description="Total number of results")
-

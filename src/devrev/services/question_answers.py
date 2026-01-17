@@ -50,7 +50,9 @@ class QuestionAnswersService(BaseService):
         response = self._post("/question-answers.get", request, QuestionAnswersGetResponse)
         return response.question_answer
 
-    def list(self, request: QuestionAnswersListRequest | None = None) -> QuestionAnswersListResponse:
+    def list(
+        self, request: QuestionAnswersListRequest | None = None
+    ) -> QuestionAnswersListResponse:
         """List question answers.
 
         Args:
@@ -92,7 +94,9 @@ class AsyncQuestionAnswersService(AsyncBaseService):
 
     async def create(self, request: QuestionAnswersCreateRequest) -> QuestionAnswer:
         """Create a new question answer."""
-        response = await self._post("/question-answers.create", request, QuestionAnswersCreateResponse)
+        response = await self._post(
+            "/question-answers.create", request, QuestionAnswersCreateResponse
+        )
         return response.question_answer
 
     async def get(self, request: QuestionAnswersGetRequest) -> QuestionAnswer:
@@ -100,7 +104,9 @@ class AsyncQuestionAnswersService(AsyncBaseService):
         response = await self._post("/question-answers.get", request, QuestionAnswersGetResponse)
         return response.question_answer
 
-    async def list(self, request: QuestionAnswersListRequest | None = None) -> QuestionAnswersListResponse:
+    async def list(
+        self, request: QuestionAnswersListRequest | None = None
+    ) -> QuestionAnswersListResponse:
         """List question answers."""
         if request is None:
             request = QuestionAnswersListRequest()
@@ -108,10 +114,11 @@ class AsyncQuestionAnswersService(AsyncBaseService):
 
     async def update(self, request: QuestionAnswersUpdateRequest) -> QuestionAnswer:
         """Update a question answer."""
-        response = await self._post("/question-answers.update", request, QuestionAnswersUpdateResponse)
+        response = await self._post(
+            "/question-answers.update", request, QuestionAnswersUpdateResponse
+        )
         return response.question_answer
 
     async def delete(self, request: QuestionAnswersDeleteRequest) -> None:
         """Delete a question answer."""
         await self._post("/question-answers.delete", request, None)
-

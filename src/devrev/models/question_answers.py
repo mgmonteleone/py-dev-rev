@@ -23,8 +23,12 @@ class QuestionAnswer(DevRevResponseModel):
     question: str = Field(..., description="Question text")
     answer: str | None = Field(default=None, description="Answer text")
     status: str | None = Field(default=None, description="Question answer status")
-    created_date: datetime | None = Field(default=None, alias="created_at", description="Creation timestamp")
-    modified_date: datetime | None = Field(default=None, alias="modified_at", description="Last modification timestamp")
+    created_date: datetime | None = Field(
+        default=None, alias="created_at", description="Creation timestamp"
+    )
+    modified_date: datetime | None = Field(
+        default=None, alias="modified_at", description="Last modification timestamp"
+    )
 
 
 class QuestionAnswersCreateRequest(DevRevBaseModel):
@@ -84,4 +88,3 @@ class QuestionAnswersDeleteRequest(DevRevBaseModel):
     """Request model for deleting a question answer."""
 
     id: str = Field(..., description="Question answer ID")
-

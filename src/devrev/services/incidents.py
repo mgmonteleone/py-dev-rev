@@ -5,6 +5,7 @@ This module provides the IncidentsService for managing DevRev incidents.
 
 from __future__ import annotations
 
+from builtins import list as list_type
 from typing import TYPE_CHECKING
 
 from devrev.models.incidents import (
@@ -14,13 +15,13 @@ from devrev.models.incidents import (
     IncidentsCreateResponse,
     IncidentsDeleteRequest,
     IncidentsDeleteResponse,
+    IncidentSeverity,
     IncidentsGetRequest,
     IncidentsGetResponse,
     IncidentsGroupRequest,
     IncidentsGroupResponse,
     IncidentsListRequest,
     IncidentsListResponse,
-    IncidentSeverity,
     IncidentStage,
     IncidentsUpdateRequest,
     IncidentsUpdateResponse,
@@ -165,7 +166,7 @@ class IncidentsService(BaseService):
         group_by: str,
         *,
         limit: int | None = None,
-    ) -> list[IncidentGroupItem]:
+    ) -> list_type[IncidentGroupItem]:
         """Group incidents by a field.
 
         Args:
@@ -274,7 +275,7 @@ class AsyncIncidentsService(AsyncBaseService):
         group_by: str,
         *,
         limit: int | None = None,
-    ) -> list[IncidentGroupItem]:
+    ) -> list_type[IncidentGroupItem]:
         """Group incidents by a field."""
         request = IncidentsGroupRequest(
             group_by=group_by,
@@ -282,4 +283,3 @@ class AsyncIncidentsService(AsyncBaseService):
         )
         response = await self._post("/incidents.group", request, IncidentsGroupResponse)
         return response.groups
-

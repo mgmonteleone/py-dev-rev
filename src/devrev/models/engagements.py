@@ -42,8 +42,12 @@ class Engagement(DevRevResponseModel):
     parent: str | None = Field(default=None, description="Parent engagement ID")
     scheduled_date: datetime | None = Field(default=None, description="Scheduled date/time")
     tags: list[str] | None = Field(default=None, description="Tag IDs")
-    created_date: datetime | None = Field(default=None, alias="created_at", description="Creation timestamp")
-    modified_date: datetime | None = Field(default=None, alias="modified_at", description="Last modification timestamp")
+    created_date: datetime | None = Field(
+        default=None, alias="created_at", description="Creation timestamp"
+    )
+    modified_date: datetime | None = Field(
+        default=None, alias="modified_at", description="Last modification timestamp"
+    )
 
 
 # Request Models
@@ -54,7 +58,9 @@ class EngagementsCreateRequest(DevRevBaseModel):
 
     title: str = Field(..., description="Engagement title", min_length=1, max_length=256)
     engagement_type: EngagementType = Field(..., description="Type of engagement")
-    description: str | None = Field(default=None, description="Engagement description", max_length=65536)
+    description: str | None = Field(
+        default=None, description="Engagement description", max_length=65536
+    )
     members: list[str] | None = Field(default=None, description="Member user IDs")
     parent: str | None = Field(default=None, description="Parent engagement ID")
     scheduled_date: datetime | None = Field(default=None, description="Scheduled date/time")
@@ -72,7 +78,9 @@ class EngagementsListRequest(DevRevBaseModel):
 
     cursor: str | None = Field(default=None, description="Pagination cursor")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
-    engagement_type: list[EngagementType] | None = Field(default=None, description="Filter by engagement types")
+    engagement_type: list[EngagementType] | None = Field(
+        default=None, description="Filter by engagement types"
+    )
     members: list[str] | None = Field(default=None, description="Filter by member user IDs")
     parent: str | None = Field(default=None, description="Filter by parent engagement ID")
 
@@ -96,7 +104,9 @@ class EngagementsDeleteRequest(DevRevBaseModel):
 class EngagementsCountRequest(DevRevBaseModel):
     """Request to count engagements."""
 
-    engagement_type: list[EngagementType] | None = Field(default=None, description="Filter by engagement types")
+    engagement_type: list[EngagementType] | None = Field(
+        default=None, description="Filter by engagement types"
+    )
     members: list[str] | None = Field(default=None, description="Filter by member user IDs")
 
 
@@ -137,4 +147,3 @@ class EngagementsCountResponse(DevRevResponseModel):
     """Response from counting engagements."""
 
     count: int = Field(..., description="Total count of engagements")
-

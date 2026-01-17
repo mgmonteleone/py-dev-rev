@@ -11,10 +11,10 @@ from devrev.services.base import AsyncBaseService, BaseService
 
 class NotificationsService(BaseService):
     """Service for sending notifications.
-    
+
     Provides methods to send notifications to users.
     """
-    
+
     def send(
         self,
         recipient_id: str,
@@ -24,13 +24,13 @@ class NotificationsService(BaseService):
         channel: str | None = None,
     ) -> NotificationsSendResponse:
         """Send a notification.
-        
+
         Args:
             recipient_id: ID of the recipient user
             message: Notification message content
             title: Optional notification title
             channel: Optional notification channel (email, push, etc.)
-        
+
         Returns:
             Response indicating success and notification ID
         """
@@ -45,10 +45,10 @@ class NotificationsService(BaseService):
 
 class AsyncNotificationsService(AsyncBaseService):
     """Async service for sending notifications.
-    
+
     Provides async methods to send notifications to users.
     """
-    
+
     async def send(
         self,
         recipient_id: str,
@@ -58,13 +58,13 @@ class AsyncNotificationsService(AsyncBaseService):
         channel: str | None = None,
     ) -> NotificationsSendResponse:
         """Send a notification.
-        
+
         Args:
             recipient_id: ID of the recipient user
             message: Notification message content
             title: Optional notification title
             channel: Optional notification channel (email, push, etc.)
-        
+
         Returns:
             Response indicating success and notification ID
         """
@@ -75,4 +75,3 @@ class AsyncNotificationsService(AsyncBaseService):
             channel=channel,
         )
         return await self._post("/notifications.send", request, NotificationsSendResponse)
-

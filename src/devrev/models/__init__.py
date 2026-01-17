@@ -139,24 +139,6 @@ from devrev.models.engagements import (
     EngagementsUpdateResponse,
     EngagementType,
 )
-from devrev.models.incidents import (
-    Incident,
-    IncidentGroupItem,
-    IncidentsCreateRequest,
-    IncidentsCreateResponse,
-    IncidentsDeleteRequest,
-    IncidentsDeleteResponse,
-    IncidentsGetRequest,
-    IncidentsGetResponse,
-    IncidentsGroupRequest,
-    IncidentsGroupResponse,
-    IncidentsListRequest,
-    IncidentsListResponse,
-    IncidentSeverity,
-    IncidentStage,
-    IncidentsUpdateRequest,
-    IncidentsUpdateResponse,
-)
 from devrev.models.groups import (
     Group,
     GroupMember,
@@ -176,6 +158,24 @@ from devrev.models.groups import (
     GroupsUpdateRequest,
     GroupsUpdateResponse,
     GroupType,
+)
+from devrev.models.incidents import (
+    Incident,
+    IncidentGroupItem,
+    IncidentsCreateRequest,
+    IncidentsCreateResponse,
+    IncidentsDeleteRequest,
+    IncidentsDeleteResponse,
+    IncidentSeverity,
+    IncidentsGetRequest,
+    IncidentsGetResponse,
+    IncidentsGroupRequest,
+    IncidentsGroupResponse,
+    IncidentsListRequest,
+    IncidentsListResponse,
+    IncidentStage,
+    IncidentsUpdateRequest,
+    IncidentsUpdateResponse,
 )
 from devrev.models.links import (
     Link,
@@ -292,11 +292,6 @@ from devrev.models.tags import (
     TagsUpdateRequest,
     TagsUpdateResponse,
 )
-from devrev.models.track_events import (
-    TrackEvent,
-    TrackEventsPublishRequest,
-    TrackEventsPublishResponse,
-)
 from devrev.models.timeline_entries import (
     TimelineEntriesCreateRequest,
     TimelineEntriesCreateResponse,
@@ -310,6 +305,11 @@ from devrev.models.timeline_entries import (
     TimelineEntriesUpdateResponse,
     TimelineEntry,
     TimelineEntryType,
+)
+from devrev.models.track_events import (
+    TrackEvent,
+    TrackEventsPublishRequest,
+    TrackEventsPublishResponse,
 )
 from devrev.models.uoms import (
     Uom,

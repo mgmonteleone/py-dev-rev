@@ -51,9 +51,10 @@ class AsyncRecommendationsService(AsyncBaseService):
 
     async def chat_completions(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         """Get chat completion recommendations."""
-        return await self._post("/recommendations.chat.completions", request, ChatCompletionResponse)
+        return await self._post(
+            "/recommendations.chat.completions", request, ChatCompletionResponse
+        )
 
     async def get_reply(self, request: GetReplyRequest) -> GetReplyResponse:
         """Get a recommended reply for an object."""
         return await self._post("/recommendations.get-reply", request, GetReplyResponse)
-

@@ -49,8 +49,12 @@ class Uom(DevRevResponseModel):
     part: str | None = Field(default=None, description="Associated part ID")
     product: str | None = Field(default=None, description="Associated product ID")
     is_enabled: bool = Field(default=True, description="Whether UOM is enabled")
-    created_date: datetime | None = Field(default=None, alias="created_at", description="Creation timestamp")
-    modified_date: datetime | None = Field(default=None, alias="modified_at", description="Last modification timestamp")
+    created_date: datetime | None = Field(
+        default=None, alias="created_at", description="Creation timestamp"
+    )
+    modified_date: datetime | None = Field(
+        default=None, alias="modified_at", description="Last modification timestamp"
+    )
 
 
 # Request Models
@@ -80,7 +84,9 @@ class UomsListRequest(DevRevBaseModel):
 
     cursor: str | None = Field(default=None, description="Pagination cursor")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
-    aggregation_type: list[UomAggregationType] | None = Field(default=None, description="Filter by aggregation types")
+    aggregation_type: list[UomAggregationType] | None = Field(
+        default=None, description="Filter by aggregation types"
+    )
     is_enabled: bool | None = Field(default=None, description="Filter by enabled status")
 
 
@@ -102,7 +108,9 @@ class UomsDeleteRequest(DevRevBaseModel):
 class UomsCountRequest(DevRevBaseModel):
     """Request to count UOMs."""
 
-    aggregation_type: list[UomAggregationType] | None = Field(default=None, description="Filter by aggregation types")
+    aggregation_type: list[UomAggregationType] | None = Field(
+        default=None, description="Filter by aggregation types"
+    )
     is_enabled: bool | None = Field(default=None, description="Filter by enabled status")
 
 
@@ -143,4 +151,3 @@ class UomsCountResponse(DevRevResponseModel):
     """Response from counting UOMs."""
 
     count: int = Field(..., description="Count of UOMs")
-

@@ -55,4 +55,3 @@ class AsyncSearchService(AsyncBaseService):
     async def hybrid(self, request: HybridSearchRequest) -> SearchResponse:
         """Perform a hybrid search combining keyword and semantic search."""
         return await self._post("/search.hybrid", request, SearchResponse)
-

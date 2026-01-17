@@ -71,4 +71,3 @@ class GetReplyResponse(DevRevResponseModel):
 
     reply: str = Field(..., description="Recommended reply text")
     confidence: float | None = Field(default=None, description="Confidence score")
-

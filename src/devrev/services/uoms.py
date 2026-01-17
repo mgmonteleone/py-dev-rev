@@ -5,6 +5,7 @@ This module provides the UomsService for managing DevRev UOMs (Units of Measure)
 
 from __future__ import annotations
 
+from builtins import list as list_type
 from typing import TYPE_CHECKING
 
 from devrev.models.uoms import (
@@ -168,7 +169,7 @@ class UomsService(BaseService):
     def count(
         self,
         *,
-        aggregation_type: list[UomAggregationType] | None = None,
+        aggregation_type: list_type[UomAggregationType] | None = None,
         is_enabled: bool | None = None,
     ) -> int:
         """Count UOMs.
@@ -281,7 +282,7 @@ class AsyncUomsService(AsyncBaseService):
     async def count(
         self,
         *,
-        aggregation_type: list[UomAggregationType] | None = None,
+        aggregation_type: list_type[UomAggregationType] | None = None,
         is_enabled: bool | None = None,
     ) -> int:
         """Count UOMs."""
@@ -291,4 +292,3 @@ class AsyncUomsService(AsyncBaseService):
         )
         response = await self._post("/uoms.count", request, UomsCountResponse)
         return response.count
-

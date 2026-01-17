@@ -23,8 +23,12 @@ class Brand(DevRevResponseModel):
     name: str = Field(..., description="Brand name")
     description: str | None = Field(default=None, description="Brand description")
     logo_url: str | None = Field(default=None, description="Brand logo URL")
-    created_date: datetime | None = Field(default=None, alias="created_at", description="Creation timestamp")
-    modified_date: datetime | None = Field(default=None, alias="modified_at", description="Last modification timestamp")
+    created_date: datetime | None = Field(
+        default=None, alias="created_at", description="Creation timestamp"
+    )
+    modified_date: datetime | None = Field(
+        default=None, alias="modified_at", description="Last modification timestamp"
+    )
 
 
 # Request Models
@@ -97,4 +101,3 @@ class BrandsDeleteResponse(DevRevResponseModel):
     """Response from deleting a brand."""
 
     pass  # Empty response body
-

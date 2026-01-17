@@ -43,10 +43,16 @@ class Incident(DevRevResponseModel):
     body: str | None = Field(default=None, description="Incident description")
     stage: IncidentStage | None = Field(default=None, description="Incident stage")
     severity: IncidentSeverity | None = Field(default=None, description="Incident severity")
-    created_date: datetime | None = Field(default=None, alias="created_at", description="Creation timestamp")
-    modified_date: datetime | None = Field(default=None, alias="modified_at", description="Last modification timestamp")
+    created_date: datetime | None = Field(
+        default=None, alias="created_at", description="Creation timestamp"
+    )
+    modified_date: datetime | None = Field(
+        default=None, alias="modified_at", description="Last modification timestamp"
+    )
     owned_by: list[str] | None = Field(default=None, description="Owner user IDs")
-    applies_to_parts: list[str] | None = Field(default=None, description="Parts this incident applies to")
+    applies_to_parts: list[str] | None = Field(
+        default=None, description="Parts this incident applies to"
+    )
 
 
 class IncidentGroupItem(DevRevResponseModel):
@@ -66,7 +72,9 @@ class IncidentsCreateRequest(DevRevBaseModel):
     body: str | None = Field(default=None, description="Incident description", max_length=65536)
     severity: IncidentSeverity | None = Field(default=None, description="Incident severity")
     owned_by: list[str] | None = Field(default=None, description="Owner user IDs")
-    applies_to_parts: list[str] | None = Field(default=None, description="Parts this incident applies to")
+    applies_to_parts: list[str] | None = Field(
+        default=None, description="Parts this incident applies to"
+    )
 
 
 class IncidentsGetRequest(DevRevBaseModel):
@@ -81,7 +89,9 @@ class IncidentsListRequest(DevRevBaseModel):
     cursor: str | None = Field(default=None, description="Pagination cursor")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
     stage: list[IncidentStage] | None = Field(default=None, description="Filter by stages")
-    severity: list[IncidentSeverity] | None = Field(default=None, description="Filter by severities")
+    severity: list[IncidentSeverity] | None = Field(
+        default=None, description="Filter by severities"
+    )
 
 
 class IncidentsUpdateRequest(DevRevBaseModel):
@@ -144,4 +154,3 @@ class IncidentsGroupResponse(DevRevResponseModel):
     """Response from grouping incidents."""
 
     groups: list[IncidentGroupItem] = Field(..., description="Grouped incident results")
-

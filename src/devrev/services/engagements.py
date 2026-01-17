@@ -5,6 +5,7 @@ This module provides the EngagementsService for managing DevRev engagements.
 
 from __future__ import annotations
 
+from builtins import list as list_type
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -171,8 +172,8 @@ class EngagementsService(BaseService):
     def count(
         self,
         *,
-        engagement_type: list[EngagementType] | None = None,
-        members: list[str] | None = None,
+        engagement_type: list_type[EngagementType] | None = None,
+        members: list_type[str] | None = None,
     ) -> int:
         """Count engagements.
 
@@ -286,8 +287,8 @@ class AsyncEngagementsService(AsyncBaseService):
     async def count(
         self,
         *,
-        engagement_type: list[EngagementType] | None = None,
-        members: list[str] | None = None,
+        engagement_type: list_type[EngagementType] | None = None,
+        members: list_type[str] | None = None,
     ) -> int:
         """Count engagements."""
         request = EngagementsCountRequest(
@@ -296,4 +297,3 @@ class AsyncEngagementsService(AsyncBaseService):
         )
         response = await self._post("/engagements.count", request, EngagementsCountResponse)
         return response.count
-
