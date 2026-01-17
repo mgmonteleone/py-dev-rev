@@ -236,16 +236,25 @@ class BetaAPIRequiredError(DevRevError):
         message: str,
         *,
         feature_name: str | None = None,
-        **kwargs: object,
+        status_code: int | None = None,
+        request_id: str | None = None,
+        response_body: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the exception.
 
         Args:
             message: The error message.
             feature_name: Optional name of the beta feature that was accessed.
-            **kwargs: Additional arguments passed to parent class.
+            status_code: HTTP status code (if applicable).
+            request_id: DevRev request ID for debugging.
+            response_body: Raw API response body.
         """
-        super().__init__(message, **kwargs)
+        super().__init__(
+            message,
+            status_code=status_code,
+            request_id=request_id,
+            response_body=response_body,
+        )
         self.feature_name = feature_name
 
 
