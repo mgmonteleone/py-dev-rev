@@ -158,13 +158,17 @@ class TestClientInitialization:
         assert client is not None
         client.close()
 
-    def test_async_client_initialization(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @pytest.mark.asyncio
+    async def test_async_client_initialization(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Async client should initialize the same way."""
         monkeypatch.setenv("DEVREV_API_TOKEN", "test-token")
 
         client = AsyncDevRevClient()
-        assert client is not None
-        assert client.api_version == APIVersion.PUBLIC
+        try:
+            assert client is not None
+            assert client.api_version == APIVersion.PUBLIC
+        finally:
+            await client.close()
 
 
 class TestPublicServicesAccessible:

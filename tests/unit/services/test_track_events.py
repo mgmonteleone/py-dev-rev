@@ -27,9 +27,9 @@ class TestTrackEventsService:
         sample_track_events_publish_response_data: dict[str, Any],
     ) -> None:
         """Test publishing a single tracking event."""
-        mock_http_client.post.return_value = create_mock_response(
-            sample_track_events_publish_response_data
-        )
+        # Override count to match single event
+        response_data = {**sample_track_events_publish_response_data, "count": 1}
+        mock_http_client.post.return_value = create_mock_response(response_data)
 
         service = TrackEventsService(mock_http_client)
         events = [
@@ -43,7 +43,7 @@ class TestTrackEventsService:
 
         assert isinstance(result, TrackEventsPublishResponse)
         assert result.success is True
-        assert result.count == 2
+        assert result.count == 1
         mock_http_client.post.assert_called_once()
 
     def test_publish_multiple_events(
@@ -158,9 +158,9 @@ class TestAsyncTrackEventsService:
         sample_track_events_publish_response_data: dict[str, Any],
     ) -> None:
         """Test publishing a single tracking event asynchronously."""
-        mock_async_http_client.post.return_value = create_mock_response(
-            sample_track_events_publish_response_data
-        )
+        # Override count to match single event
+        response_data = {**sample_track_events_publish_response_data, "count": 1}
+        mock_async_http_client.post.return_value = create_mock_response(response_data)
 
         service = AsyncTrackEventsService(mock_async_http_client)
         events = [
@@ -174,7 +174,7 @@ class TestAsyncTrackEventsService:
 
         assert isinstance(result, TrackEventsPublishResponse)
         assert result.success is True
-        assert result.count == 2
+        assert result.count == 1
         mock_async_http_client.post.assert_called_once()
 
     @pytest.mark.asyncio
