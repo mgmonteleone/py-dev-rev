@@ -52,6 +52,19 @@ from devrev.models.base import (
     TagWithValue,
     UserSummary,
 )
+from devrev.models.brands import (
+    Brand,
+    BrandsCreateRequest,
+    BrandsCreateResponse,
+    BrandsDeleteRequest,
+    BrandsDeleteResponse,
+    BrandsGetRequest,
+    BrandsGetResponse,
+    BrandsListRequest,
+    BrandsListResponse,
+    BrandsUpdateRequest,
+    BrandsUpdateResponse,
+)
 from devrev.models.code_changes import (
     CodeChange,
     CodeChangesCreateRequest,
@@ -110,6 +123,40 @@ from devrev.models.dev_users import (
     DevUsersUpdateRequest,
     DevUsersUpdateResponse,
 )
+from devrev.models.engagements import (
+    Engagement,
+    EngagementsCountRequest,
+    EngagementsCountResponse,
+    EngagementsCreateRequest,
+    EngagementsCreateResponse,
+    EngagementsDeleteRequest,
+    EngagementsDeleteResponse,
+    EngagementsGetRequest,
+    EngagementsGetResponse,
+    EngagementsListRequest,
+    EngagementsListResponse,
+    EngagementsUpdateRequest,
+    EngagementsUpdateResponse,
+    EngagementType,
+)
+from devrev.models.incidents import (
+    Incident,
+    IncidentGroupItem,
+    IncidentsCreateRequest,
+    IncidentsCreateResponse,
+    IncidentsDeleteRequest,
+    IncidentsDeleteResponse,
+    IncidentsGetRequest,
+    IncidentsGetResponse,
+    IncidentsGroupRequest,
+    IncidentsGroupResponse,
+    IncidentsListRequest,
+    IncidentsListResponse,
+    IncidentSeverity,
+    IncidentStage,
+    IncidentsUpdateRequest,
+    IncidentsUpdateResponse,
+)
 from devrev.models.groups import (
     Group,
     GroupMember,
@@ -143,6 +190,10 @@ from devrev.models.links import (
     LinkSummary,
     LinkType,
 )
+from devrev.models.notifications import (
+    NotificationsSendRequest,
+    NotificationsSendResponse,
+)
 from devrev.models.parts import (
     Part,
     PartsCreateRequest,
@@ -157,6 +208,35 @@ from devrev.models.parts import (
     PartsUpdateRequest,
     PartsUpdateResponse,
     PartType,
+)
+from devrev.models.preferences import (
+    Preferences,
+    PreferencesGetRequest,
+    PreferencesGetResponse,
+    PreferencesUpdateRequest,
+    PreferencesUpdateResponse,
+)
+from devrev.models.question_answers import (
+    QuestionAnswer,
+    QuestionAnswersCreateRequest,
+    QuestionAnswersCreateResponse,
+    QuestionAnswersDeleteRequest,
+    QuestionAnswersGetRequest,
+    QuestionAnswersGetResponse,
+    QuestionAnswersListRequest,
+    QuestionAnswersListResponse,
+    QuestionAnswersUpdateRequest,
+    QuestionAnswersUpdateResponse,
+)
+from devrev.models.recommendations import (
+    ChatChoice,
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    ChatMessage,
+    GetReplyRequest,
+    GetReplyResponse,
+    MessageRole,
+    TokenUsage,
 )
 from devrev.models.rev_users import (
     RevUser,
@@ -174,6 +254,13 @@ from devrev.models.rev_users import (
     RevUserSummary,
     RevUsersUpdateRequest,
     RevUsersUpdateResponse,
+)
+from devrev.models.search import (
+    CoreSearchRequest,
+    HybridSearchRequest,
+    SearchNamespace,
+    SearchResponse,
+    SearchResult,
 )
 from devrev.models.slas import (
     Sla,
@@ -205,6 +292,11 @@ from devrev.models.tags import (
     TagsUpdateRequest,
     TagsUpdateResponse,
 )
+from devrev.models.track_events import (
+    TrackEvent,
+    TrackEventsPublishRequest,
+    TrackEventsPublishResponse,
+)
 from devrev.models.timeline_entries import (
     TimelineEntriesCreateRequest,
     TimelineEntriesCreateResponse,
@@ -218,6 +310,23 @@ from devrev.models.timeline_entries import (
     TimelineEntriesUpdateResponse,
     TimelineEntry,
     TimelineEntryType,
+)
+from devrev.models.uoms import (
+    Uom,
+    UomAggregationType,
+    UomMetricScope,
+    UomsCountRequest,
+    UomsCountResponse,
+    UomsCreateRequest,
+    UomsCreateResponse,
+    UomsDeleteRequest,
+    UomsDeleteResponse,
+    UomsGetRequest,
+    UomsGetResponse,
+    UomsListRequest,
+    UomsListResponse,
+    UomsUpdateRequest,
+    UomsUpdateResponse,
 )
 from devrev.models.webhooks import (
     Webhook,
@@ -304,6 +413,18 @@ __all__ = [
     "ArticlesUpdateResponse",
     "ArticlesDeleteRequest",
     "ArticlesDeleteResponse",
+    # Brands
+    "Brand",
+    "BrandsCreateRequest",
+    "BrandsCreateResponse",
+    "BrandsGetRequest",
+    "BrandsGetResponse",
+    "BrandsListRequest",
+    "BrandsListResponse",
+    "BrandsUpdateRequest",
+    "BrandsUpdateResponse",
+    "BrandsDeleteRequest",
+    "BrandsDeleteResponse",
     # Code Changes
     "CodeChange",
     "CodeChangeSummary",
@@ -359,6 +480,38 @@ __all__ = [
     "DevUsersSelfResponse",
     "DevUsersSelfUpdateRequest",
     "DevUsersSelfUpdateResponse",
+    # Engagements
+    "Engagement",
+    "EngagementType",
+    "EngagementsCreateRequest",
+    "EngagementsCreateResponse",
+    "EngagementsGetRequest",
+    "EngagementsGetResponse",
+    "EngagementsListRequest",
+    "EngagementsListResponse",
+    "EngagementsUpdateRequest",
+    "EngagementsUpdateResponse",
+    "EngagementsDeleteRequest",
+    "EngagementsDeleteResponse",
+    "EngagementsCountRequest",
+    "EngagementsCountResponse",
+    # Incidents
+    "Incident",
+    "IncidentStage",
+    "IncidentSeverity",
+    "IncidentGroupItem",
+    "IncidentsCreateRequest",
+    "IncidentsCreateResponse",
+    "IncidentsGetRequest",
+    "IncidentsGetResponse",
+    "IncidentsListRequest",
+    "IncidentsListResponse",
+    "IncidentsUpdateRequest",
+    "IncidentsUpdateResponse",
+    "IncidentsDeleteRequest",
+    "IncidentsDeleteResponse",
+    "IncidentsGroupRequest",
+    "IncidentsGroupResponse",
     # Groups
     "Group",
     "GroupSummary",
@@ -390,6 +543,9 @@ __all__ = [
     "LinksListResponse",
     "LinksDeleteRequest",
     "LinksDeleteResponse",
+    # Notifications
+    "NotificationsSendRequest",
+    "NotificationsSendResponse",
     # Parts
     "Part",
     "PartSummary",
@@ -404,6 +560,32 @@ __all__ = [
     "PartsUpdateResponse",
     "PartsDeleteRequest",
     "PartsDeleteResponse",
+    # Preferences
+    "Preferences",
+    "PreferencesGetRequest",
+    "PreferencesGetResponse",
+    "PreferencesUpdateRequest",
+    "PreferencesUpdateResponse",
+    # Question Answers
+    "QuestionAnswer",
+    "QuestionAnswersCreateRequest",
+    "QuestionAnswersCreateResponse",
+    "QuestionAnswersGetRequest",
+    "QuestionAnswersGetResponse",
+    "QuestionAnswersListRequest",
+    "QuestionAnswersListResponse",
+    "QuestionAnswersUpdateRequest",
+    "QuestionAnswersUpdateResponse",
+    "QuestionAnswersDeleteRequest",
+    # Recommendations
+    "MessageRole",
+    "ChatMessage",
+    "TokenUsage",
+    "ChatChoice",
+    "ChatCompletionRequest",
+    "ChatCompletionResponse",
+    "GetReplyRequest",
+    "GetReplyResponse",
     # Rev Users
     "RevUser",
     "RevUserSummary",
@@ -420,6 +602,12 @@ __all__ = [
     "RevUsersDeleteResponse",
     "RevUsersMergeRequest",
     "RevUsersMergeResponse",
+    # Search
+    "SearchNamespace",
+    "SearchResult",
+    "CoreSearchRequest",
+    "HybridSearchRequest",
+    "SearchResponse",
     # SLAs
     "Sla",
     "SlaSummary",
@@ -448,6 +636,10 @@ __all__ = [
     "TagsUpdateResponse",
     "TagsDeleteRequest",
     "TagsDeleteResponse",
+    # Track Events
+    "TrackEvent",
+    "TrackEventsPublishRequest",
+    "TrackEventsPublishResponse",
     # Timeline Entries
     "TimelineEntry",
     "TimelineEntryType",
@@ -496,4 +688,20 @@ __all__ = [
     "WorksExportResponse",
     "WorksCountRequest",
     "WorksCountResponse",
+    # UOMs
+    "Uom",
+    "UomAggregationType",
+    "UomMetricScope",
+    "UomsCreateRequest",
+    "UomsCreateResponse",
+    "UomsGetRequest",
+    "UomsGetResponse",
+    "UomsListRequest",
+    "UomsListResponse",
+    "UomsUpdateRequest",
+    "UomsUpdateResponse",
+    "UomsDeleteRequest",
+    "UomsDeleteResponse",
+    "UomsCountRequest",
+    "UomsCountResponse",
 ]
