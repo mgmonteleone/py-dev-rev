@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from devrev.models.conversations import (
     Conversation,
+    ConversationExportItem,
     ConversationsCreateRequest,
     ConversationsDeleteRequest,
     ConversationsExportRequest,
@@ -144,7 +145,7 @@ class TestConversationsService:
         result = service.export()
 
         assert len(result) == 1
-        assert isinstance(result[0], Conversation)
+        assert isinstance(result[0], ConversationExportItem)
         mock_http_client.post.assert_called_once()
 
     def test_export_conversations_with_request(

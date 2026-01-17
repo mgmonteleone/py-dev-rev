@@ -10,6 +10,8 @@ from devrev.models.webhooks import (
     WebhooksCreateResponse,
     WebhooksDeleteRequest,
     WebhooksDeleteResponse,
+    WebhooksFetchRequest,
+    WebhooksFetchResponse,
     WebhooksGetRequest,
     WebhooksGetResponse,
     WebhooksListRequest,
@@ -49,6 +51,25 @@ class WebhooksService(BaseService):
         """Delete a webhook."""
         self._post("/webhooks.delete", request, WebhooksDeleteResponse)
 
+    def fetch(
+        self,
+        id: str,
+    ) -> dict[str, object]:
+        """Fetch webhook data (beta only).
+
+        Args:
+            id: Webhook ID
+
+        Returns:
+            Webhook data dictionary
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = WebhooksFetchRequest(id=id)
+        response = self._post("/webhooks.fetch", request, WebhooksFetchResponse)
+        return response.data
+
 
 class AsyncWebhooksService(AsyncBaseService):
     """Async service for managing DevRev Webhooks."""
@@ -78,3 +99,22 @@ class AsyncWebhooksService(AsyncBaseService):
     async def delete(self, request: WebhooksDeleteRequest) -> None:
         """Delete a webhook."""
         await self._post("/webhooks.delete", request, WebhooksDeleteResponse)
+
+    async def fetch(
+        self,
+        id: str,
+    ) -> dict[str, object]:
+        """Fetch webhook data (beta only).
+
+        Args:
+            id: Webhook ID
+
+        Returns:
+            Webhook data dictionary
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = WebhooksFetchRequest(id=id)
+        response = await self._post("/webhooks.fetch", request, WebhooksFetchResponse)
+        return response.data

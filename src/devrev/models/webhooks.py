@@ -107,3 +107,15 @@ class WebhooksDeleteResponse(DevRevResponseModel):
     """Response from deleting a webhook."""
 
     pass
+
+
+class WebhooksFetchRequest(DevRevBaseModel):
+    """Request to fetch webhook data (beta only)."""
+
+    id: str = Field(..., description="Webhook ID")
+
+
+class WebhooksFetchResponse(DevRevResponseModel):
+    """Response from fetching webhook data (beta only)."""
+
+    data: dict[str, object] = Field(..., description="Webhook data")

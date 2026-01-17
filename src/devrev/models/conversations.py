@@ -74,9 +74,10 @@ class ConversationsUpdateRequest(DevRevBaseModel):
 
 
 class ConversationsExportRequest(DevRevBaseModel):
-    """Request to export conversations."""
+    """Request to export conversations (beta only)."""
 
     cursor: str | None = Field(default=None, description="Pagination cursor")
+    limit: int | None = Field(default=None, ge=1, le=100, description="Max results")
 
 
 class ConversationsCreateResponse(DevRevResponseModel):
@@ -109,7 +110,14 @@ class ConversationsDeleteResponse(DevRevResponseModel):
     pass
 
 
-class ConversationsExportResponse(PaginatedResponse):
-    """Response from exporting conversations."""
+class ConversationExportItem(DevRevResponseModel):
+    """Exported conversation item (beta only)."""
 
-    conversations: list[Conversation] = Field(..., description="Exported conversations")
+    id: str = Field(..., description="Conversation ID")
+    data: dict[str, object] | None = Field(default=None, description="Conversation data")
+
+
+class ConversationsExportResponse(PaginatedResponse):
+    """Response from exporting conversations (beta only)."""
+
+    conversations: list[ConversationExportItem] = Field(..., description="Exported conversations")

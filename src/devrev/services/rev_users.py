@@ -10,16 +10,30 @@ from typing import TYPE_CHECKING, Any
 
 from devrev.models.rev_users import (
     RevUser,
+    RevUsersAssociationsAddRequest,
+    RevUsersAssociationsAddResponse,
+    RevUsersAssociationsListRequest,
+    RevUsersAssociationsListResponse,
+    RevUsersAssociationsRemoveRequest,
+    RevUsersAssociationsRemoveResponse,
     RevUsersCreateRequest,
     RevUsersCreateResponse,
+    RevUsersDeletePersonalDataRequest,
+    RevUsersDeletePersonalDataResponse,
     RevUsersDeleteRequest,
     RevUsersDeleteResponse,
+    RevUsersGetPersonalDataRequest,
+    RevUsersGetPersonalDataResponse,
     RevUsersGetRequest,
     RevUsersGetResponse,
+    RevUsersLinkRequest,
+    RevUsersLinkResponse,
     RevUsersListRequest,
     RevUsersListResponse,
     RevUsersMergeRequest,
     RevUsersMergeResponse,
+    RevUsersUnlinkRequest,
+    RevUsersUnlinkResponse,
     RevUsersUpdateRequest,
     RevUsersUpdateResponse,
 )
@@ -163,6 +177,125 @@ class RevUsersService(BaseService):
         )
         self._post("/rev-users.merge", request, RevUsersMergeResponse)
 
+    def associations_add(
+        self,
+        id: str,
+        *,
+        account: str | None = None,
+        workspace: str | None = None,
+    ) -> None:
+        """Add associations to a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+            account: Account ID to associate
+            workspace: Workspace ID to associate
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersAssociationsAddRequest(id=id, account=account, workspace=workspace)
+        self._post("/rev-users.associations.add", request, RevUsersAssociationsAddResponse)
+
+    def associations_list(
+        self,
+        id: str,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> RevUsersAssociationsListResponse:
+        """List associations for a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+            cursor: Pagination cursor
+            limit: Maximum number of results
+
+        Returns:
+            Paginated list of associations
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersAssociationsListRequest(id=id, cursor=cursor, limit=limit)
+        return self._post("/rev-users.associations.list", request, RevUsersAssociationsListResponse)
+
+    def associations_remove(
+        self,
+        id: str,
+        *,
+        account: str | None = None,
+        workspace: str | None = None,
+    ) -> None:
+        """Remove associations from a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+            account: Account ID to remove
+            workspace: Workspace ID to remove
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersAssociationsRemoveRequest(id=id, account=account, workspace=workspace)
+        self._post("/rev-users.associations.remove", request, RevUsersAssociationsRemoveResponse)
+
+    def delete_personal_data(self, id: str) -> None:
+        """Delete personal data for a Rev user (beta only).
+
+        This method is used for GDPR compliance to delete personal data.
+
+        Args:
+            id: Rev user ID
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersDeletePersonalDataRequest(id=id)
+        self._post("/rev-users.delete-personal-data", request, RevUsersDeletePersonalDataResponse)
+
+    def get_personal_data(self, id: str) -> dict[str, Any]:
+        """Get personal data for a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+
+        Returns:
+            Personal data for the user
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersGetPersonalDataRequest(id=id)
+        response = self._post("/rev-users.personal-data", request, RevUsersGetPersonalDataResponse)
+        return response.personal_data
+
+    def link(self, id: str, rev_org: str) -> None:
+        """Link a Rev user to an organization (beta only).
+
+        Args:
+            id: Rev user ID
+            rev_org: Rev organization ID to link to
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersLinkRequest(id=id, rev_org=rev_org)
+        self._post("/rev-users.link", request, RevUsersLinkResponse)
+
+    def unlink(self, id: str, rev_org: str) -> None:
+        """Unlink a Rev user from an organization (beta only).
+
+        Args:
+            id: Rev user ID
+            rev_org: Rev organization ID to unlink from
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersUnlinkRequest(id=id, rev_org=rev_org)
+        self._post("/rev-users.unlink", request, RevUsersUnlinkResponse)
+
 
 class AsyncRevUsersService(AsyncBaseService):
     """Asynchronous service for managing DevRev customer users."""
@@ -233,3 +366,130 @@ class AsyncRevUsersService(AsyncBaseService):
         """Merge two Rev users."""
         request = RevUsersMergeRequest(primary_user=primary_user, secondary_user=secondary_user)
         await self._post("/rev-users.merge", request, RevUsersMergeResponse)
+
+    async def associations_add(
+        self,
+        id: str,
+        *,
+        account: str | None = None,
+        workspace: str | None = None,
+    ) -> None:
+        """Add associations to a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+            account: Account ID to associate
+            workspace: Workspace ID to associate
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersAssociationsAddRequest(id=id, account=account, workspace=workspace)
+        await self._post("/rev-users.associations.add", request, RevUsersAssociationsAddResponse)
+
+    async def associations_list(
+        self,
+        id: str,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> RevUsersAssociationsListResponse:
+        """List associations for a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+            cursor: Pagination cursor
+            limit: Maximum number of results
+
+        Returns:
+            Paginated list of associations
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersAssociationsListRequest(id=id, cursor=cursor, limit=limit)
+        return await self._post(
+            "/rev-users.associations.list", request, RevUsersAssociationsListResponse
+        )
+
+    async def associations_remove(
+        self,
+        id: str,
+        *,
+        account: str | None = None,
+        workspace: str | None = None,
+    ) -> None:
+        """Remove associations from a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+            account: Account ID to remove
+            workspace: Workspace ID to remove
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersAssociationsRemoveRequest(id=id, account=account, workspace=workspace)
+        await self._post(
+            "/rev-users.associations.remove", request, RevUsersAssociationsRemoveResponse
+        )
+
+    async def delete_personal_data(self, id: str) -> None:
+        """Delete personal data for a Rev user (beta only).
+
+        This method is used for GDPR compliance to delete personal data.
+
+        Args:
+            id: Rev user ID
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersDeletePersonalDataRequest(id=id)
+        await self._post(
+            "/rev-users.delete-personal-data", request, RevUsersDeletePersonalDataResponse
+        )
+
+    async def get_personal_data(self, id: str) -> dict[str, Any]:
+        """Get personal data for a Rev user (beta only).
+
+        Args:
+            id: Rev user ID
+
+        Returns:
+            Personal data for the user
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersGetPersonalDataRequest(id=id)
+        response = await self._post(
+            "/rev-users.personal-data", request, RevUsersGetPersonalDataResponse
+        )
+        return response.personal_data
+
+    async def link(self, id: str, rev_org: str) -> None:
+        """Link a Rev user to an organization (beta only).
+
+        Args:
+            id: Rev user ID
+            rev_org: Rev organization ID to link to
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersLinkRequest(id=id, rev_org=rev_org)
+        await self._post("/rev-users.link", request, RevUsersLinkResponse)
+
+    async def unlink(self, id: str, rev_org: str) -> None:
+        """Unlink a Rev user from an organization (beta only).
+
+        Args:
+            id: Rev user ID
+            rev_org: Rev organization ID to unlink from
+
+        Note:
+            This method is only available with beta API.
+        """
+        request = RevUsersUnlinkRequest(id=id, rev_org=rev_org)
+        await self._post("/rev-users.unlink", request, RevUsersUnlinkResponse)

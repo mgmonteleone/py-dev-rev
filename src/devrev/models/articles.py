@@ -107,3 +107,15 @@ class ArticlesDeleteResponse(DevRevResponseModel):
     """Response from deleting an article."""
 
     pass
+
+
+class ArticlesCountRequest(DevRevBaseModel):
+    """Request to count articles (beta only)."""
+
+    status: list[str] | None = Field(default=None, description="Filter by article status")
+
+
+class ArticlesCountResponse(DevRevResponseModel):
+    """Response from counting articles (beta only)."""
+
+    count: int = Field(..., description="Count of matching articles")
