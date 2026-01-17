@@ -505,6 +505,7 @@ class HTTPClient:
                         status_code=200,
                         headers=response.headers,
                         json={"_not_modified": True},
+                        request=response.request,
                     )
 
                 if not self._should_retry(response) or attempt >= self._max_retries:
@@ -844,6 +845,7 @@ class AsyncHTTPClient:
                         status_code=200,
                         headers=response.headers,
                         json={"_not_modified": True},
+                        request=response.request,
                     )
 
                 if not self._should_retry(response) or attempt >= self._max_retries:
