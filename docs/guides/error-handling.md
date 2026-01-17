@@ -16,6 +16,7 @@ DevRevError (base)
 ├── ServiceUnavailableError (503)
 ├── TimeoutError
 ├── NetworkError
+├── CircuitBreakerError
 └── ConfigurationError
 ```
 
@@ -105,6 +106,40 @@ except ServiceUnavailableError:
 except ServerError as e:
     print(f"Server error: {e.message}")
     print(f"Request ID: {e.request_id}")  # Useful for support
+```
+
+### Circuit Breaker Errors
+
+The circuit breaker pattern prevents cascading failures by temporarily blocking requests after repeated failures:
+
+```python
+from devrev.exceptions import CircuitBreakerError
+
+try:
+    response = client.accounts.list()
+except CircuitBreakerError as e:
+    print(f"Circuit breaker is open: {e.message}")
+    print("Service is temporarily unavailable due to repeated failures")
+    # Wait for recovery timeout before retrying
+```
+
+Check circuit breaker state:
+
+```python
+from devrev import DevRevClient
+
+client = DevRevClient()
+
+# Check if circuit is open
+if client._http.is_circuit_open:
+    print("Circuit breaker is open - requests will be blocked")
+else:
+    # Safe to make requests
+    accounts = client.accounts.list()
+
+# Get current circuit state
+state = client._http.circuit_state
+print(f"Circuit state: {state}")  # CLOSED, OPEN, or HALF_OPEN
 ```
 
 ## Error Properties

@@ -7,7 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes yet.
+### Added
+- Connection pooling with configurable limits for improved performance (#78)
+- Fine-grained timeout configuration with `TimeoutConfig` class (#78)
+- ETag caching for conditional requests to reduce bandwidth (#78)
+- Circuit breaker pattern for automatic failure detection and recovery (#78)
+- Structured JSON logging with `JSONFormatter` for production environments (#78)
+- Health check methods (`health_check()`) for monitoring service availability (#78)
+- `CircuitBreakerError` exception for circuit breaker state handling (#78)
+- HTTP/2 support (optional, disabled by default) (#78)
+
+### Changed
+- Enhanced `DevRevConfig` with new performance and reliability settings (#78)
+- Improved HTTP client with connection pooling and keep-alive support (#78)
+- Updated logging to support both text and JSON formats (#78)
+
+### Configuration
+New environment variables and configuration options:
+- `DEVREV_LOG_FORMAT` - Log format: `text` or `json` (default: `text`)
+- `DEVREV_MAX_CONNECTIONS` - Maximum connection pool size (default: `100`)
+- `DEVREV_MAX_KEEPALIVE_CONNECTIONS` - Maximum keep-alive connections (default: `20`)
+- `DEVREV_KEEPALIVE_EXPIRY` - Keep-alive expiry in seconds (default: `30.0`)
+- `DEVREV_HTTP2` - Enable HTTP/2 support (default: `false`)
+- `DEVREV_CIRCUIT_BREAKER_ENABLED` - Enable circuit breaker (default: `true`)
+- `DEVREV_CIRCUIT_BREAKER_THRESHOLD` - Failure threshold (default: `5`)
+- `DEVREV_CIRCUIT_BREAKER_RECOVERY_TIMEOUT` - Recovery timeout in seconds (default: `30`)
+- `DEVREV_CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS` - Test requests in half-open state (default: `3`)
 
 ## [1.0.0] - 2026-01-13
 

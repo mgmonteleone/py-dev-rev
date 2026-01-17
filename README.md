@@ -57,6 +57,14 @@ This SDK is generated and maintained from the official DevRev OpenAPI specificat
 - ✅ **Rate Limiting** - Built-in rate limit handling with Retry-After support
 - ✅ **Pagination** - Easy iteration over paginated endpoints
 
+### Performance & Reliability
+
+- ✅ **Connection Pooling** - Configurable connection pool with keep-alive support
+- ✅ **Circuit Breaker** - Automatic failure detection and recovery
+- ✅ **ETag Caching** - Conditional requests to reduce bandwidth
+- ✅ **Fine-Grained Timeouts** - Separate timeouts for connect, read, write, and pool operations
+- ✅ **HTTP/2 Support** - Optional HTTP/2 for improved performance
+
 ### Developer Experience
 
 - ✅ **Rich Exceptions** - Detailed, actionable error messages
@@ -67,7 +75,8 @@ This SDK is generated and maintained from the official DevRev OpenAPI specificat
 ### Enterprise Ready
 
 - ✅ **Security First** - No secrets in code, environment-based configuration
-- ✅ **Production Logging** - Structured logging suitable for production
+- ✅ **Production Logging** - Structured JSON logging for cloud environments
+- ✅ **Health Checks** - Built-in health check endpoints for monitoring
 - ✅ **High Test Coverage** - 80%+ code coverage with unit and integration tests
 
 ---
@@ -389,6 +398,10 @@ client.webhooks.update(
 | `DEVREV_TIMEOUT` | No | `30` | Request timeout in seconds |
 | `DEVREV_MAX_RETRIES` | No | `3` | Maximum retry attempts |
 | `DEVREV_LOG_LEVEL` | No | `WARN` | Logging level (DEBUG, INFO, WARN, ERROR) |
+| `DEVREV_LOG_FORMAT` | No | `text` | Log format (text, json) |
+| `DEVREV_MAX_CONNECTIONS` | No | `100` | Maximum connection pool size |
+| `DEVREV_HTTP2` | No | `false` | Enable HTTP/2 support |
+| `DEVREV_CIRCUIT_BREAKER_ENABLED` | No | `true` | Enable circuit breaker pattern |
 
 ### Configuration File
 
@@ -466,7 +479,10 @@ DevRevError (base)
 ├── ConflictError (409)
 ├── RateLimitError (429)
 ├── ServerError (500)
-└── ServiceUnavailableError (503)
+├── ServiceUnavailableError (503)
+├── TimeoutError
+├── NetworkError
+└── CircuitBreakerError
 ```
 
 ---

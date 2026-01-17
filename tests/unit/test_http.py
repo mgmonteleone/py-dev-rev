@@ -442,3 +442,294 @@ class TestCircuitBreakerBehavior:
         client._circuit_breaker_state.record_success()
         assert client._circuit_breaker_state.failure_count == 0
         client.close()
+
+    def test_circuit_transitions_to_half_open_after_timeout(self, api_token: SecretStr) -> None:
+        """Test circuit breaker transitions from OPEN to HALF_OPEN after recovery timeout."""
+        import time
+
+        cb_config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=0.1)
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+            circuit_breaker_config=cb_config,
+        )
+        # Force circuit open
+        client._circuit_breaker_state.state = CircuitState.OPEN
+        client._circuit_breaker_state.last_failure_time = time.monotonic()
+
+        # Initially should not allow execution
+        assert not client._circuit_breaker_state.can_execute(cb_config)
+
+        # Wait for recovery timeout
+        time.sleep(0.15)
+
+        # Should transition to HALF_OPEN and allow execution
+        assert client._circuit_breaker_state.can_execute(cb_config)
+        assert client.circuit_state == CircuitState.HALF_OPEN
+        client.close()
+
+    def test_half_open_closes_on_success(self, api_token: SecretStr) -> None:
+        """Test circuit breaker closes from HALF_OPEN on successful request."""
+        cb_config = CircuitBreakerConfig(failure_threshold=5)
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+            circuit_breaker_config=cb_config,
+        )
+        # Set to HALF_OPEN state
+        client._circuit_breaker_state.state = CircuitState.HALF_OPEN
+        client._circuit_breaker_state.half_open_calls = 1
+
+        # Record success should close the circuit
+        client._circuit_breaker_state.record_success()
+        assert client.circuit_state == CircuitState.CLOSED
+        assert client._circuit_breaker_state.failure_count == 0
+        assert client._circuit_breaker_state.half_open_calls == 0
+        client.close()
+
+    def test_half_open_reopens_on_failure(self, api_token: SecretStr) -> None:
+        """Test circuit breaker reopens from HALF_OPEN on failed request."""
+        cb_config = CircuitBreakerConfig(failure_threshold=5)
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+            circuit_breaker_config=cb_config,
+        )
+        # Set to HALF_OPEN state
+        client._circuit_breaker_state.state = CircuitState.HALF_OPEN
+
+        # Record failure should reopen the circuit
+        client._circuit_breaker_state.record_failure(cb_config)
+        assert client.circuit_state == CircuitState.OPEN
+        client.close()
+
+    def test_half_open_limits_concurrent_calls(self, api_token: SecretStr) -> None:
+        """Test circuit breaker limits calls in HALF_OPEN state."""
+        cb_config = CircuitBreakerConfig(failure_threshold=5, half_open_max_calls=2)
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+            circuit_breaker_config=cb_config,
+        )
+        # Set to HALF_OPEN state
+        client._circuit_breaker_state.state = CircuitState.HALF_OPEN
+        client._circuit_breaker_state.half_open_calls = 0
+
+        # First call should be allowed
+        assert client._circuit_breaker_state.can_execute(cb_config)
+        assert client._circuit_breaker_state.half_open_calls == 1
+
+        # Second call should be allowed
+        assert client._circuit_breaker_state.can_execute(cb_config)
+        assert client._circuit_breaker_state.half_open_calls == 2
+
+        # Third call should be rejected (max is 2)
+        assert not client._circuit_breaker_state.can_execute(cb_config)
+        client.close()
+
+
+class TestETagConditionalRequests:
+    """Tests for ETag conditional request handling."""
+
+    @pytest.fixture
+    def api_token(self) -> SecretStr:
+        return SecretStr("test-token")
+
+    @respx.mock
+    def test_304_not_modified_response(self, api_token: SecretStr) -> None:
+        """Test handling of 304 Not Modified responses."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        # First request returns ETag
+        respx.get("https://api.devrev.ai/resource").mock(
+            return_value=httpx.Response(200, json={"data": "value"}, headers={"ETag": '"abc123"'})
+        )
+        response = client.get("/resource")
+        assert response.status_code == 200
+        assert response.json() == {"data": "value"}
+
+        # Second request returns 304 Not Modified
+        respx.get("https://api.devrev.ai/resource").mock(
+            return_value=httpx.Response(304, headers={"ETag": '"abc123"'})
+        )
+        response = client.get("/resource")
+        # Should be converted to 200 with special marker
+        assert response.status_code == 200
+        assert response.json() == {"_not_modified": True}
+        client.close()
+
+    @respx.mock
+    def test_etag_sent_in_subsequent_request(self, api_token: SecretStr) -> None:
+        """Test that If-None-Match header is sent with cached ETag."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        # First request returns ETag
+        route = respx.get("https://api.devrev.ai/resource").mock(
+            return_value=httpx.Response(200, json={"data": "value"}, headers={"ETag": '"abc123"'})
+        )
+        client.get("/resource")
+
+        # Second request should include If-None-Match
+        route.mock(return_value=httpx.Response(304, headers={"ETag": '"abc123"'}))
+        client.get("/resource")
+
+        # Verify the second request included If-None-Match header
+        assert len(route.calls) == 2
+        second_request = route.calls[1].request
+        assert second_request.headers.get("If-None-Match") == '"abc123"'
+        client.close()
+
+    @respx.mock
+    def test_etag_cache_with_query_params(self, api_token: SecretStr) -> None:
+        """Test ETag caching differentiates requests with different query params."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        # Request with param1
+        respx.get("https://api.devrev.ai/resource?page=1").mock(
+            return_value=httpx.Response(200, json={"page": 1}, headers={"ETag": '"etag1"'})
+        )
+        client.get("/resource", params={"page": "1"})
+        assert "GET:/resource?page=1" in client._etag_cache
+        assert client._etag_cache["GET:/resource?page=1"] == '"etag1"'
+
+        # Request with param2 should have different cache key
+        respx.get("https://api.devrev.ai/resource?page=2").mock(
+            return_value=httpx.Response(200, json={"page": 2}, headers={"ETag": '"etag2"'})
+        )
+        client.get("/resource", params={"page": "2"})
+        assert "GET:/resource?page=2" in client._etag_cache
+        assert client._etag_cache["GET:/resource?page=2"] == '"etag2"'
+
+        # Both should be cached separately
+        assert len(client._etag_cache) == 2
+        client.close()
+
+    @respx.mock
+    def test_post_requests_do_not_use_etag(self, api_token: SecretStr) -> None:
+        """Test that POST requests do not use ETag caching."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        # POST request with ETag in response
+        respx.post("https://api.devrev.ai/resource").mock(
+            return_value=httpx.Response(200, json={"id": "123"}, headers={"ETag": '"abc123"'})
+        )
+        client.post("/resource", data={"name": "test"})
+
+        # ETag should not be cached for POST
+        assert "POST:/resource" not in client._etag_cache
+        client.close()
+
+
+class TestHealthCheck:
+    """Tests for health_check method."""
+
+    @pytest.fixture
+    def api_token(self) -> SecretStr:
+        return SecretStr("test-token")
+
+    @respx.mock
+    def test_health_check_success(self, api_token: SecretStr) -> None:
+        """Test health check returns True for successful response."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        respx.get("https://api.devrev.ai/health").mock(
+            return_value=httpx.Response(200, json={"status": "ok"})
+        )
+        assert client.health_check() is True
+        client.close()
+
+    @respx.mock
+    def test_health_check_404_treated_as_healthy(self, api_token: SecretStr) -> None:
+        """Test health check returns True for 404 (endpoint may not exist)."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        respx.get("https://api.devrev.ai/health").mock(
+            return_value=httpx.Response(404)
+        )
+        # 404 is treated as healthy (endpoint may not exist but service is up)
+        assert client.health_check() is True
+        client.close()
+
+    @respx.mock
+    def test_health_check_failure(self, api_token: SecretStr) -> None:
+        """Test health check returns False for error responses."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        respx.get("https://api.devrev.ai/health").mock(
+            return_value=httpx.Response(500)
+        )
+        assert client.health_check() is False
+        client.close()
+
+    @respx.mock
+    def test_health_check_network_error(self, api_token: SecretStr) -> None:
+        """Test health check returns False on network errors."""
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        respx.get("https://api.devrev.ai/health").mock(
+            side_effect=httpx.ConnectError("Connection failed")
+        )
+        assert client.health_check() is False
+        client.close()
+
+    def test_health_check_skipped_when_circuit_open(self, api_token: SecretStr) -> None:
+        """Test health check returns False when circuit breaker is open."""
+        import time
+
+        cb_config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=60.0)
+        client = HTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+            circuit_breaker_config=cb_config,
+        )
+        # Force circuit open
+        client._circuit_breaker_state.state = CircuitState.OPEN
+        client._circuit_breaker_state.last_failure_time = time.monotonic()
+
+        # Health check should return False without making request
+        assert client.health_check() is False
+        client.close()
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_async_health_check_success(self, api_token: SecretStr) -> None:
+        """Test async health check returns True for successful response."""
+        client = AsyncHTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        respx.get("https://api.devrev.ai/health").mock(
+            return_value=httpx.Response(200, json={"status": "ok"})
+        )
+        assert await client.health_check() is True
+        await client.close()
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_async_health_check_failure(self, api_token: SecretStr) -> None:
+        """Test async health check returns False for error responses."""
+        client = AsyncHTTPClient(
+            api_token=api_token,
+            base_url="https://api.devrev.ai",
+        )
+        respx.get("https://api.devrev.ai/health").mock(
+            return_value=httpx.Response(500)
+        )
+        assert await client.health_check() is False
+        await client.close()

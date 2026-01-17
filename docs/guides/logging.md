@@ -94,28 +94,73 @@ devrev_logger.setLevel(logging.DEBUG)
 
 ## Structured Logging
 
-For production environments with log aggregation:
+### JSON Logging for Production
+
+The SDK includes built-in JSON logging for production environments:
 
 ```python
-import json
-import logging
+from devrev import DevRevConfig, configure_logging
 
-class JSONFormatter(logging.Formatter):
-    def format(self, record):
-        log_data = {
-            "timestamp": self.formatTime(record),
-            "level": record.levelname,
-            "logger": record.name,
-            "message": record.getMessage(),
-        }
-        if hasattr(record, "request_id"):
-            log_data["request_id"] = record.request_id
-        return json.dumps(log_data)
+# Configure JSON logging
+config = DevRevConfig(
+    api_token="your-token",
+    log_level="INFO",
+    log_format="json",  # Enable JSON format
+)
+
+# Or configure directly
+configure_logging(level="INFO", log_format="json")
+```
+
+Example JSON output:
+
+```json
+{
+  "timestamp": "2026-01-17T10:30:45.123456Z",
+  "severity": "INFO",
+  "message": "Request completed successfully",
+  "logger": "devrev.http",
+  "service": "devrev-sdk"
+}
+```
+
+### Custom JSON Formatter
+
+Use the built-in `JSONFormatter` for custom logging:
+
+```python
+import logging
+from devrev import JSONFormatter
+
+# Create handler with JSON formatter
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter(
+    service_name="my-app",
+    include_timestamp=True,
+    extra_fields={"environment": "production", "version": "1.0.0"}
+))
 
 # Apply to devrev logger
-handler = logging.StreamHandler()
-handler.setFormatter(JSONFormatter())
-logging.getLogger("devrev").addHandler(handler)
+logger = logging.getLogger("devrev")
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+```
+
+### Cloud Logging Integration
+
+JSON logs are compatible with cloud logging services:
+
+```python
+from devrev import configure_logging
+
+# Google Cloud Logging
+configure_logging(level="INFO", log_format="json")
+
+# AWS CloudWatch
+configure_logging(level="INFO", log_format="json")
+
+# Azure Monitor
+configure_logging(level="INFO", log_format="json")
 ```
 
 ## Debugging Tips
@@ -175,13 +220,16 @@ except DevRevError as e:
 
 ```bash
 # Production
-export DEVREV_LOG_LEVEL=WARN
+export DEVREV_LOG_LEVEL=INFO
+export DEVREV_LOG_FORMAT=json
 
 # Staging
 export DEVREV_LOG_LEVEL=INFO
+export DEVREV_LOG_FORMAT=json
 
 # Development
 export DEVREV_LOG_LEVEL=DEBUG
+export DEVREV_LOG_FORMAT=text
 ```
 
 ### Security Considerations
