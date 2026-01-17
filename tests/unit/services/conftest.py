@@ -158,3 +158,202 @@ def sample_link_data() -> dict[str, Any]:
         "target": "don:core:issue:789",
         "link_type": "is_blocked_by",
     }
+
+
+# Incident fixtures
+@pytest.fixture
+def sample_incident_data() -> dict[str, Any]:
+    """Sample incident data."""
+    return {
+        "id": "don:core:incident:123",
+        "display_id": "INC-123",
+        "title": "Test Incident",
+        "body": "Test incident description",
+        "stage": "acknowledged",
+        "severity": "sev1",
+    }
+
+
+# Engagement fixtures
+@pytest.fixture
+def sample_engagement_data() -> dict[str, Any]:
+    """Sample engagement data."""
+    return {
+        "id": "don:core:engagement:123",
+        "display_id": "ENG-123",
+        "title": "Test Engagement",
+        "engagement_type": "meeting",
+        "description": "Test engagement description",
+        "members": ["don:identity:user:456"],
+        "parent": None,
+        "scheduled_date": "2024-01-15T10:00:00Z",
+        "tags": ["don:core:tag:789"],
+    }
+
+
+# Brand fixtures
+@pytest.fixture
+def sample_brand_data() -> dict[str, Any]:
+    """Sample brand data."""
+    return {
+        "id": "don:core:brand:123",
+        "display_id": "BRAND-123",
+        "name": "Test Brand",
+        "description": "Test brand description",
+        "logo_url": "https://example.com/logo.png",
+    }
+
+
+# Search fixtures
+@pytest.fixture
+def sample_search_response_data() -> dict[str, Any]:
+    """Sample search response data."""
+    return {
+        "results": [
+            {
+                "id": "don:core:work:123",
+                "type": "work",
+                "score": 0.95,
+                "highlights": ["priority:p0", "status:open"],
+                "work_summary": {
+                    "id": "don:core:work:123",
+                    "display_id": "ISS-123",
+                    "title": "Critical bug in authentication",
+                    "type": "issue",
+                    "stage": "in_progress",
+                    "priority": "p0",
+                },
+            },
+            {
+                "id": "don:core:article:456",
+                "type": "article",
+                "score": 0.87,
+                "highlights": ["authentication", "login"],
+                "article_summary": {
+                    "id": "don:core:article:456",
+                    "title": "Authentication troubleshooting guide",
+                    "status": "published",
+                },
+            },
+        ],
+        "next_cursor": "cursor-abc123",
+        "total_count": 42,
+    }
+
+
+# Recommendations fixtures
+@pytest.fixture
+def sample_chat_message_data() -> dict[str, Any]:
+    """Sample chat message data."""
+    return {
+        "role": "user",
+        "content": "Hello, how can I help you?",
+    }
+
+
+@pytest.fixture
+def sample_chat_completion_data() -> dict[str, Any]:
+    """Sample chat completion response data."""
+    return {
+        "id": "chatcmpl-123",
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "I can help you with your DevRev questions!",
+                },
+                "finish_reason": "stop",
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 10,
+            "completion_tokens": 20,
+            "total_tokens": 30,
+        },
+    }
+
+
+@pytest.fixture
+def sample_get_reply_data() -> dict[str, Any]:
+    """Sample get reply response data."""
+    return {
+        "reply": "Thank you for contacting us. We'll look into this issue.",
+        "confidence": 0.95,
+    }
+
+
+# Question Answer fixtures
+@pytest.fixture
+def sample_question_answer_data() -> dict[str, Any]:
+    """Sample question answer data."""
+    return {
+        "id": "don:core:question_answer:123",
+        "display_id": "QA-123",
+        "question": "How do I reset my password?",
+        "answer": "Click on the 'Forgot Password' link on the login page.",
+        "status": "published",
+        "created_at": "2024-01-15T10:00:00Z",
+        "modified_at": "2024-01-15T12:00:00Z",
+    }
+
+
+# UOM fixtures
+@pytest.fixture
+def sample_uom_data() -> dict[str, Any]:
+    """Sample UOM data."""
+    return {
+        "id": "don:core:uom:123",
+        "name": "Test UOM",
+        "description": "Test description",
+        "aggregation_type": "sum",
+        "metric_scope": "org",
+        "is_enabled": True,
+    }
+
+
+# Notification fixtures
+@pytest.fixture
+def sample_notification_send_response_data() -> dict[str, Any]:
+    """Sample notification send response data."""
+    return {
+        "success": True,
+        "notification_id": "don:core:notification:123",
+    }
+
+
+# Track events fixtures
+@pytest.fixture
+def sample_track_event_data() -> dict[str, Any]:
+    """Sample track event data."""
+    return {
+        "name": "user_login",
+        "properties": {
+            "source": "web",
+            "browser": "chrome",
+        },
+        "timestamp": "2024-01-15T10:00:00Z",
+        "user_id": "don:identity:user:123",
+    }
+
+
+@pytest.fixture
+def sample_track_events_publish_response_data() -> dict[str, Any]:
+    """Sample track events publish response data."""
+    return {
+        "success": True,
+        "count": 2,
+    }
+
+
+# Preferences fixtures
+@pytest.fixture
+def sample_preferences_data() -> dict[str, Any]:
+    """Sample preferences data."""
+    return {
+        "id": "don:identity:preferences:123",
+        "notifications_enabled": True,
+        "email_notifications": True,
+        "theme": "dark",
+        "locale": "en-US",
+    }

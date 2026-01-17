@@ -19,12 +19,20 @@ from devrev.models.groups import (
     GroupType,
 )
 from devrev.models.links import Link, LinksCreateRequest, LinkType
+from devrev.models.question_answers import (
+    QuestionAnswer,
+    QuestionAnswersCreateRequest,
+    QuestionAnswersDeleteRequest,
+    QuestionAnswersGetRequest,
+    QuestionAnswersUpdateRequest,
+)
 from devrev.models.tags import Tag, TagsCreateRequest
 from devrev.models.webhooks import Webhook, WebhooksCreateRequest
 from devrev.services.articles import AsyncArticlesService
 from devrev.services.conversations import AsyncConversationsService
 from devrev.services.groups import AsyncGroupsService
 from devrev.services.links import AsyncLinksService
+from devrev.services.question_answers import AsyncQuestionAnswersService
 from devrev.services.tags import AsyncTagsService
 from devrev.services.webhooks import AsyncWebhooksService
 
@@ -241,3 +249,100 @@ class TestAsyncGroupsService:
 
         assert len(result) == 1
         assert isinstance(result[0], GroupMember)
+
+
+class TestAsyncQuestionAnswersService:
+    """Tests for AsyncQuestionAnswersService."""
+
+    @pytest.mark.asyncio
+    async def test_create_question_answer(
+        self,
+        mock_async_http_client: AsyncMock,
+        sample_question_answer_data: dict[str, Any],
+    ) -> None:
+        """Test creating a question answer asynchronously."""
+        mock_async_http_client.post.return_value = create_mock_response(
+            {"question_answer": sample_question_answer_data}
+        )
+
+        service = AsyncQuestionAnswersService(mock_async_http_client)
+        request = QuestionAnswersCreateRequest(
+            question="How do I reset my password?",
+            answer="Click on the 'Forgot Password' link on the login page.",
+        )
+        result = await service.create(request)
+
+        assert isinstance(result, QuestionAnswer)
+        assert result.id == "don:core:question_answer:123"
+        assert result.question == "How do I reset my password?"
+
+    @pytest.mark.asyncio
+    async def test_get_question_answer(
+        self,
+        mock_async_http_client: AsyncMock,
+        sample_question_answer_data: dict[str, Any],
+    ) -> None:
+        """Test getting a question answer asynchronously."""
+        mock_async_http_client.post.return_value = create_mock_response(
+            {"question_answer": sample_question_answer_data}
+        )
+
+        service = AsyncQuestionAnswersService(mock_async_http_client)
+        request = QuestionAnswersGetRequest(id="don:core:question_answer:123")
+        result = await service.get(request)
+
+        assert isinstance(result, QuestionAnswer)
+        assert result.id == "don:core:question_answer:123"
+
+    @pytest.mark.asyncio
+    async def test_list_question_answers(
+        self,
+        mock_async_http_client: AsyncMock,
+        sample_question_answer_data: dict[str, Any],
+    ) -> None:
+        """Test listing question answers asynchronously."""
+        mock_async_http_client.post.return_value = create_mock_response(
+            {"question_answers": [sample_question_answer_data]}
+        )
+
+        service = AsyncQuestionAnswersService(mock_async_http_client)
+        result = await service.list()
+
+        assert len(result.question_answers) == 1
+        assert isinstance(result.question_answers[0], QuestionAnswer)
+
+    @pytest.mark.asyncio
+    async def test_update_question_answer(
+        self,
+        mock_async_http_client: AsyncMock,
+        sample_question_answer_data: dict[str, Any],
+    ) -> None:
+        """Test updating a question answer asynchronously."""
+        updated_data = {**sample_question_answer_data, "answer": "Updated answer"}
+        mock_async_http_client.post.return_value = create_mock_response(
+            {"question_answer": updated_data}
+        )
+
+        service = AsyncQuestionAnswersService(mock_async_http_client)
+        request = QuestionAnswersUpdateRequest(
+            id="don:core:question_answer:123",
+            answer="Updated answer",
+        )
+        result = await service.update(request)
+
+        assert isinstance(result, QuestionAnswer)
+        assert result.answer == "Updated answer"
+
+    @pytest.mark.asyncio
+    async def test_delete_question_answer(
+        self,
+        mock_async_http_client: AsyncMock,
+    ) -> None:
+        """Test deleting a question answer asynchronously."""
+        mock_async_http_client.post.return_value = create_mock_response({})
+
+        service = AsyncQuestionAnswersService(mock_async_http_client)
+        request = QuestionAnswersDeleteRequest(id="don:core:question_answer:123")
+        result = await service.delete(request)
+
+        assert result is None
