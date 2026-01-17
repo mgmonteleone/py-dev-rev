@@ -115,11 +115,13 @@ class DevRevClient:
             else:
                 self._config = get_config()
 
-        # Store API version - when config is explicitly provided, use its api_version
-        # Otherwise, explicit api_version param takes precedence over default config
-        self._api_version = (
-            self._config.api_version if config else (api_version or self._config.api_version)
-        )
+        # Store API version:
+        # - When config object is explicitly provided, use config's api_version (config overrides all)
+        # - Otherwise, prefer explicit api_version param over the config's default value
+        if config:
+            self._api_version = self._config.api_version
+        else:
+            self._api_version = api_version or self._config.api_version
 
         # Build pool config from settings
         pool_config = ConnectionPoolConfig(
@@ -429,11 +431,13 @@ class AsyncDevRevClient:
             else:
                 self._config = get_config()
 
-        # Store API version - when config is explicitly provided, use its api_version
-        # Otherwise, explicit api_version param takes precedence over default config
-        self._api_version = (
-            self._config.api_version if config else (api_version or self._config.api_version)
-        )
+        # Store API version:
+        # - When config object is explicitly provided, use config's api_version (config overrides all)
+        # - Otherwise, prefer explicit api_version param over the config's default value
+        if config:
+            self._api_version = self._config.api_version
+        else:
+            self._api_version = api_version or self._config.api_version
 
         # Build pool config from settings
         pool_config = ConnectionPoolConfig(

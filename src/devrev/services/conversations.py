@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import overload
 
 from devrev.models.conversations import (
     Conversation,
@@ -51,30 +52,61 @@ class ConversationsService(BaseService):
         """Delete a conversation."""
         self._post("/conversations.delete", request, ConversationsDeleteResponse)
 
+    @overload
+    def export(
+        self,
+        request: ConversationsExportRequest | None = None,
+    ) -> Sequence[Conversation]: ...
+
+    @overload
     def export(
         self,
         *,
         cursor: str | None = None,
         limit: int | None = None,
-    ) -> ConversationsExportResponse:
+        return_response: bool = True,
+    ) -> ConversationsExportResponse: ...
+
+    def export(
+        self,
+        request: ConversationsExportRequest | None = None,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+        return_response: bool = False,
+    ) -> Sequence[Conversation] | ConversationsExportResponse:
         """Export conversations.
 
         This endpoint is only available with the beta API. Calling this method
         when the client is configured for the public API will result in an
         HTTP 404 error from the server.
 
+        This method supports two calling patterns for backwards compatibility:
+
+        1. Legacy pattern (returns just the conversations list):
+           ``export()`` or ``export(request)``
+
+        2. New pattern (returns full response with pagination):
+           ``export(cursor="...", limit=10, return_response=True)``
+
         Args:
-            cursor: Pagination cursor
-            limit: Maximum number of results
+            request: Export request object (legacy pattern)
+            cursor: Pagination cursor (new pattern)
+            limit: Maximum number of results (new pattern)
+            return_response: If True, return full response object (default: False for backwards compat)
 
         Returns:
-            Export response with conversations and pagination
+            Sequence of Conversation objects (legacy) or ConversationsExportResponse (if return_response=True)
 
         Note:
             Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.
         """
-        request = ConversationsExportRequest(cursor=cursor, limit=limit)
-        return self._post("/conversations.export", request, ConversationsExportResponse)
+        if request is None:
+            request = ConversationsExportRequest(cursor=cursor, limit=limit)
+        response = self._post("/conversations.export", request, ConversationsExportResponse)
+        if return_response:
+            return response
+        return response.conversations
 
 
 class AsyncConversationsService(AsyncBaseService):
@@ -106,27 +138,58 @@ class AsyncConversationsService(AsyncBaseService):
         """Delete a conversation."""
         await self._post("/conversations.delete", request, ConversationsDeleteResponse)
 
+    @overload
+    async def export(
+        self,
+        request: ConversationsExportRequest | None = None,
+    ) -> Sequence[Conversation]: ...
+
+    @overload
     async def export(
         self,
         *,
         cursor: str | None = None,
         limit: int | None = None,
-    ) -> ConversationsExportResponse:
+        return_response: bool = True,
+    ) -> ConversationsExportResponse: ...
+
+    async def export(
+        self,
+        request: ConversationsExportRequest | None = None,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+        return_response: bool = False,
+    ) -> Sequence[Conversation] | ConversationsExportResponse:
         """Export conversations.
 
         This endpoint is only available with the beta API. Calling this method
         when the client is configured for the public API will result in an
         HTTP 404 error from the server.
 
+        This method supports two calling patterns for backwards compatibility:
+
+        1. Legacy pattern (returns just the conversations list):
+           ``await export()`` or ``await export(request)``
+
+        2. New pattern (returns full response with pagination):
+           ``await export(cursor="...", limit=10, return_response=True)``
+
         Args:
-            cursor: Pagination cursor
-            limit: Maximum number of results
+            request: Export request object (legacy pattern)
+            cursor: Pagination cursor (new pattern)
+            limit: Maximum number of results (new pattern)
+            return_response: If True, return full response object (default: False for backwards compat)
 
         Returns:
-            Export response with conversations and pagination
+            Sequence of Conversation objects (legacy) or ConversationsExportResponse (if return_response=True)
 
         Note:
             Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.
         """
-        request = ConversationsExportRequest(cursor=cursor, limit=limit)
-        return await self._post("/conversations.export", request, ConversationsExportResponse)
+        if request is None:
+            request = ConversationsExportRequest(cursor=cursor, limit=limit)
+        response = await self._post("/conversations.export", request, ConversationsExportResponse)
+        if return_response:
+            return response
+        return response.conversations
