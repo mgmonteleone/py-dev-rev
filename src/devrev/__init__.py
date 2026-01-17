@@ -7,6 +7,7 @@ from devrev.client import AsyncDevRevClient, DevRevClient
 from devrev.config import DevRevConfig, configure, get_config
 from devrev.exceptions import (
     AuthenticationError,
+    CircuitBreakerError,
     ConfigurationError,
     ConflictError,
     DevRevError,
@@ -19,8 +20,15 @@ from devrev.exceptions import (
     TimeoutError,
     ValidationError,
 )
+from devrev.utils.http import (
+    CircuitBreakerConfig,
+    CircuitState,
+    ConnectionPoolConfig,
+    TimeoutConfig,
+)
+from devrev.utils.logging import JSONFormatter, configure_logging
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __all__ = [
     # Version
     "__version__",
@@ -31,6 +39,14 @@ __all__ = [
     "DevRevConfig",
     "get_config",
     "configure",
+    # HTTP Configuration
+    "TimeoutConfig",
+    "ConnectionPoolConfig",
+    "CircuitBreakerConfig",
+    "CircuitState",
+    # Logging
+    "configure_logging",
+    "JSONFormatter",
     # Exceptions
     "DevRevError",
     "AuthenticationError",
@@ -44,4 +60,5 @@ __all__ = [
     "ConfigurationError",
     "TimeoutError",
     "NetworkError",
+    "CircuitBreakerError",
 ]

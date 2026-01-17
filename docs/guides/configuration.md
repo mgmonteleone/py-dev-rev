@@ -49,7 +49,15 @@ client = DevRevClient(config=config)
 | `base_url` | `DEVREV_BASE_URL` | `https://api.devrev.ai` | API base URL |
 | `timeout` | `DEVREV_TIMEOUT` | `30` | Request timeout (seconds) |
 | `max_retries` | `DEVREV_MAX_RETRIES` | `3` | Maximum retry attempts |
-| - | `DEVREV_LOG_LEVEL` | `WARN` | Logging level |
+| `log_level` | `DEVREV_LOG_LEVEL` | `WARN` | Logging level |
+| `log_format` | `DEVREV_LOG_FORMAT` | `text` | Log format (text, json) |
+| `max_connections` | `DEVREV_MAX_CONNECTIONS` | `100` | Maximum connection pool size |
+| `max_keepalive_connections` | `DEVREV_MAX_KEEPALIVE_CONNECTIONS` | `20` | Maximum keep-alive connections |
+| `keepalive_expiry` | `DEVREV_KEEPALIVE_EXPIRY` | `30.0` | Keep-alive expiry (seconds) |
+| `http2` | `DEVREV_HTTP2` | `false` | Enable HTTP/2 support |
+| `circuit_breaker_enabled` | `DEVREV_CIRCUIT_BREAKER_ENABLED` | `true` | Enable circuit breaker |
+| `circuit_breaker_threshold` | `DEVREV_CIRCUIT_BREAKER_THRESHOLD` | `5` | Failure threshold |
+| `circuit_breaker_recovery_timeout` | `DEVREV_CIRCUIT_BREAKER_RECOVERY_TIMEOUT` | `30.0` | Recovery timeout (seconds) |
 
 ## Timeout Configuration
 
@@ -112,7 +120,11 @@ DEVREV_LOG_LEVEL=DEBUG
 DEVREV_API_TOKEN=prod-token
 DEVREV_TIMEOUT=30
 DEVREV_MAX_RETRIES=3
-DEVREV_LOG_LEVEL=WARN
+DEVREV_LOG_LEVEL=INFO
+DEVREV_LOG_FORMAT=json
+DEVREV_CIRCUIT_BREAKER_ENABLED=true
+DEVREV_MAX_CONNECTIONS=100
+DEVREV_HTTP2=false
 ```
 
 ### Testing
@@ -165,16 +177,67 @@ except ConfigurationError as e:
 
 ## Advanced Configuration
 
-### Custom HTTP Settings
+### Connection Pooling
+
+Configure connection pool settings for optimal performance:
 
 ```python
 from devrev import DevRevConfig
 
 config = DevRevConfig(
     api_token="your-token",
-    timeout=30,
-    max_retries=3,
-    # Additional HTTP settings are handled internally
+    max_connections=100,  # Total connections
+    max_keepalive_connections=20,  # Idle connections to keep alive
+    keepalive_expiry=30.0,  # Seconds before closing idle connections
+    http2=False,  # Enable HTTP/2 if needed
+)
+```
+
+### Fine-Grained Timeouts
+
+Use `TimeoutConfig` for granular timeout control:
+
+```python
+from devrev import DevRevClient, TimeoutConfig
+
+# Custom timeout configuration
+timeout_config = TimeoutConfig(
+    connect=5.0,  # Connection timeout
+    read=30.0,    # Read timeout
+    write=30.0,   # Write timeout
+    pool=10.0,    # Pool acquisition timeout
+)
+
+client = DevRevClient(timeout=timeout_config)
+```
+
+### Circuit Breaker Configuration
+
+Configure circuit breaker for reliability:
+
+```python
+from devrev import DevRevConfig
+
+config = DevRevConfig(
+    api_token="your-token",
+    circuit_breaker_enabled=True,
+    circuit_breaker_threshold=5,  # Failures before opening
+    circuit_breaker_recovery_timeout=30.0,  # Seconds before retry
+    circuit_breaker_half_open_max_calls=3,  # Test calls in half-open state
+)
+```
+
+### Production Logging
+
+Enable JSON logging for production environments:
+
+```python
+from devrev import DevRevConfig
+
+config = DevRevConfig(
+    api_token="your-token",
+    log_level="INFO",
+    log_format="json",  # Structured JSON logs
 )
 ```
 

@@ -192,6 +192,34 @@ class NetworkError(DevRevError):
     """
 
 
+class CircuitBreakerError(DevRevError):
+    """Circuit breaker is open - service is unavailable.
+
+    Raised when the circuit breaker pattern has opened due to
+    repeated failures, preventing further requests until recovery.
+
+    Attributes:
+        recovery_timeout: Seconds until circuit breaker may allow requests
+    """
+
+    def __init__(
+        self,
+        message: str = "Circuit breaker is open - service temporarily unavailable",
+        *,
+        recovery_timeout: float | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize circuit breaker error.
+
+        Args:
+            message: Human-readable error description
+            recovery_timeout: Seconds until circuit may close
+            **kwargs: Additional arguments passed to DevRevError
+        """
+        super().__init__(message, **kwargs)
+        self.recovery_timeout = recovery_timeout
+
+
 # Status code to exception mapping for use in HTTP layer
 STATUS_CODE_TO_EXCEPTION: dict[int, type[DevRevError]] = {
     400: ValidationError,
