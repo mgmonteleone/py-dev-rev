@@ -408,7 +408,9 @@ class AsyncRevUsersService(AsyncBaseService):
             This method is only available with beta API.
         """
         request = RevUsersAssociationsListRequest(id=id, cursor=cursor, limit=limit)
-        return await self._post("/rev-users.associations.list", request, RevUsersAssociationsListResponse)
+        return await self._post(
+            "/rev-users.associations.list", request, RevUsersAssociationsListResponse
+        )
 
     async def associations_remove(
         self,
@@ -428,7 +430,9 @@ class AsyncRevUsersService(AsyncBaseService):
             This method is only available with beta API.
         """
         request = RevUsersAssociationsRemoveRequest(id=id, account=account, workspace=workspace)
-        await self._post("/rev-users.associations.remove", request, RevUsersAssociationsRemoveResponse)
+        await self._post(
+            "/rev-users.associations.remove", request, RevUsersAssociationsRemoveResponse
+        )
 
     async def delete_personal_data(self, id: str) -> None:
         """Delete personal data for a Rev user (beta only).
@@ -442,7 +446,9 @@ class AsyncRevUsersService(AsyncBaseService):
             This method is only available with beta API.
         """
         request = RevUsersDeletePersonalDataRequest(id=id)
-        await self._post("/rev-users.delete-personal-data", request, RevUsersDeletePersonalDataResponse)
+        await self._post(
+            "/rev-users.delete-personal-data", request, RevUsersDeletePersonalDataResponse
+        )
 
     async def get_personal_data(self, id: str) -> dict[str, Any]:
         """Get personal data for a Rev user (beta only).
@@ -457,7 +463,9 @@ class AsyncRevUsersService(AsyncBaseService):
             This method is only available with beta API.
         """
         request = RevUsersGetPersonalDataRequest(id=id)
-        response = await self._post("/rev-users.personal-data", request, RevUsersGetPersonalDataResponse)
+        response = await self._post(
+            "/rev-users.personal-data", request, RevUsersGetPersonalDataResponse
+        )
         return response.personal_data
 
     async def link(self, id: str, rev_org: str) -> None:
