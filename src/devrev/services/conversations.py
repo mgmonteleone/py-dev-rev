@@ -57,7 +57,11 @@ class ConversationsService(BaseService):
         cursor: str | None = None,
         limit: int | None = None,
     ) -> ConversationsExportResponse:
-        """Export conversations (beta only).
+        """Export conversations.
+
+        This endpoint is only available with the beta API. Calling this method
+        when the client is configured for the public API will result in an
+        HTTP 404 error from the server.
 
         Args:
             cursor: Pagination cursor
@@ -66,8 +70,8 @@ class ConversationsService(BaseService):
         Returns:
             Export response with conversations and pagination
 
-        Raises:
-            BetaAPIRequiredError: If not using beta API
+        Note:
+            Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.
         """
         request = ConversationsExportRequest(cursor=cursor, limit=limit)
         return self._post("/conversations.export", request, ConversationsExportResponse)
@@ -108,7 +112,11 @@ class AsyncConversationsService(AsyncBaseService):
         cursor: str | None = None,
         limit: int | None = None,
     ) -> ConversationsExportResponse:
-        """Export conversations (beta only).
+        """Export conversations.
+
+        This endpoint is only available with the beta API. Calling this method
+        when the client is configured for the public API will result in an
+        HTTP 404 error from the server.
 
         Args:
             cursor: Pagination cursor
@@ -117,8 +125,8 @@ class AsyncConversationsService(AsyncBaseService):
         Returns:
             Export response with conversations and pagination
 
-        Raises:
-            BetaAPIRequiredError: If not using beta API
+        Note:
+            Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.
         """
         request = ConversationsExportRequest(cursor=cursor, limit=limit)
         return await self._post("/conversations.export", request, ConversationsExportResponse)

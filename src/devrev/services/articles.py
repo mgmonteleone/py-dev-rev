@@ -56,7 +56,11 @@ class ArticlesService(BaseService):
         *,
         status: list[str] | None = None,
     ) -> int:
-        """Count articles (beta only).
+        """Count articles.
+
+        This endpoint is only available with the beta API. Calling this method
+        when the client is configured for the public API will result in an
+        HTTP 404 error from the server.
 
         Args:
             status: Filter by article status
@@ -64,8 +68,8 @@ class ArticlesService(BaseService):
         Returns:
             Count of matching articles
 
-        Raises:
-            BetaAPIRequiredError: If not using beta API
+        Note:
+            Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.
         """
         request = ArticlesCountRequest(status=status)
         response = self._post("/articles.count", request, ArticlesCountResponse)
@@ -106,7 +110,11 @@ class AsyncArticlesService(AsyncBaseService):
         *,
         status: list[str] | None = None,
     ) -> int:
-        """Count articles (beta only).
+        """Count articles.
+
+        This endpoint is only available with the beta API. Calling this method
+        when the client is configured for the public API will result in an
+        HTTP 404 error from the server.
 
         Args:
             status: Filter by article status
@@ -114,8 +122,8 @@ class AsyncArticlesService(AsyncBaseService):
         Returns:
             Count of matching articles
 
-        Raises:
-            BetaAPIRequiredError: If not using beta API
+        Note:
+            Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.
         """
         request = ArticlesCountRequest(status=status)
         response = await self._post("/articles.count", request, ArticlesCountResponse)
