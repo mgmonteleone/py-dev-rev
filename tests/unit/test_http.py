@@ -655,9 +655,7 @@ class TestHealthCheck:
             api_token=api_token,
             base_url="https://api.devrev.ai",
         )
-        respx.get("https://api.devrev.ai/health").mock(
-            return_value=httpx.Response(404)
-        )
+        respx.get("https://api.devrev.ai/health").mock(return_value=httpx.Response(404))
         # 404 is treated as healthy (endpoint may not exist but service is up)
         assert client.health_check() is True
         client.close()
@@ -669,9 +667,7 @@ class TestHealthCheck:
             api_token=api_token,
             base_url="https://api.devrev.ai",
         )
-        respx.get("https://api.devrev.ai/health").mock(
-            return_value=httpx.Response(500)
-        )
+        respx.get("https://api.devrev.ai/health").mock(return_value=httpx.Response(500))
         assert client.health_check() is False
         client.close()
 
@@ -728,8 +724,6 @@ class TestHealthCheck:
             api_token=api_token,
             base_url="https://api.devrev.ai",
         )
-        respx.get("https://api.devrev.ai/health").mock(
-            return_value=httpx.Response(500)
-        )
+        respx.get("https://api.devrev.ai/health").mock(return_value=httpx.Response(500))
         assert await client.health_check() is False
         await client.close()
