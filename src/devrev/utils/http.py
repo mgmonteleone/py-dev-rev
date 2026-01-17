@@ -123,7 +123,7 @@ class CircuitBreakerState:
                 elapsed = time.monotonic() - self.last_failure_time
                 if elapsed >= config.recovery_timeout:
                     self.state = CircuitState.HALF_OPEN
-                    self.half_open_calls = 0
+                    self.half_open_calls = 1
                     logger.info("Circuit breaker half-open - testing recovery")
                     return True
                 return False
