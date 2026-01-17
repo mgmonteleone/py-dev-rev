@@ -6,24 +6,50 @@ Main client classes for interacting with the DevRev API.
 from typing import Self
 
 from devrev.config import APIVersion, DevRevConfig, get_config
+from devrev.exceptions import BetaAPIRequiredError
 from devrev.services.accounts import AccountsService, AsyncAccountsService
 from devrev.services.articles import ArticlesService, AsyncArticlesService
+from devrev.services.brands import AsyncBrandsService, BrandsService
 from devrev.services.code_changes import AsyncCodeChangesService, CodeChangesService
 from devrev.services.conversations import (
     AsyncConversationsService,
     ConversationsService,
 )
 from devrev.services.dev_users import AsyncDevUsersService, DevUsersService
+from devrev.services.engagements import (
+    AsyncEngagementsService,
+    EngagementsService,
+)
 from devrev.services.groups import AsyncGroupsService, GroupsService
+from devrev.services.incidents import AsyncIncidentsService, IncidentsService
 from devrev.services.links import AsyncLinksService, LinksService
+from devrev.services.notifications import (
+    AsyncNotificationsService,
+    NotificationsService,
+)
 from devrev.services.parts import AsyncPartsService, PartsService
+from devrev.services.preferences import AsyncPreferencesService, PreferencesService
+from devrev.services.question_answers import (
+    AsyncQuestionAnswersService,
+    QuestionAnswersService,
+)
+from devrev.services.recommendations import (
+    AsyncRecommendationsService,
+    RecommendationsService,
+)
 from devrev.services.rev_users import AsyncRevUsersService, RevUsersService
+from devrev.services.search import AsyncSearchService, SearchService
 from devrev.services.slas import AsyncSlasService, SlasService
 from devrev.services.tags import AsyncTagsService, TagsService
 from devrev.services.timeline_entries import (
     AsyncTimelineEntriesService,
     TimelineEntriesService,
 )
+from devrev.services.track_events import (
+    AsyncTrackEventsService,
+    TrackEventsService,
+)
+from devrev.services.uoms import AsyncUomsService, UomsService
 from devrev.services.webhooks import AsyncWebhooksService, WebhooksService
 from devrev.services.works import AsyncWorksService, WorksService
 from devrev.utils.http import (
@@ -137,6 +163,31 @@ class DevRevClient:
         self._webhooks = WebhooksService(self._http)
         self._works = WorksService(self._http)
 
+        # Beta-only services (initialized but access-guarded)
+        self._incidents: IncidentsService | None = None
+        self._engagements: EngagementsService | None = None
+        self._brands: BrandsService | None = None
+        self._uoms: UomsService | None = None
+        self._question_answers: QuestionAnswersService | None = None
+        self._recommendations: RecommendationsService | None = None
+        self._search: SearchService | None = None
+        self._preferences: PreferencesService | None = None
+        self._notifications: NotificationsService | None = None
+        self._track_events: TrackEventsService | None = None
+
+        # Initialize beta services if using beta API
+        if self._api_version == APIVersion.BETA:
+            self._incidents = IncidentsService(self._http)
+            self._engagements = EngagementsService(self._http)
+            self._brands = BrandsService(self._http)
+            self._uoms = UomsService(self._http)
+            self._question_answers = QuestionAnswersService(self._http)
+            self._recommendations = RecommendationsService(self._http)
+            self._search = SearchService(self._http)
+            self._preferences = PreferencesService(self._http)
+            self._notifications = NotificationsService(self._http)
+            self._track_events = TrackEventsService(self._http)
+
     @property
     def api_version(self) -> APIVersion:
         """Get the API version being used by this client."""
@@ -211,6 +262,106 @@ class DevRevClient:
     def works(self) -> WorksService:
         """Access the Works service."""
         return self._works
+
+    @property
+    def incidents(self) -> IncidentsService:
+        """Access the Incidents service (beta only)."""
+        if self._incidents is None:
+            raise BetaAPIRequiredError(
+                "The incidents service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._incidents
+
+    @property
+    def engagements(self) -> EngagementsService:
+        """Access the Engagements service (beta only)."""
+        if self._engagements is None:
+            raise BetaAPIRequiredError(
+                "The engagements service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._engagements
+
+    @property
+    def brands(self) -> BrandsService:
+        """Access the Brands service (beta only)."""
+        if self._brands is None:
+            raise BetaAPIRequiredError(
+                "The brands service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._brands
+
+    @property
+    def uoms(self) -> UomsService:
+        """Access the UOMs service (beta only)."""
+        if self._uoms is None:
+            raise BetaAPIRequiredError(
+                "The uoms service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._uoms
+
+    @property
+    def question_answers(self) -> QuestionAnswersService:
+        """Access the Question Answers service (beta only)."""
+        if self._question_answers is None:
+            raise BetaAPIRequiredError(
+                "The question_answers service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._question_answers
+
+    @property
+    def recommendations(self) -> RecommendationsService:
+        """Access the Recommendations service (beta only)."""
+        if self._recommendations is None:
+            raise BetaAPIRequiredError(
+                "The recommendations service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._recommendations
+
+    @property
+    def search(self) -> SearchService:
+        """Access the Search service (beta only)."""
+        if self._search is None:
+            raise BetaAPIRequiredError(
+                "The search service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._search
+
+    @property
+    def preferences(self) -> PreferencesService:
+        """Access the Preferences service (beta only)."""
+        if self._preferences is None:
+            raise BetaAPIRequiredError(
+                "The preferences service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._preferences
+
+    @property
+    def notifications(self) -> NotificationsService:
+        """Access the Notifications service (beta only)."""
+        if self._notifications is None:
+            raise BetaAPIRequiredError(
+                "The notifications service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._notifications
+
+    @property
+    def track_events(self) -> TrackEventsService:
+        """Access the Track Events service (beta only)."""
+        if self._track_events is None:
+            raise BetaAPIRequiredError(
+                "The track_events service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._track_events
 
     def close(self) -> None:
         """Close the client and release resources."""
@@ -326,6 +477,31 @@ class AsyncDevRevClient:
         self._webhooks = AsyncWebhooksService(self._http)
         self._works = AsyncWorksService(self._http)
 
+        # Beta-only services (initialized but access-guarded)
+        self._incidents: AsyncIncidentsService | None = None
+        self._engagements: AsyncEngagementsService | None = None
+        self._brands: AsyncBrandsService | None = None
+        self._uoms: AsyncUomsService | None = None
+        self._question_answers: AsyncQuestionAnswersService | None = None
+        self._recommendations: AsyncRecommendationsService | None = None
+        self._search: AsyncSearchService | None = None
+        self._preferences: AsyncPreferencesService | None = None
+        self._notifications: AsyncNotificationsService | None = None
+        self._track_events: AsyncTrackEventsService | None = None
+
+        # Initialize beta services if using beta API
+        if self._api_version == APIVersion.BETA:
+            self._incidents = AsyncIncidentsService(self._http)
+            self._engagements = AsyncEngagementsService(self._http)
+            self._brands = AsyncBrandsService(self._http)
+            self._uoms = AsyncUomsService(self._http)
+            self._question_answers = AsyncQuestionAnswersService(self._http)
+            self._recommendations = AsyncRecommendationsService(self._http)
+            self._search = AsyncSearchService(self._http)
+            self._preferences = AsyncPreferencesService(self._http)
+            self._notifications = AsyncNotificationsService(self._http)
+            self._track_events = AsyncTrackEventsService(self._http)
+
     @property
     def api_version(self) -> APIVersion:
         """Get the API version being used by this client."""
@@ -400,6 +576,106 @@ class AsyncDevRevClient:
     def works(self) -> AsyncWorksService:
         """Access the Works service."""
         return self._works
+
+    @property
+    def incidents(self) -> AsyncIncidentsService:
+        """Access the Incidents service (beta only)."""
+        if self._incidents is None:
+            raise BetaAPIRequiredError(
+                "The incidents service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._incidents
+
+    @property
+    def engagements(self) -> AsyncEngagementsService:
+        """Access the Engagements service (beta only)."""
+        if self._engagements is None:
+            raise BetaAPIRequiredError(
+                "The engagements service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._engagements
+
+    @property
+    def brands(self) -> AsyncBrandsService:
+        """Access the Brands service (beta only)."""
+        if self._brands is None:
+            raise BetaAPIRequiredError(
+                "The brands service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._brands
+
+    @property
+    def uoms(self) -> AsyncUomsService:
+        """Access the UOMs service (beta only)."""
+        if self._uoms is None:
+            raise BetaAPIRequiredError(
+                "The uoms service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._uoms
+
+    @property
+    def question_answers(self) -> AsyncQuestionAnswersService:
+        """Access the Question Answers service (beta only)."""
+        if self._question_answers is None:
+            raise BetaAPIRequiredError(
+                "The question_answers service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._question_answers
+
+    @property
+    def recommendations(self) -> AsyncRecommendationsService:
+        """Access the Recommendations service (beta only)."""
+        if self._recommendations is None:
+            raise BetaAPIRequiredError(
+                "The recommendations service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._recommendations
+
+    @property
+    def search(self) -> AsyncSearchService:
+        """Access the Search service (beta only)."""
+        if self._search is None:
+            raise BetaAPIRequiredError(
+                "The search service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._search
+
+    @property
+    def preferences(self) -> AsyncPreferencesService:
+        """Access the Preferences service (beta only)."""
+        if self._preferences is None:
+            raise BetaAPIRequiredError(
+                "The preferences service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._preferences
+
+    @property
+    def notifications(self) -> AsyncNotificationsService:
+        """Access the Notifications service (beta only)."""
+        if self._notifications is None:
+            raise BetaAPIRequiredError(
+                "The notifications service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._notifications
+
+    @property
+    def track_events(self) -> AsyncTrackEventsService:
+        """Access the Track Events service (beta only)."""
+        if self._track_events is None:
+            raise BetaAPIRequiredError(
+                "The track_events service requires beta API. "
+                "Initialize client with api_version=APIVersion.BETA"
+            )
+        return self._track_events
 
     async def close(self) -> None:
         """Close the client and release resources."""
