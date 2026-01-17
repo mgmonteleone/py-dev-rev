@@ -5,7 +5,7 @@ Main client classes for interacting with the DevRev API.
 
 from typing import Self
 
-from devrev.config import DevRevConfig, get_config
+from devrev.config import APIVersion, DevRevConfig, get_config
 from devrev.services.accounts import AccountsService, AsyncAccountsService
 from devrev.services.articles import ArticlesService, AsyncArticlesService
 from devrev.services.code_changes import AsyncCodeChangesService, CodeChangesService
@@ -59,6 +59,7 @@ class DevRevClient:
         api_token: str | None = None,
         base_url: str | None = None,
         timeout: int | None = None,
+        api_version: APIVersion | None = None,
         config: DevRevConfig | None = None,
     ) -> None:
         """Initialize the DevRev client.
@@ -67,23 +68,29 @@ class DevRevClient:
             api_token: DevRev API token (or set DEVREV_API_TOKEN env var)
             base_url: API base URL (default: https://api.devrev.ai)
             timeout: Request timeout in seconds (default: 30)
+            api_version: API version to use (default: APIVersion.PUBLIC)
             config: Full configuration object (overrides other params)
         """
         if config:
             self._config = config
         else:
-            config_kwargs: dict[str, str | int] = {}
+            config_kwargs: dict[str, str | int | APIVersion] = {}
             if api_token:
                 config_kwargs["api_token"] = api_token
             if base_url:
                 config_kwargs["base_url"] = base_url
             if timeout:
                 config_kwargs["timeout"] = timeout
+            if api_version:
+                config_kwargs["api_version"] = api_version
 
             if config_kwargs:
                 self._config = DevRevConfig(**config_kwargs)  # type: ignore[arg-type]
             else:
                 self._config = get_config()
+
+        # Store API version (parameter takes precedence if explicitly provided)
+        self._api_version = api_version if api_version is not None else self._config.api_version
 
         # Build pool config from settings
         pool_config = ConnectionPoolConfig(
@@ -126,6 +133,11 @@ class DevRevClient:
         self._timeline_entries = TimelineEntriesService(self._http)
         self._webhooks = WebhooksService(self._http)
         self._works = WorksService(self._http)
+
+    @property
+    def api_version(self) -> APIVersion:
+        """Get the API version being used by this client."""
+        return self._api_version
 
     @property
     def accounts(self) -> AccountsService:
@@ -233,6 +245,7 @@ class AsyncDevRevClient:
         api_token: str | None = None,
         base_url: str | None = None,
         timeout: int | None = None,
+        api_version: APIVersion | None = None,
         config: DevRevConfig | None = None,
     ) -> None:
         """Initialize the async DevRev client.
@@ -241,23 +254,29 @@ class AsyncDevRevClient:
             api_token: DevRev API token (or set DEVREV_API_TOKEN env var)
             base_url: API base URL (default: https://api.devrev.ai)
             timeout: Request timeout in seconds (default: 30)
+            api_version: API version to use (default: APIVersion.PUBLIC)
             config: Full configuration object (overrides other params)
         """
         if config:
             self._config = config
         else:
-            config_kwargs: dict[str, str | int] = {}
+            config_kwargs: dict[str, str | int | APIVersion] = {}
             if api_token:
                 config_kwargs["api_token"] = api_token
             if base_url:
                 config_kwargs["base_url"] = base_url
             if timeout:
                 config_kwargs["timeout"] = timeout
+            if api_version:
+                config_kwargs["api_version"] = api_version
 
             if config_kwargs:
                 self._config = DevRevConfig(**config_kwargs)  # type: ignore[arg-type]
             else:
                 self._config = get_config()
+
+        # Store API version (parameter takes precedence if explicitly provided)
+        self._api_version = api_version if api_version is not None else self._config.api_version
 
         # Build pool config from settings
         pool_config = ConnectionPoolConfig(
@@ -300,6 +319,11 @@ class AsyncDevRevClient:
         self._timeline_entries = AsyncTimelineEntriesService(self._http)
         self._webhooks = AsyncWebhooksService(self._http)
         self._works = AsyncWorksService(self._http)
+
+    @property
+    def api_version(self) -> APIVersion:
+        """Get the API version being used by this client."""
+        return self._api_version
 
     @property
     def accounts(self) -> AsyncAccountsService:

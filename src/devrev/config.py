@@ -6,10 +6,21 @@ with optional .env file support for local development.
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class APIVersion(str, Enum):
+    """DevRev API version selection.
+
+    PUBLIC: Stable public API (default)
+    BETA: Beta API with new features (may change)
+    """
+    PUBLIC = "public"
+    BETA = "beta"
 
 
 class DevRevConfig(BaseSettings):
@@ -21,6 +32,7 @@ class DevRevConfig(BaseSettings):
     Environment Variables:
         DEVREV_API_TOKEN: API authentication token (required)
         DEVREV_BASE_URL: API base URL (default: https://api.devrev.ai)
+        DEVREV_API_VERSION: API version (default: public, options: public, beta)
         DEVREV_TIMEOUT: Request timeout in seconds (default: 30)
         DEVREV_MAX_RETRIES: Maximum retry attempts (default: 3)
         DEVREV_LOG_LEVEL: Logging level (default: WARN)
@@ -65,6 +77,10 @@ class DevRevConfig(BaseSettings):
     base_url: str = Field(
         default="https://api.devrev.ai",
         description="DevRev API base URL",
+    )
+    api_version: APIVersion = Field(
+        default=APIVersion.PUBLIC,
+        description="DevRev API version (public or beta)",
     )
 
     # HTTP Settings
