@@ -476,9 +476,13 @@ class HTTPClient:
                     self._max_retries + 1,
                 )
 
+                # Strip leading slash to ensure proper URL resolution with base_url
+                # httpx treats URLs starting with / as absolute paths, overriding base_url path
+                normalized_endpoint = endpoint.lstrip("/")
+
                 response = self._client.request(
                     method=method,
-                    url=endpoint,
+                    url=normalized_endpoint,
                     json=json,
                     params=params,
                     headers=request_headers if request_headers else None,
@@ -816,9 +820,13 @@ class AsyncHTTPClient:
                     self._max_retries + 1,
                 )
 
+                # Strip leading slash to ensure proper URL resolution with base_url
+                # httpx treats URLs starting with / as absolute paths, overriding base_url path
+                normalized_endpoint = endpoint.lstrip("/")
+
                 response = await self._client.request(
                     method=method,
-                    url=endpoint,
+                    url=normalized_endpoint,
                     json=json,
                     params=params,
                     headers=request_headers if request_headers else None,
