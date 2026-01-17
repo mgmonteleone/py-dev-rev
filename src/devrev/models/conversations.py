@@ -114,7 +114,7 @@ class ConversationExportItem(DevRevResponseModel):
     """Exported conversation item (beta only)."""
 
     id: str = Field(..., description="Conversation ID")
-    data: dict | None = Field(default=None, description="Conversation data")
+    data: dict[str, object] | None = Field(default=None, description="Conversation data")
 
 
 class ConversationsExportResponse(PaginatedResponse):

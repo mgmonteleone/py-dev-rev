@@ -118,4 +118,4 @@ class WebhooksFetchRequest(DevRevBaseModel):
 class WebhooksFetchResponse(DevRevResponseModel):
     """Response from fetching webhook data (beta only)."""
 
-    data: dict = Field(..., description="Webhook data")
+    data: dict[str, object] = Field(..., description="Webhook data")

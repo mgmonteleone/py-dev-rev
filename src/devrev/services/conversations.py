@@ -7,6 +7,7 @@ from typing import overload
 
 from devrev.models.conversations import (
     Conversation,
+    ConversationExportItem,
     ConversationsCreateRequest,
     ConversationsCreateResponse,
     ConversationsDeleteRequest,
@@ -56,7 +57,7 @@ class ConversationsService(BaseService):
     def export(
         self,
         request: ConversationsExportRequest | None = None,
-    ) -> Sequence[Conversation]: ...
+    ) -> Sequence[ConversationExportItem]: ...
 
     @overload
     def export(
@@ -74,7 +75,7 @@ class ConversationsService(BaseService):
         cursor: str | None = None,
         limit: int | None = None,
         return_response: bool = False,
-    ) -> Sequence[Conversation] | ConversationsExportResponse:
+    ) -> Sequence[ConversationExportItem] | ConversationsExportResponse:
         """Export conversations.
 
         This endpoint is only available with the beta API. Calling this method
@@ -96,7 +97,7 @@ class ConversationsService(BaseService):
             return_response: If True, return full response object (default: False for backwards compat)
 
         Returns:
-            Sequence of Conversation objects (legacy) or ConversationsExportResponse (if return_response=True)
+            Sequence of ConversationExportItem objects (legacy) or ConversationsExportResponse (if return_response=True)
 
         Note:
             Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.
@@ -142,7 +143,7 @@ class AsyncConversationsService(AsyncBaseService):
     async def export(
         self,
         request: ConversationsExportRequest | None = None,
-    ) -> Sequence[Conversation]: ...
+    ) -> Sequence[ConversationExportItem]: ...
 
     @overload
     async def export(
@@ -160,7 +161,7 @@ class AsyncConversationsService(AsyncBaseService):
         cursor: str | None = None,
         limit: int | None = None,
         return_response: bool = False,
-    ) -> Sequence[Conversation] | ConversationsExportResponse:
+    ) -> Sequence[ConversationExportItem] | ConversationsExportResponse:
         """Export conversations.
 
         This endpoint is only available with the beta API. Calling this method
@@ -182,7 +183,7 @@ class AsyncConversationsService(AsyncBaseService):
             return_response: If True, return full response object (default: False for backwards compat)
 
         Returns:
-            Sequence of Conversation objects (legacy) or ConversationsExportResponse (if return_response=True)
+            Sequence of ConversationExportItem objects (legacy) or ConversationsExportResponse (if return_response=True)
 
         Note:
             Beta API only. Use ``api_version=APIVersion.BETA`` when initializing the client.

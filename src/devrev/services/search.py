@@ -23,16 +23,23 @@ class SearchService(BaseService):
     """
 
     @overload
-    def core(self, request: CoreSearchRequest) -> SearchResponse: ...
+    def core(
+        self,
+        request_or_query: CoreSearchRequest,
+        *,
+        namespaces: list[SearchNamespace] | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
+    ) -> SearchResponse: ...
 
     @overload
     def core(
         self,
-        query: str,
+        request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
-        limit: int | None = None,
-        cursor: str | None = None,
+        namespaces: list[SearchNamespace] | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
     ) -> SearchResponse: ...
 
     def core(
@@ -89,17 +96,25 @@ class SearchService(BaseService):
         return self._post("/search.core", request, SearchResponse)
 
     @overload
-    def hybrid(self, request: HybridSearchRequest) -> SearchResponse: ...
+    def hybrid(
+        self,
+        request_or_query: HybridSearchRequest,
+        *,
+        namespaces: list[SearchNamespace] | None = ...,
+        semantic_weight: float | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
+    ) -> SearchResponse: ...
 
     @overload
     def hybrid(
         self,
-        query: str,
+        request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
-        semantic_weight: float | None = None,
-        limit: int | None = None,
-        cursor: str | None = None,
+        namespaces: list[SearchNamespace] | None = ...,
+        semantic_weight: float | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
     ) -> SearchResponse: ...
 
     def hybrid(
@@ -169,16 +184,23 @@ class AsyncSearchService(AsyncBaseService):
     """
 
     @overload
-    async def core(self, request: CoreSearchRequest) -> SearchResponse: ...
+    async def core(
+        self,
+        request_or_query: CoreSearchRequest,
+        *,
+        namespaces: list[SearchNamespace] | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
+    ) -> SearchResponse: ...
 
     @overload
     async def core(
         self,
-        query: str,
+        request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
-        limit: int | None = None,
-        cursor: str | None = None,
+        namespaces: list[SearchNamespace] | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
     ) -> SearchResponse: ...
 
     async def core(
@@ -235,17 +257,25 @@ class AsyncSearchService(AsyncBaseService):
         return await self._post("/search.core", request, SearchResponse)
 
     @overload
-    async def hybrid(self, request: HybridSearchRequest) -> SearchResponse: ...
+    async def hybrid(
+        self,
+        request_or_query: HybridSearchRequest,
+        *,
+        namespaces: list[SearchNamespace] | None = ...,
+        semantic_weight: float | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
+    ) -> SearchResponse: ...
 
     @overload
     async def hybrid(
         self,
-        query: str,
+        request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
-        semantic_weight: float | None = None,
-        limit: int | None = None,
-        cursor: str | None = None,
+        namespaces: list[SearchNamespace] | None = ...,
+        semantic_weight: float | None = ...,
+        limit: int | None = ...,
+        cursor: str | None = ...,
     ) -> SearchResponse: ...
 
     async def hybrid(

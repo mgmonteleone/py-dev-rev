@@ -54,7 +54,7 @@ class ArticlesService(BaseService):
     def count(
         self,
         *,
-        status: list[str] | None = None,
+        status: Sequence[str] | None = None,
     ) -> int:
         """Count articles.
 
@@ -108,7 +108,7 @@ class AsyncArticlesService(AsyncBaseService):
     async def count(
         self,
         *,
-        status: list[str] | None = None,
+        status: Sequence[str] | None = None,
     ) -> int:
         """Count articles.
 

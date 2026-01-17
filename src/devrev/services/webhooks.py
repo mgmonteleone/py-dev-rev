@@ -54,7 +54,7 @@ class WebhooksService(BaseService):
     def fetch(
         self,
         id: str,
-    ) -> dict:
+    ) -> dict[str, object]:
         """Fetch webhook data (beta only).
 
         Args:
@@ -103,7 +103,7 @@ class AsyncWebhooksService(AsyncBaseService):
     async def fetch(
         self,
         id: str,
-    ) -> dict:
+    ) -> dict[str, object]:
         """Fetch webhook data (beta only).
 
         Args:
