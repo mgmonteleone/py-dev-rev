@@ -44,8 +44,11 @@ class WidgetAggregationType(str, Enum):
     MAX = "max"
 
 
-class WidgetDataSource(DevRevBaseModel):
+class WidgetDataSource(DevRevResponseModel):
     """Widget data source configuration.
+
+    Inherits from DevRevResponseModel for forward-compatibility with
+    additional API fields in nested response objects.
 
     Attributes:
         type: The type of data source
@@ -58,8 +61,11 @@ class WidgetDataSource(DevRevBaseModel):
     query_id: str | None = Field(default=None, description="OASIS query ID")
 
 
-class WidgetGroupByConfig(DevRevBaseModel):
+class WidgetGroupByConfig(DevRevResponseModel):
     """Widget group-by configuration.
+
+    Inherits from DevRevResponseModel for forward-compatibility with
+    additional API fields in nested response objects.
 
     Attributes:
         field: Field to group by
@@ -70,8 +76,11 @@ class WidgetGroupByConfig(DevRevBaseModel):
     limit: int | None = Field(default=None, description="Maximum number of groups")
 
 
-class WidgetQuery(DevRevBaseModel):
+class WidgetQuery(DevRevResponseModel):
     """Widget query configuration.
+
+    Inherits from DevRevResponseModel for forward-compatibility with
+    additional API fields in nested response objects.
 
     Attributes:
         filters: Query filters

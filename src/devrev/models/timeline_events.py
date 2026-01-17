@@ -35,8 +35,11 @@ class TimelineEventType(str, Enum):
     CUSTOM = "custom"
 
 
-class FieldChange(DevRevBaseModel):
+class FieldChange(DevRevResponseModel):
     """Represents a single field change in a timeline event.
+
+    Inherits from DevRevResponseModel for forward-compatibility with
+    additional API fields.
 
     Attributes:
         field_name: Name of the changed field
