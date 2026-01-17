@@ -138,6 +138,56 @@ class RevUsersMergeRequest(DevRevBaseModel):
     secondary_user: str = Field(..., description="Secondary user ID (will be merged)")
 
 
+class RevUsersAssociationsAddRequest(DevRevBaseModel):
+    """Request to add associations to a Rev user (beta only)."""
+
+    id: str = Field(..., description="Rev user ID")
+    account: str | None = Field(default=None, description="Account ID to associate")
+    workspace: str | None = Field(default=None, description="Workspace ID to associate")
+
+
+class RevUsersAssociationsListRequest(DevRevBaseModel):
+    """Request to list associations for a Rev user (beta only)."""
+
+    id: str = Field(..., description="Rev user ID")
+    cursor: str | None = Field(default=None, description="Pagination cursor")
+    limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
+
+
+class RevUsersAssociationsRemoveRequest(DevRevBaseModel):
+    """Request to remove associations from a Rev user (beta only)."""
+
+    id: str = Field(..., description="Rev user ID")
+    account: str | None = Field(default=None, description="Account ID to remove")
+    workspace: str | None = Field(default=None, description="Workspace ID to remove")
+
+
+class RevUsersDeletePersonalDataRequest(DevRevBaseModel):
+    """Request to delete personal data for a Rev user (beta only, GDPR compliance)."""
+
+    id: str = Field(..., description="Rev user ID")
+
+
+class RevUsersGetPersonalDataRequest(DevRevBaseModel):
+    """Request to get personal data for a Rev user (beta only)."""
+
+    id: str = Field(..., description="Rev user ID")
+
+
+class RevUsersLinkRequest(DevRevBaseModel):
+    """Request to link a Rev user to an organization (beta only)."""
+
+    id: str = Field(..., description="Rev user ID")
+    rev_org: str = Field(..., description="Rev organization ID to link to")
+
+
+class RevUsersUnlinkRequest(DevRevBaseModel):
+    """Request to unlink a Rev user from an organization (beta only)."""
+
+    id: str = Field(..., description="Rev user ID")
+    rev_org: str = Field(..., description="Rev organization ID to unlink from")
+
+
 # Response Models
 
 
@@ -175,3 +225,45 @@ class RevUsersMergeResponse(DevRevResponseModel):
     """Response from merging Rev users."""
 
     pass  # Empty response body (async processing)
+
+
+class RevUsersAssociationsAddResponse(DevRevResponseModel):
+    """Response from adding associations to a Rev user (beta only)."""
+
+    pass  # Empty response body
+
+
+class RevUsersAssociationsListResponse(PaginatedResponse):
+    """Response from listing associations for a Rev user (beta only)."""
+
+    associations: list[str] = Field(..., description="List of associated account/workspace IDs")
+
+
+class RevUsersAssociationsRemoveResponse(DevRevResponseModel):
+    """Response from removing associations from a Rev user (beta only)."""
+
+    pass  # Empty response body
+
+
+class RevUsersDeletePersonalDataResponse(DevRevResponseModel):
+    """Response from deleting personal data for a Rev user (beta only)."""
+
+    pass  # Empty response body
+
+
+class RevUsersGetPersonalDataResponse(DevRevResponseModel):
+    """Response from getting personal data for a Rev user (beta only)."""
+
+    personal_data: dict[str, Any] = Field(..., description="Personal data for the user")
+
+
+class RevUsersLinkResponse(DevRevResponseModel):
+    """Response from linking a Rev user to an organization (beta only)."""
+
+    pass  # Empty response body
+
+
+class RevUsersUnlinkResponse(DevRevResponseModel):
+    """Response from unlinking a Rev user from an organization (beta only)."""
+
+    pass  # Empty response body

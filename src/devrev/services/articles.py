@@ -6,6 +6,8 @@ from collections.abc import Sequence
 
 from devrev.models.articles import (
     Article,
+    ArticlesCountRequest,
+    ArticlesCountResponse,
     ArticlesCreateRequest,
     ArticlesCreateResponse,
     ArticlesDeleteRequest,
@@ -49,6 +51,26 @@ class ArticlesService(BaseService):
         """Delete an article."""
         self._post("/articles.delete", request, ArticlesDeleteResponse)
 
+    def count(
+        self,
+        *,
+        status: list[str] | None = None,
+    ) -> int:
+        """Count articles (beta only).
+
+        Args:
+            status: Filter by article status
+
+        Returns:
+            Count of matching articles
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = ArticlesCountRequest(status=status)
+        response = self._post("/articles.count", request, ArticlesCountResponse)
+        return response.count
+
 
 class AsyncArticlesService(AsyncBaseService):
     """Async service for managing DevRev Articles."""
@@ -78,3 +100,23 @@ class AsyncArticlesService(AsyncBaseService):
     async def delete(self, request: ArticlesDeleteRequest) -> None:
         """Delete an article."""
         await self._post("/articles.delete", request, ArticlesDeleteResponse)
+
+    async def count(
+        self,
+        *,
+        status: list[str] | None = None,
+    ) -> int:
+        """Count articles (beta only).
+
+        Args:
+            status: Filter by article status
+
+        Returns:
+            Count of matching articles
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = ArticlesCountRequest(status=status)
+        response = await self._post("/articles.count", request, ArticlesCountResponse)
+        return response.count

@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from devrev.models.conversations import (
     Conversation,
+    ConversationExportItem,
     ConversationsCreateRequest,
     ConversationsCreateResponse,
     ConversationsDeleteRequest,
@@ -51,12 +52,26 @@ class ConversationsService(BaseService):
         """Delete a conversation."""
         self._post("/conversations.delete", request, ConversationsDeleteResponse)
 
-    def export(self, request: ConversationsExportRequest | None = None) -> Sequence[Conversation]:
-        """Export conversations."""
-        if request is None:
-            request = ConversationsExportRequest()
-        response = self._post("/conversations.export", request, ConversationsExportResponse)
-        return response.conversations
+    def export(
+        self,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> ConversationsExportResponse:
+        """Export conversations (beta only).
+
+        Args:
+            cursor: Pagination cursor
+            limit: Maximum number of results
+
+        Returns:
+            Export response with conversations and pagination
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = ConversationsExportRequest(cursor=cursor, limit=limit)
+        return self._post("/conversations.export", request, ConversationsExportResponse)
 
 
 class AsyncConversationsService(AsyncBaseService):
@@ -89,10 +104,22 @@ class AsyncConversationsService(AsyncBaseService):
         await self._post("/conversations.delete", request, ConversationsDeleteResponse)
 
     async def export(
-        self, request: ConversationsExportRequest | None = None
-    ) -> Sequence[Conversation]:
-        """Export conversations."""
-        if request is None:
-            request = ConversationsExportRequest()
-        response = await self._post("/conversations.export", request, ConversationsExportResponse)
-        return response.conversations
+        self,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> ConversationsExportResponse:
+        """Export conversations (beta only).
+
+        Args:
+            cursor: Pagination cursor
+            limit: Maximum number of results
+
+        Returns:
+            Export response with conversations and pagination
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = ConversationsExportRequest(cursor=cursor, limit=limit)
+        return await self._post("/conversations.export", request, ConversationsExportResponse)

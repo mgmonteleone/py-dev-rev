@@ -19,6 +19,8 @@ from devrev.models.groups import (
     GroupsGetResponse,
     GroupsListRequest,
     GroupsListResponse,
+    GroupsMembersCountRequest,
+    GroupsMembersCountResponse,
     GroupsUpdateRequest,
     GroupsUpdateResponse,
 )
@@ -63,6 +65,25 @@ class GroupsService(BaseService):
         response = self._post("/group-members.list", request, GroupMembersListResponse)
         return response.members
 
+    def members_count(
+        self,
+        id: str,
+    ) -> int:
+        """Count members in a group (beta only).
+
+        Args:
+            id: Group ID
+
+        Returns:
+            Count of group members
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = GroupsMembersCountRequest(id=id)
+        response = self._post("/groups.members.count", request, GroupsMembersCountResponse)
+        return response.count
+
 
 class AsyncGroupsService(AsyncBaseService):
     """Async service for managing DevRev Groups."""
@@ -101,3 +122,22 @@ class AsyncGroupsService(AsyncBaseService):
         """List members of a group."""
         response = await self._post("/group-members.list", request, GroupMembersListResponse)
         return response.members
+
+    async def members_count(
+        self,
+        id: str,
+    ) -> int:
+        """Count members in a group (beta only).
+
+        Args:
+            id: Group ID
+
+        Returns:
+            Count of group members
+
+        Raises:
+            BetaAPIRequiredError: If not using beta API
+        """
+        request = GroupsMembersCountRequest(id=id)
+        response = await self._post("/groups.members.count", request, GroupsMembersCountResponse)
+        return response.count

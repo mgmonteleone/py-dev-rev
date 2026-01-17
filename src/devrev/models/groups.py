@@ -138,3 +138,15 @@ class GroupMembersListResponse(PaginatedResponse):
     """Response from listing members."""
 
     members: list[GroupMember] = Field(..., description="List of members")
+
+
+class GroupsMembersCountRequest(DevRevBaseModel):
+    """Request to count group members (beta only)."""
+
+    id: str = Field(..., description="Group ID")
+
+
+class GroupsMembersCountResponse(DevRevResponseModel):
+    """Response from counting group members (beta only)."""
+
+    count: int = Field(..., description="Count of group members")
