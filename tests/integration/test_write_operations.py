@@ -32,12 +32,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Mark all tests in this module
+# Check for either DEVREV_API_TOKEN or DEVREV_TEST_API_TOKEN (matches write_client fixture)
+_has_api_token = bool(
+    os.environ.get("DEVREV_API_TOKEN") or os.environ.get("DEVREV_TEST_API_TOKEN")
+)
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.write,
     pytest.mark.skipif(
-        not os.environ.get("DEVREV_API_TOKEN"),
-        reason="DEVREV_API_TOKEN environment variable not set",
+        not _has_api_token,
+        reason="DEVREV_API_TOKEN or DEVREV_TEST_API_TOKEN environment variable required",
     ),
     pytest.mark.skipif(
         os.environ.get("DEVREV_WRITE_TESTS_ENABLED", "").lower() not in ("true", "1", "yes"),

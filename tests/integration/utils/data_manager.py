@@ -146,18 +146,24 @@ class TestDataManager:
         """Sort resources for deletion respecting dependencies."""
         return sorted(resources, key=lambda r: self._get_deletion_priority(r[0]))
 
-    def _delete_resource(self, resource_type: str, resource_id: str) -> None:
+    def _delete_resource(self, resource_type: str, resource_id: str) -> bool:
         """Delete a single resource by type and ID.
 
         Args:
             resource_type: Type of resource to delete.
             resource_id: ID of the resource to delete.
 
+        Returns:
+            True if deletion was attempted, False if no delete method exists.
+
         Raises:
             Exception: If deletion fails.
         """
         self._throttle()
 
+        # Note: Only include resource types that have delete() methods in the SDK.
+        # Unsupported types: group (no delete), conversation (no delete),
+        # part (no delete), rev_user (no delete)
         delete_methods = {
             "account": lambda rid: self._client.accounts.delete(rid),
             "tag": lambda rid: self._client.tags.delete(
@@ -170,11 +176,6 @@ class TestDataManager:
                 __import__(
                     "devrev.models.articles", fromlist=["ArticlesDeleteRequest"]
                 ).ArticlesDeleteRequest(id=rid)
-            ),
-            "group": lambda rid: self._client.groups.delete(
-                __import__(
-                    "devrev.models.groups", fromlist=["GroupsDeleteRequest"]
-                ).GroupsDeleteRequest(id=rid)
             ),
             "webhook": lambda rid: self._client.webhooks.delete(
                 __import__(
@@ -190,8 +191,14 @@ class TestDataManager:
 
         if resource_type in delete_methods:
             delete_methods[resource_type](resource_id)
+            return True
         else:
-            logger.warning(f"No delete method for resource type: {resource_type}")
+            # Return False to indicate cleanup was not possible - caller should track this
+            logger.warning(
+                f"No delete method for resource type: {resource_type}. "
+                f"Resource {resource_id} may be orphaned."
+            )
+            return False
 
     def cleanup(self) -> CleanupReport:
         """Delete all registered resources in dependency order.
@@ -213,8 +220,15 @@ class TestDataManager:
 
         for resource_type, resource_id in sorted_resources:
             try:
-                self._delete_resource(resource_type, resource_id)
-                report.add_success(resource_type, resource_id)
+                deleted = self._delete_resource(resource_type, resource_id)
+                if deleted:
+                    report.add_success(resource_type, resource_id)
+                else:
+                    report.add_skipped(
+                        resource_type,
+                        resource_id,
+                        f"No delete method available for {resource_type}",
+                    )
             except Exception as e:
                 report.add_failure(resource_type, resource_id, str(e))
 

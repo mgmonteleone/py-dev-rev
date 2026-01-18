@@ -9,7 +9,7 @@ from tests.integration.utils.constants import (
     RESOURCE_TYPES,
     TEST_PREFIX,
 )
-from tests.integration.utils.test_data_manager import TestDataManager
+from tests.integration.utils.data_manager import TestDataManager
 
 __all__ = [
     "CleanupReport",
