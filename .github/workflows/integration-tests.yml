@@ -6,10 +6,10 @@ on:
   # Run daily to catch API changes
   schedule:
     - cron: '0 6 * * *'  # Daily at 6 AM UTC
-  
+
   # Allow manual triggering
   workflow_dispatch:
-  
+
   # Run on main branch pushes (optional)
   push:
     branches: [main]
@@ -17,6 +17,10 @@ on:
       - 'src/**'
       - 'tests/integration/**'
       - 'pyproject.toml'
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   integration:
@@ -42,16 +46,17 @@ jobs:
           pip install -e ".[dev]"
       
       - name: Run integration tests
+        id: integration_tests
         env:
           DEVREV_API_TOKEN: ${{ secrets.DEVREV_API_TOKEN }}
         run: |
           echo "Running integration tests against DevRev API..."
           pytest tests/integration/ -v -m integration --tb=short
-      
+
       - name: Report results
         if: always()
         run: |
-          if [ $? -eq 0 ]; then
+          if [ "${{ steps.integration_tests.outcome }}" == "success" ]; then
             echo "✅ Integration tests passed"
           else
             echo "❌ Integration tests failed - API may have changed"

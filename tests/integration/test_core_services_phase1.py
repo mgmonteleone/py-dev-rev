@@ -12,6 +12,7 @@ Related to Issue #103: Achieve 100% Integration Test Coverage
 """
 
 import logging
+import os
 
 import pytest
 
@@ -19,6 +20,15 @@ from devrev import DevRevClient
 from devrev.models.groups import GroupMembersListRequest
 from devrev.models.timeline_entries import TimelineEntriesListRequest, TimelineEntriesGetRequest
 from devrev.models.links import LinksListRequest, LinksGetRequest
+
+# Skip all integration tests if DEVREV_API_TOKEN is not set
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not os.environ.get("DEVREV_API_TOKEN"),
+        reason="DEVREV_API_TOKEN environment variable not set",
+    ),
+]
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

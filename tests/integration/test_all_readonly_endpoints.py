@@ -10,12 +10,22 @@ for reporting back to DevRev.
 """
 
 import logging
+import os
 from typing import Any
 
 import pytest
 
 from devrev import DevRevClient
 from devrev.exceptions import DevRevError
+
+# Skip all integration tests if DEVREV_API_TOKEN is not set
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not os.environ.get("DEVREV_API_TOKEN"),
+        reason="DEVREV_API_TOKEN environment variable not set",
+    ),
+]
 
 # Configure logging to capture validation errors
 logging.basicConfig(level=logging.DEBUG)
