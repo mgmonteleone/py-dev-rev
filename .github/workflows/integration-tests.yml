@@ -30,9 +30,7 @@ permissions:
 jobs:
   integration:
     runs-on: ubuntu-latest
-    # Only run if API token is available
-    if: ${{ secrets.DEVREV_API_TOKEN != '' }}
-    
+
     strategy:
       matrix:
         python-version: ['3.11', '3.12', '3.13']
@@ -55,6 +53,10 @@ jobs:
         env:
           DEVREV_API_TOKEN: ${{ secrets.DEVREV_API_TOKEN }}
         run: |
+          if [ -z "$DEVREV_API_TOKEN" ]; then
+            echo "Skipping integration tests - no API token available"
+            exit 0
+          fi
           echo "Running integration tests against DevRev API..."
           pytest tests/integration/ -v -m integration --tb=short
 
@@ -70,11 +72,10 @@ jobs:
   # Backwards compatibility check
   backwards-compat:
     runs-on: ubuntu-latest
-    if: ${{ secrets.DEVREV_API_TOKEN != '' }}
     permissions:
       contents: read
       issues: write
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -92,6 +93,10 @@ jobs:
         env:
           DEVREV_API_TOKEN: ${{ secrets.DEVREV_API_TOKEN }}
         run: |
+          if [ -z "$DEVREV_API_TOKEN" ]; then
+            echo "Skipping backwards compatibility tests - no API token available"
+            exit 0
+          fi
           echo "Running backwards compatibility tests..."
           pytest tests/integration/test_readonly_endpoints.py -v -m integration
       
