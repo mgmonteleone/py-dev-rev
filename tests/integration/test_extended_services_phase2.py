@@ -201,6 +201,10 @@ class TestQuestionAnswersEndpoints:
         assert isinstance(result.question_answers, list)
         logger.info(f"✅ question-answers.list: {len(result.question_answers)} Q&As")
 
+    @pytest.mark.xfail(
+        reason="DevRev API returns 400 Bad Request for question-answers.get regardless of input",
+        raises=Exception,
+    )
     def test_question_answers_get(self, beta_client: DevRevClient) -> None:
         """Test question-answers.get endpoint."""
         list_result = beta_client.question_answers.list()

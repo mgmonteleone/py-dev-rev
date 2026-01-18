@@ -47,7 +47,8 @@ class QuestionAnswersService(BaseService):
         Returns:
             The QuestionAnswer
         """
-        response = self._post("/question-answers.get", request, QuestionAnswersGetResponse)
+        params = {"id": request.id}
+        response = self._get("/question-answers.get", params, QuestionAnswersGetResponse)
         return response.question_answer
 
     def list(
@@ -101,7 +102,8 @@ class AsyncQuestionAnswersService(AsyncBaseService):
 
     async def get(self, request: QuestionAnswersGetRequest) -> QuestionAnswer:
         """Get a question answer by ID."""
-        response = await self._post("/question-answers.get", request, QuestionAnswersGetResponse)
+        params = {"id": request.id}
+        response = await self._get("/question-answers.get", params, QuestionAnswersGetResponse)
         return response.question_answer
 
     async def list(
