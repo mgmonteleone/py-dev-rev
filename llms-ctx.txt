@@ -1,0 +1,167 @@
+# DevRev Python SDK - Core Context for AI Agents
+
+## Overview
+A modern, type-safe Python SDK for the DevRev API. Requires Python 3.11+.
+
+**Install**: `pip install devrev-python-sdk`
+**Docs**: https://mgmonteleone.github.io/py-dev-rev/
+**Version**: 2.0.0
+
+## Quick Start
+
+```python
+from devrev import DevRevClient
+
+# Set env var: export DEVREV_API_TOKEN="your-token"
+client = DevRevClient()
+
+# List accounts
+accounts = client.accounts.list(limit=10)
+for account in accounts.accounts:
+    print(f"{account.id}: {account.display_name}")
+
+# Get a work item
+work = client.works.get(id="don:core:dvrv-us-1:devo/1:ticket/123")
+print(f"Title: {work.work.title}")
+```
+
+## Clients
+
+### Sync Client
+```python
+from devrev import DevRevClient
+
+client = DevRevClient()
+# Or with explicit token:
+client = DevRevClient(api_token="your-token")
+```
+
+### Async Client
+```python
+import asyncio
+from devrev import AsyncDevRevClient
+
+async def main():
+    async with AsyncDevRevClient() as client:
+        accounts = await client.accounts.list()
+        print(f"Found {len(accounts.accounts)} accounts")
+
+asyncio.run(main())
+```
+
+## Available Services
+
+All services are accessed as `client.<service>.<method>()`:
+
+| Service | Description | Common Methods |
+|---------|-------------|----------------|
+| `accounts` | Customer accounts | list, get, create, update, delete |
+| `works` | Tickets, issues | list, get, create, update, count, export |
+| `dev_users` | Dev team users | list, get |
+| `rev_users` | Customer users | list, get, create, update |
+| `parts` | Product parts | list, get, create |
+| `articles` | KB articles | list, get, create, update |
+| `conversations` | Conversations | list, get, create |
+| `tags` | Tags | list, get, create |
+| `groups` | Groups | list, get, create |
+| `webhooks` | Webhooks | list, get, create, delete |
+| `slas` | SLAs | list, get |
+| `timeline_entries` | Activity log | list, create |
+| `links` | Object links | list, create, delete |
+| `code_changes` | Code changes | list |
+
+## Pagination
+
+DevRev uses cursor-based pagination:
+
+```python
+cursor = None
+all_accounts = []
+
+while True:
+    response = client.accounts.list(cursor=cursor, limit=50)
+    all_accounts.extend(response.accounts)
+    cursor = response.next_cursor
+    if not cursor:
+        break
+```
+
+## Error Handling
+
+```python
+from devrev.exceptions import (
+    DevRevError,       # Base exception
+    AuthenticationError,  # 401
+    ForbiddenError,       # 403
+    NotFoundError,        # 404
+    ValidationError,      # 400
+    RateLimitError,       # 429 (has .retry_after)
+    ServerError,          # 500
+)
+
+try:
+    work = client.works.get(id="invalid")
+except NotFoundError as e:
+    print(f"Not found: {e.message}")
+except RateLimitError as e:
+    print(f"Rate limited, retry after {e.retry_after}s")
+except DevRevError as e:
+    print(f"Error: {e.message}, Status: {e.status_code}")
+```
+
+## Creating Work Items
+
+```python
+from devrev.models import WorkType
+
+# Create a ticket
+response = client.works.create(
+    type=WorkType.TICKET,
+    title="Customer issue",
+    applies_to_part="don:core:dvrv-us-1:devo/1:part/1",
+    body="Description of the issue"
+)
+print(f"Created: {response.work.display_id}")
+```
+
+## Async Concurrent Requests
+
+```python
+import asyncio
+from devrev import AsyncDevRevClient
+
+async def fetch_dashboard():
+    async with AsyncDevRevClient() as client:
+        accounts, works, users = await asyncio.gather(
+            client.accounts.list(limit=10),
+            client.works.list(limit=50),
+            client.dev_users.list()
+        )
+        return {
+            "accounts": len(accounts.accounts),
+            "works": len(works.works),
+            "users": len(users.dev_users)
+        }
+```
+
+## Beta API (Optional)
+
+Enable beta features (incidents, engagements, search, recommendations):
+
+```python
+from devrev import DevRevClient, APIVersion
+
+client = DevRevClient(api_version=APIVersion.BETA)
+incidents = client.incidents.list()
+```
+
+## Key Points for AI Code Generation
+
+1. **Always use environment variables** for DEVREV_API_TOKEN
+2. **Use context managers** (`with`/`async with`) for proper cleanup
+3. **Response objects** contain the data in a nested attribute (e.g., `response.accounts`, `response.work`)
+4. **IDs are DON format**: `don:core:dvrv-us-1:devo/1:ticket/123`
+5. **Pagination** uses `cursor` and `next_cursor`, not page numbers
+6. **Import models** from `devrev.models` (e.g., `WorkType`)
+7. **Import exceptions** from `devrev.exceptions`
+

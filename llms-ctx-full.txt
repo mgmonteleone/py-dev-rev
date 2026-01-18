@@ -1,0 +1,337 @@
+# DevRev Python SDK - Full Context for AI Agents
+
+## Overview
+
+A modern, type-safe Python SDK for the DevRev API with:
+- Full async support (sync and async clients)
+- Pydantic v2 models for all requests/responses
+- Comprehensive error handling with typed exceptions
+- Connection pooling and circuit breaker pattern
+- ETag caching for conditional requests
+
+**Requirements**: Python 3.11+
+**Install**: `pip install devrev-python-sdk`
+**Docs**: https://mgmonteleone.github.io/py-dev-rev/
+**Version**: 2.0.0
+
+## Authentication
+
+### Environment Variable (Recommended)
+```bash
+export DEVREV_API_TOKEN="your-api-token"
+```
+
+```python
+from devrev import DevRevClient
+client = DevRevClient()  # Reads from environment
+```
+
+### Direct Token
+```python
+client = DevRevClient(api_token="your-token")
+```
+
+### Configuration Object
+```python
+from devrev import DevRevClient, DevRevConfig
+
+config = DevRevConfig(
+    api_token="your-token",
+    timeout=60,
+    max_retries=3
+)
+client = DevRevClient(config=config)
+```
+
+## Sync Client Usage
+
+```python
+from devrev import DevRevClient
+
+# Using context manager (recommended)
+with DevRevClient() as client:
+    accounts = client.accounts.list(limit=10)
+    for account in accounts.accounts:
+        print(f"{account.id}: {account.display_name}")
+
+# Or create and close manually
+client = DevRevClient()
+try:
+    response = client.works.get(id="don:core:dvrv-us-1:devo/1:ticket/123")
+    print(f"Title: {response.work.title}")
+finally:
+    client.close()
+```
+
+## Async Client Usage
+
+```python
+import asyncio
+from devrev import AsyncDevRevClient
+
+async def main():
+    async with AsyncDevRevClient() as client:
+        # Single request
+        accounts = await client.accounts.list(limit=10)
+        
+        # Parallel requests
+        accounts, works, users = await asyncio.gather(
+            client.accounts.list(limit=10),
+            client.works.list(limit=50),
+            client.dev_users.list()
+        )
+        
+        print(f"Accounts: {len(accounts.accounts)}")
+        print(f"Works: {len(works.works)}")
+        print(f"Users: {len(users.dev_users)}")
+
+asyncio.run(main())
+```
+
+## Available Services
+
+Access via `client.<service>.<method>()`:
+
+### Account Management
+- `accounts.list(limit, cursor)` → `AccountsListResponse`
+- `accounts.get(id)` → `AccountsGetResponse`
+- `accounts.create(display_name, ...)` → `AccountsCreateResponse`
+- `accounts.update(id, display_name, ...)` → `AccountsUpdateResponse`
+- `accounts.delete(id)` → None
+
+### Work Items (Tickets, Issues)
+- `works.list(limit, cursor, type, stage_name, ...)` → `WorksListResponse`
+- `works.get(id)` → `WorksGetResponse`
+- `works.create(type, title, applies_to_part, body, ...)` → `WorksCreateResponse`
+- `works.update(id, title, body, ...)` → `WorksUpdateResponse`
+- `works.count(type, ...)` → `WorksCountResponse`
+- `works.export(type, first, ...)` → `WorksExportResponse`
+
+### Users
+- `dev_users.list(limit, cursor)` → `DevUsersListResponse`
+- `dev_users.get(id)` → `DevUsersGetResponse`
+- `rev_users.list(limit, cursor)` → `RevUsersListResponse`
+- `rev_users.get(id)` → `RevUsersGetResponse`
+- `rev_users.create(email, display_name, ...)` → `RevUsersCreateResponse`
+
+### Parts & Articles
+- `parts.list(limit, cursor, type)` → `PartsListResponse`
+- `parts.get(id)` → `PartsGetResponse`
+- `articles.list(limit, cursor)` → `ArticlesListResponse`
+- `articles.get(id)` → `ArticlesGetResponse`
+- `articles.create(title, resource, ...)` → `ArticlesCreateResponse`
+
+### Other Services
+- `conversations.list/get/create` - Customer conversations
+- `tags.list/get/create` - Tag management
+- `groups.list/get/create` - Group management
+- `webhooks.list/get/create/delete` - Webhook configuration
+- `slas.list/get` - Service level agreements
+- `timeline_entries.list/create` - Activity log
+- `links.list/create/delete` - Object relationships
+- `code_changes.list` - Code change tracking
+
+## Models
+
+Import from `devrev.models`:
+
+```python
+from devrev.models import (
+    WorkType,          # TICKET, ISSUE, OPPORTUNITY, etc.
+    AccountType,       # CUSTOMER, PROSPECT, etc.
+    PartType,          # PRODUCT, CAPABILITY, FEATURE, etc.
+    Visibility,        # INTERNAL, EXTERNAL, PRIVATE
+)
+```
+
+## Creating Work Items
+
+```python
+from devrev import DevRevClient
+from devrev.models import WorkType
+
+client = DevRevClient()
+
+# Create a ticket
+response = client.works.create(
+    type=WorkType.TICKET,
+    title="Customer cannot access dashboard",
+    applies_to_part="don:core:dvrv-us-1:devo/1:part/1",
+    body="Customer reports 500 error when loading the dashboard.",
+    owned_by=["don:identity:dvrv-us-1:devo/1:devu/123"]
+)
+print(f"Created: {response.work.display_id}")
+
+# Create an issue
+response = client.works.create(
+    type=WorkType.ISSUE,
+    title="Fix dashboard loading error",
+    applies_to_part="don:core:dvrv-us-1:devo/1:part/1",
+    body="Investigate and fix 500 error on dashboard load."
+)
+```
+
+## Pagination
+
+DevRev uses cursor-based pagination:
+
+```python
+cursor = None
+all_works = []
+
+while True:
+    response = client.works.list(cursor=cursor, limit=100)
+    all_works.extend(response.works)
+    
+    cursor = response.next_cursor
+    if not cursor:
+        break
+
+print(f"Total: {len(all_works)} works")
+
+## Error Handling
+
+Exception hierarchy from `devrev.exceptions`:
+
+```
+DevRevError (base)
+├── AuthenticationError (401) - Invalid/missing API token
+├── ForbiddenError (403) - Permission denied
+├── NotFoundError (404) - Resource not found
+├── ValidationError (400) - Invalid request data
+├── ConflictError (409) - Resource conflict
+├── RateLimitError (429) - Rate limit exceeded (.retry_after seconds)
+├── ServerError (500) - Server error
+├── ServiceUnavailableError (503) - Service unavailable
+├── TimeoutError - Request timeout
+├── NetworkError - Network connectivity issue
+├── CircuitBreakerError - Circuit breaker is open
+└── ConfigurationError - Invalid configuration
+```
+
+### Error Handling Pattern
+
+```python
+from devrev import DevRevClient
+from devrev.exceptions import (
+    DevRevError,
+    NotFoundError,
+    ValidationError,
+    RateLimitError,
+    AuthenticationError
+)
+import time
+
+client = DevRevClient()
+
+try:
+    work = client.works.get(id="don:core:dvrv-us-1:devo/1:ticket/123")
+    print(f"Title: {work.work.title}")
+except NotFoundError as e:
+    print(f"Work not found: {e.message}")
+except ValidationError as e:
+    print(f"Invalid request: {e.message}")
+except RateLimitError as e:
+    print(f"Rate limited, retry after {e.retry_after} seconds")
+    time.sleep(e.retry_after)
+except AuthenticationError as e:
+    print(f"Auth failed: {e.message}")
+except DevRevError as e:
+    print(f"API error: {e.message}, status: {e.status_code}")
+```
+
+## Beta API
+
+Enable beta features for incidents, engagements, brands, search, recommendations:
+
+```python
+from devrev import DevRevClient, APIVersion
+
+# Enable beta API
+client = DevRevClient(api_version=APIVersion.BETA)
+
+# Or via environment variable:
+# export DEVREV_API_VERSION=beta
+
+# Beta-only services
+incidents = client.incidents.list()
+engagements = client.engagements.list()
+brands = client.brands.list()
+search_results = client.search.hybrid(query="dashboard error")
+```
+
+### Beta Services
+- `incidents` - Incident management with SLA integration
+- `engagements` - Customer interaction tracking
+- `brands` - Multi-brand support
+- `uoms` - Unit of measurement and metering
+- `question_answers` - Q&A for knowledge base
+- `recommendations` - AI-powered chat completions
+- `search` - Hybrid search (keyword + semantic)
+
+## Framework Integrations
+
+### FastAPI
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends
+from devrev import AsyncDevRevClient
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.devrev = AsyncDevRevClient()
+    yield
+    await app.state.devrev.close()
+
+app = FastAPI(lifespan=lifespan)
+
+def get_client() -> AsyncDevRevClient:
+    return app.state.devrev
+
+@app.get("/accounts")
+async def list_accounts(client: AsyncDevRevClient = Depends(get_client)):
+    response = await client.accounts.list(limit=10)
+    return {"accounts": [a.model_dump() for a in response.accounts]}
+```
+
+### Flask
+
+```python
+from flask import Flask, g
+from devrev import DevRevClient
+
+app = Flask(__name__)
+
+def get_client() -> DevRevClient:
+    if "devrev" not in g:
+        g.devrev = DevRevClient()
+    return g.devrev
+
+@app.teardown_appcontext
+def close_client(error):
+    client = g.pop("devrev", None)
+    if client:
+        client.close()
+
+@app.route("/accounts")
+def list_accounts():
+    client = get_client()
+    response = client.accounts.list(limit=10)
+    return {"accounts": [a.model_dump() for a in response.accounts]}
+```
+
+## Important Notes for AI Code Generation
+
+1. **Environment Variables**: Always use `DEVREV_API_TOKEN` env var, never hardcode tokens
+2. **Context Managers**: Use `with`/`async with` for automatic resource cleanup
+3. **Response Structure**: Data is nested (e.g., `response.accounts`, `response.work`)
+4. **ID Format**: DevRev uses DON IDs: `don:core:dvrv-us-1:devo/1:ticket/123`
+5. **Pagination**: Cursor-based using `cursor` and `next_cursor`, not page numbers
+6. **Type Safety**: Use `WorkType`, `AccountType` enums from `devrev.models`
+7. **Imports**: Models from `devrev.models`, exceptions from `devrev.exceptions`
+8. **Async**: Use `AsyncDevRevClient` with `await` for all API calls
+9. **Error Properties**: All exceptions have `.message`, `.status_code`, `.request_id`
+10. **Rate Limits**: `RateLimitError` has `.retry_after` attribute in seconds
+```
+
