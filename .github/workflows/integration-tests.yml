@@ -1,6 +1,4 @@
 name: Integration Tests
-permissions:
-  contents: read
 
 on:
   # Run daily to catch API changes (read-only tests)
@@ -40,10 +38,10 @@ jobs:
         python-version: ['3.11', '3.12', '3.13']
     
     steps:
-      - uses: actions/checkout@v6
-      
+      - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       
@@ -78,18 +76,18 @@ jobs:
       issues: write
     
     steps:
-      - uses: actions/checkout@v6
-      
+      - uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-      
+
       - name: Run backwards compatibility tests
         env:
           DEVREV_API_TOKEN: ${{ secrets.DEVREV_API_TOKEN }}
@@ -140,10 +138,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
