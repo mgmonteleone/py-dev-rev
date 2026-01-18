@@ -51,8 +51,11 @@ class TestQuestionAnswersService:
         mock_http_client: MagicMock,
         sample_question_answer_data: dict[str, Any],
     ) -> None:
-        """Test getting a question answer by ID."""
-        mock_http_client.post.return_value = create_mock_response(
+        """Test getting a question answer by ID.
+
+        Note: The service uses GET (not POST) per OpenAPI spec.
+        """
+        mock_http_client.get.return_value = create_mock_response(
             {"question_answer": sample_question_answer_data}
         )
 
@@ -62,7 +65,7 @@ class TestQuestionAnswersService:
 
         assert isinstance(result, QuestionAnswer)
         assert result.id == "don:core:question_answer:123"
-        mock_http_client.post.assert_called_once()
+        mock_http_client.get.assert_called_once()
 
     def test_list_question_answers(
         self,

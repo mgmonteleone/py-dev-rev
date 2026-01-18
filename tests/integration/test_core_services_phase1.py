@@ -36,8 +36,15 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")
 def client() -> DevRevClient:
-    """Create a DevRev client for integration tests."""
+    """Create a DevRev client for PUBLIC API integration tests."""
     return DevRevClient()
+
+
+@pytest.fixture(scope="module")
+def beta_client() -> DevRevClient:
+    """Create a DevRev client for BETA API integration tests."""
+    from devrev.config import APIVersion
+    return DevRevClient(api_version=APIVersion.BETA)
 
 
 class TestGroupMembersEndpoints:
@@ -58,20 +65,20 @@ class TestGroupMembersEndpoints:
         assert isinstance(result, list)
         logger.info(f"✅ group-members.list: {len(result)} members in group {group_id}")
 
-    def test_group_members_count(self, client: DevRevClient) -> None:
-        """Test group-members.count endpoint."""
+    def test_group_members_count(self, beta_client: DevRevClient) -> None:
+        """Test groups.members.count endpoint (BETA API only)."""
         # Get a valid group ID from list
-        groups_result = client.groups.list()
+        groups_result = beta_client.groups.list()
         if not groups_result or len(groups_result) == 0:
             pytest.skip("No groups available for testing")
-        
+
         group_id = groups_result[0].id
-        
-        # Test count members
-        result = client.groups.members_count(group_id)
+
+        # Test count members (beta endpoint)
+        result = beta_client.groups.members_count(group_id)
         assert isinstance(result, int)
         assert result >= 0
-        logger.info(f"✅ group-members.count: {result} members in group {group_id}")
+        logger.info(f"✅ groups.members.count: {result} members in group {group_id}")
 
 
 class TestTimelineEntriesEndpoints:
@@ -118,24 +125,47 @@ class TestTimelineEntriesEndpoints:
 
 
 class TestLinksEndpoints:
-    """Tests for links endpoints."""
+    """Tests for links endpoints.
+
+    Note: links.list requires an 'object' parameter to filter by.
+    The API returns 400 if called without specifying an object.
+    """
 
     def test_links_list(self, client: DevRevClient) -> None:
-        """Test links.list endpoint."""
-        # Test list links
-        result = client.links.list()
+        """Test links.list endpoint.
+
+        Note: This endpoint requires an 'object' parameter. We use a work item ID.
+        """
+        # Get a valid work item to query links for
+        works_result = client.works.list(limit=1)
+        if not works_result.works:
+            pytest.skip("No works available for testing links")
+
+        object_id = works_result.works[0].id
+
+        # Test list links with object filter
+        request = LinksListRequest(object=object_id)
+        result = client.links.list(request)
         assert isinstance(result, list)
-        logger.info(f"✅ links.list: {len(result)} links")
+        logger.info(f"✅ links.list: {len(result)} links for object {object_id}")
 
     def test_links_get(self, client: DevRevClient) -> None:
         """Test links.get endpoint."""
-        # Get a valid link ID from list
-        list_result = client.links.list()
+        # Get a valid work item to query links for
+        works_result = client.works.list(limit=1)
+        if not works_result.works:
+            pytest.skip("No works available for testing links")
+
+        object_id = works_result.works[0].id
+
+        # Get links for the object
+        list_request = LinksListRequest(object=object_id)
+        list_result = client.links.list(list_request)
         if not list_result or len(list_result) == 0:
             pytest.skip("No links available for testing")
-        
+
         link_id = list_result[0].id
-        
+
         # Test get link
         request = LinksGetRequest(id=link_id)
         result = client.links.get(request)

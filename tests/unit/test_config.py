@@ -26,9 +26,23 @@ class TestDevRevConfig:
         assert config.log_level == "DEBUG"
 
     def test_config_requires_api_token(self) -> None:
-        """Test that API token is required."""
+        """Test that API token is required.
+
+        Note: DevRevConfig also reads from .env file, so we must override
+        model_config to prevent file loading during this test.
+        """
+        # Create a subclass that doesn't read .env files
+        from pydantic_settings import SettingsConfigDict
+
+        class TestConfig(DevRevConfig):
+            model_config = SettingsConfigDict(
+                env_prefix="DEVREV_",
+                env_file=None,  # Disable .env file loading
+                extra="ignore",
+            )
+
         with patch.dict(os.environ, {}, clear=True), pytest.raises(ValidationError):
-            DevRevConfig()
+            TestConfig()
 
     def test_base_url_strips_trailing_slash(self, mock_env_vars: dict[str, str]) -> None:
         """Test that trailing slash is removed from base URL.

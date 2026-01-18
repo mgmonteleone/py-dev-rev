@@ -1,17 +1,34 @@
 """Integration tests for API connectivity."""
 
+import os
+
 import pytest
 
+from devrev import DevRevClient
 
-@pytest.mark.integration
-class TestPing:
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not os.environ.get("DEVREV_API_TOKEN"),
+        reason="DEVREV_API_TOKEN environment variable not set",
+    ),
+]
+
+
+class TestConnectivity:
     """Test API connectivity."""
 
-    @pytest.mark.skip(reason="Client HTTP layer not yet implemented (Phase 2)")
-    def test_ping_endpoint(self) -> None:
-        """Test that ping endpoint is reachable.
+    @pytest.fixture
+    def client(self) -> DevRevClient:
+        """Create a DevRev client."""
+        return DevRevClient()
 
-        This test will be enabled in Phase 2 when the HTTP client is implemented.
+    def test_api_connectivity(self, client: DevRevClient) -> None:
+        """Test that API is reachable by listing dev users.
+
+        DevRev doesn't have a dedicated ping endpoint, so we test connectivity
+        by calling dev-users.list which should always work with a valid token.
         """
-        # This will be implemented in Phase 2
-        pass
+        result = client.dev_users.list(limit=1)
+        assert result is not None
+        assert hasattr(result, "dev_users")

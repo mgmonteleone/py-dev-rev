@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pydantic import Field
 
@@ -33,6 +34,21 @@ class UomMetricScope(str, Enum):
     USER = "user"
 
 
+class AggregationDetails(DevRevResponseModel):
+    """Aggregation details for a UOM."""
+
+    aggregation_type: UomAggregationType | None = Field(
+        default=None, description="Aggregation type"
+    )
+
+
+class UomUnit(DevRevResponseModel):
+    """Unit details for a UOM."""
+
+    name: str | None = Field(default=None, description="Unit name")
+    type: str | None = Field(default=None, description="Unit type (number, boolean)")
+
+
 class Uom(DevRevResponseModel):
     """DevRev UOM model.
 
@@ -41,20 +57,23 @@ class Uom(DevRevResponseModel):
 
     id: str = Field(..., description="UOM ID")
     display_id: str | None = Field(default=None, description="Human-readable display ID")
-    name: str = Field(..., description="UOM name")
+    name: str | None = Field(default=None, description="UOM name")
+    metric_name: str | None = Field(default=None, description="Metric name identifier")
     description: str | None = Field(default=None, description="UOM description")
-    aggregation_type: UomAggregationType = Field(..., description="Aggregation type")
-    metric_scope: UomMetricScope | None = Field(default=None, description="Metric scope")
+    aggregation_type: UomAggregationType | None = Field(
+        default=None, description="Aggregation type (legacy)"
+    )
+    aggregation_details: AggregationDetails | dict[str, Any] | None = Field(
+        default=None, description="Aggregation details"
+    )
+    metric_scope: UomMetricScope | str | None = Field(default=None, description="Metric scope")
     dimensions: list[str] | None = Field(default=None, description="Dimensions")
-    part: str | None = Field(default=None, description="Associated part ID")
-    product: str | None = Field(default=None, description="Associated product ID")
-    is_enabled: bool = Field(default=True, description="Whether UOM is enabled")
-    created_date: datetime | None = Field(
-        default=None, alias="created_at", description="Creation timestamp"
-    )
-    modified_date: datetime | None = Field(
-        default=None, alias="modified_at", description="Last modification timestamp"
-    )
+    part: dict[str, Any] | str | None = Field(default=None, description="Associated part")
+    product: dict[str, Any] | str | None = Field(default=None, description="Associated product")
+    unit: UomUnit | dict[str, Any] | None = Field(default=None, description="Unit details")
+    is_enabled: bool | None = Field(default=None, description="Whether UOM is enabled")
+    created_date: datetime | None = Field(default=None, description="Creation timestamp")
+    modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
 
 
 # Request Models

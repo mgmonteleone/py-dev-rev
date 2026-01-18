@@ -35,8 +35,8 @@ class Engagement(DevRevResponseModel):
 
     id: str = Field(..., description="Engagement ID")
     display_id: str | None = Field(default=None, description="Human-readable display ID")
-    title: str = Field(..., description="Engagement title")
-    engagement_type: EngagementType = Field(..., description="Type of engagement")
+    title: str | None = Field(default=None, description="Engagement title")
+    engagement_type: EngagementType | None = Field(default=None, description="Type of engagement")
     description: str | None = Field(default=None, description="Engagement description")
     members: list[str] | None = Field(default=None, description="Member user IDs")
     parent: str | None = Field(default=None, description="Parent engagement ID")

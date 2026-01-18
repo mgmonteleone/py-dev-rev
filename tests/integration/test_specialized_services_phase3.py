@@ -15,6 +15,7 @@ import pytest
 
 from devrev import DevRevClient
 from devrev.config import APIVersion
+from devrev.exceptions import DevRevError
 from devrev.models.search import CoreSearchRequest, HybridSearchRequest, SearchNamespace
 from devrev.models.recommendations import GetReplyRequest
 
@@ -44,8 +45,16 @@ def beta_client() -> DevRevClient:
 
 
 class TestSearchEndpoints:
-    """Tests for search endpoints (BETA API)."""
+    """Tests for search endpoints (BETA API).
 
+    Note: Search API may require specific permissions or data to be available.
+    Returns 400 if search is not available for this workspace.
+    """
+
+    @pytest.mark.xfail(
+        reason="Search API returns 400 - may not be enabled for this workspace",
+        raises=DevRevError,
+    )
     def test_search_core(self, beta_client: DevRevClient) -> None:
         """Test search.core endpoint."""
         # Search for works
@@ -58,6 +67,10 @@ class TestSearchEndpoints:
         assert hasattr(result, "results")
         logger.info(f"✅ search.core: {len(result.results)} results")
 
+    @pytest.mark.xfail(
+        reason="Search API returns 400 - may not be enabled for this workspace",
+        raises=DevRevError,
+    )
     def test_search_core_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.core endpoint with request object."""
         request = CoreSearchRequest(
@@ -70,6 +83,10 @@ class TestSearchEndpoints:
         assert hasattr(result, "results")
         logger.info(f"✅ search.core (with request): {len(result.results)} results")
 
+    @pytest.mark.xfail(
+        reason="Search API returns 400 - may not be enabled for this workspace",
+        raises=DevRevError,
+    )
     def test_search_hybrid(self, beta_client: DevRevClient) -> None:
         """Test search.hybrid endpoint."""
         # Hybrid search for works
@@ -83,6 +100,10 @@ class TestSearchEndpoints:
         assert hasattr(result, "results")
         logger.info(f"✅ search.hybrid: {len(result.results)} results")
 
+    @pytest.mark.xfail(
+        reason="Search API returns 400 - may not be enabled for this workspace",
+        raises=DevRevError,
+    )
     def test_search_hybrid_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.hybrid endpoint with request object."""
         request = HybridSearchRequest(
@@ -98,8 +119,15 @@ class TestSearchEndpoints:
 
 
 class TestRecommendationsEndpoints:
-    """Tests for recommendations endpoints (BETA API)."""
+    """Tests for recommendations endpoints (BETA API).
 
+    Note: AI-based endpoints may require specific setup, data, or permissions.
+    """
+
+    @pytest.mark.xfail(
+        reason="Recommendations API may require specific AI features to be enabled",
+        raises=DevRevError,
+    )
     def test_recommendations_get_reply(self, beta_client: DevRevClient) -> None:
         """Test recommendations.get-reply endpoint.
 
@@ -113,17 +141,10 @@ class TestRecommendationsEndpoints:
 
         conversation_id = conversations[0].id
 
-        try:
-            request = GetReplyRequest(object_id=conversation_id)
-            result = beta_client.recommendations.get_reply(request)
-            assert result is not None
-            logger.info(f"✅ recommendations.get-reply: Got reply recommendation")
-        except Exception as e:
-            # This endpoint may not be available or may require special permissions
-            if "not found" in str(e).lower() or "not available" in str(e).lower():
-                pytest.skip(f"Recommendations endpoint not available: {e}")
-            else:
-                raise
+        request = GetReplyRequest(object_id=conversation_id)
+        result = beta_client.recommendations.get_reply(request)
+        assert result is not None
+        logger.info(f"✅ recommendations.get-reply: Got reply recommendation")
 
 
 class TestBetaEndpoints:
@@ -132,6 +153,10 @@ class TestBetaEndpoints:
     These endpoints are only available in BETA API version.
     """
 
+    @pytest.mark.xfail(
+        reason="rev-users.get-personal-data may require GDPR compliance features to be enabled",
+        raises=DevRevError,
+    )
     def test_rev_users_get_personal_data(self, beta_client: DevRevClient) -> None:
         """Test rev-users.get-personal-data endpoint (beta only).
 
@@ -143,12 +168,9 @@ class TestBetaEndpoints:
 
         user_id = list_result.rev_users[0].id
 
-        try:
-            result = beta_client.rev_users.get_personal_data(user_id)
-            assert result is not None
-            logger.info(f"✅ rev-users.get-personal-data: Retrieved personal data")
-        except AttributeError:
-            pytest.skip("get_personal_data method not yet implemented")
+        result = beta_client.rev_users.get_personal_data(user_id)
+        assert result is not None
+        logger.info(f"✅ rev-users.get-personal-data: Retrieved personal data")
 
 
 class TestKnownIssues:

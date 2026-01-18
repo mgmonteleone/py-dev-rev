@@ -163,14 +163,20 @@ def sample_link_data() -> dict[str, Any]:
 # Incident fixtures
 @pytest.fixture
 def sample_incident_data() -> dict[str, Any]:
-    """Sample incident data."""
+    """Sample incident data matching actual API response structure.
+
+    The API returns complex objects for stage and severity, not simple strings.
+    """
     return {
         "id": "don:core:incident:123",
         "display_id": "INC-123",
         "title": "Test Incident",
         "body": "Test incident description",
-        "stage": "acknowledged",
-        "severity": "sev1",
+        "stage": {
+            "stage": {"id": "don:core:custom_stage:123", "name": "Acknowledged"},
+            "state": {"id": "don:core:custom_state:456", "name": "Active", "is_final": False},
+        },
+        "severity": {"id": 1, "label": "Sev1", "ordinal": 1},
     }
 
 

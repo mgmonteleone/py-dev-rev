@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+
+#### GroupsMembersCountRequest Parameter Rename (#107)
+
+**Breaking Change**: The `members_count` method parameter and `GroupsMembersCountRequest` model field were renamed to match the actual DevRev API field names.
+
+**Changes Made**:
+- **Method Parameter**: `members_count(id=...)` → `members_count(group_id=...)`
+- **Model Field**: `GroupsMembersCountRequest.id` → `GroupsMembersCountRequest.group`
+
+**Reason**: The OpenAPI specification and actual API use `group` as the field name, not `id`. This change aligns the SDK with the real API behavior discovered during integration testing.
+
+**Migration**:
+```python
+# Before (incorrect)
+count = client.groups.members_count(id="don:identity:dvrv-us-1:devo/abc123:group/xyz789")
+
+# After (correct)
+count = client.groups.members_count(group_id="don:identity:dvrv-us-1:devo/abc123:group/xyz789")
+```
+
+**Note**: There are no known existing consumers of this SDK, so the impact is minimal.
+
 ## [2.0.0] - 2026-01-18
 
 🚀 **Beta API Support** - Major release adding support for DevRev Beta API with 74 new endpoints!

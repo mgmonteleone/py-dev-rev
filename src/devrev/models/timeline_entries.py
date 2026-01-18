@@ -16,9 +16,15 @@ from devrev.models.base import (
 
 
 class TimelineEntryType(str, Enum):
-    """Timeline entry type enumeration."""
+    """Timeline entry type enumeration.
 
+    Note: The API may return additional timeline entry types.
+    Unknown values will be handled gracefully.
+    """
+
+    CHANGE_EVENT = "timeline_change_event"
     COMMENT = "timeline_comment"
+    # Legacy values kept for backwards compatibility
     NOTE = "timeline_note"
     EVENT = "timeline_event"
 
@@ -27,7 +33,9 @@ class TimelineEntry(DevRevResponseModel):
     """DevRev Timeline Entry model."""
 
     id: str = Field(..., description="Timeline entry ID")
-    type: TimelineEntryType | None = Field(default=None, description="Entry type")
+    type: str | None = Field(
+        default=None, description="Entry type (may be TimelineEntryType value or other)"
+    )
     body: str | None = Field(default=None, description="Entry content")
     object: str | None = Field(default=None, description="Parent object ID")
     created_by: UserSummary | None = Field(default=None, description="Creator")

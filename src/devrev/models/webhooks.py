@@ -20,6 +20,7 @@ class WebhookStatus(str, Enum):
 
     ACTIVE = "active"
     INACTIVE = "inactive"
+    UNVERIFIED = "unverified"
 
 
 class Webhook(DevRevResponseModel):
