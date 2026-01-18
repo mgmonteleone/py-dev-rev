@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
 
 from pydantic import Field
 
 from devrev.models.base import (
     DevRevBaseModel,
     DevRevResponseModel,
+    OrgSummary,
     PaginatedResponse,
     UserSummary,
 )
@@ -49,7 +49,7 @@ class GroupMember(DevRevResponseModel):
     """
 
     member: UserSummary = Field(..., description="Member details")
-    member_rev_org: Any | None = Field(default=None, description="Member's Rev org")
+    member_rev_org: OrgSummary | None = Field(default=None, description="Member's Rev org")
 
 
 class GroupsCreateRequest(DevRevBaseModel):

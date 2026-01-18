@@ -19,6 +19,7 @@ import pytest
 
 from devrev import DevRevClient
 from devrev.config import APIVersion
+from devrev.exceptions import DevRevError
 from devrev.models.code_changes import CodeChangesListRequest, CodeChangesGetRequest
 from devrev.models.brands import BrandsListRequest, BrandsGetRequest
 from devrev.models.question_answers import QuestionAnswersListRequest, QuestionAnswersGetRequest
@@ -80,7 +81,7 @@ class TestBrandsEndpoints:
 
     @pytest.mark.xfail(
         reason="Brands API returns 404 - feature may not be enabled for this workspace",
-        raises=Exception,
+        raises=DevRevError,
     )
     def test_brands_list(self, beta_client: DevRevClient) -> None:
         """Test brands.list endpoint."""
@@ -91,7 +92,7 @@ class TestBrandsEndpoints:
 
     @pytest.mark.xfail(
         reason="Brands API returns 404 - feature may not be enabled for this workspace",
-        raises=Exception,
+        raises=DevRevError,
     )
     def test_brands_get(self, beta_client: DevRevClient) -> None:
         """Test brands.get endpoint."""
@@ -223,7 +224,7 @@ class TestPreferencesEndpoints:
 
     @pytest.mark.xfail(
         reason="Preferences API returns 400 - may require specific user context or permissions",
-        raises=Exception,
+        raises=DevRevError,
     )
     def test_preferences_get(self, beta_client: DevRevClient) -> None:
         """Test preferences.get endpoint."""

@@ -362,7 +362,7 @@ class TestConversationsReadOnly:
 
     @pytest.mark.xfail(
         reason="conversations.export returns 400 - may require specific permissions or data",
-        raises=Exception,
+        raises=DevRevError,
     )
     def test_conversations_export(self, beta_client: DevRevClient) -> None:
         """Test conversations.export endpoint (BETA API only).
