@@ -6,7 +6,7 @@ Simple examples demonstrating common DevRev SDK operations.
 
 1. Install the SDK:
    ```bash
-   pip install py-devrev
+   pip install devrev-python-sdk
    ```
 
 2. Set your API token:

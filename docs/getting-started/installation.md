@@ -12,7 +12,7 @@ This guide covers all methods for installing the DevRev Python SDK.
 The simplest way to install:
 
 ```bash
-pip install py-devrev
+pip install devrev-python-sdk
 ```
 
 ## Installation Methods
@@ -20,7 +20,7 @@ pip install py-devrev
 ### Using pip (Recommended)
 
 ```bash
-pip install py-devrev
+pip install devrev-python-sdk
 ```
 
 ### Using uv (Faster)
@@ -28,13 +28,13 @@ pip install py-devrev
 [uv](https://github.com/astral-sh/uv) is a fast Python package installer:
 
 ```bash
-uv pip install py-devrev
+uv pip install devrev-python-sdk
 ```
 
 ### Using Poetry
 
 ```bash
-poetry add py-devrev
+poetry add devrev-python-sdk
 ```
 
 ### Using pipx (For CLI tools)
@@ -42,7 +42,7 @@ poetry add py-devrev
 If you're using the SDK as a CLI tool:
 
 ```bash
-pipx install py-devrev
+pipx install devrev-python-sdk
 ```
 
 ## Development Installation
@@ -82,7 +82,7 @@ After installation, verify it works:
 ```python
 >>> import devrev
 >>> print(devrev.__version__)
-0.1.0
+2.0.0
 >>> from devrev import DevRevClient
 >>> # Success!
 ```
@@ -103,7 +103,7 @@ We recommend using virtual environments:
     python -m venv .venv
     source .venv/bin/activate  # Linux/macOS
     .venv\Scripts\activate     # Windows
-    pip install py-devrev
+    pip install devrev-python-sdk
     ```
 
 === "conda"
@@ -111,7 +111,7 @@ We recommend using virtual environments:
     ```bash
     conda create -n devrev python=3.11
     conda activate devrev
-    pip install py-devrev
+    pip install devrev-python-sdk
     ```
 
 === "pyenv + virtualenv"
@@ -120,7 +120,7 @@ We recommend using virtual environments:
     pyenv install 3.11.0
     pyenv virtualenv 3.11.0 devrev
     pyenv activate devrev
-    pip install py-devrev
+    pip install devrev-python-sdk
     ```
 
 ## Upgrading
@@ -128,7 +128,7 @@ We recommend using virtual environments:
 To upgrade to the latest version:
 
 ```bash
-pip install --upgrade py-devrev
+pip install --upgrade devrev-python-sdk
 ```
 
 ## Troubleshooting
@@ -161,12 +161,12 @@ If you get permission errors:
 
 ```bash
 # Use --user flag
-pip install --user py-devrev
+pip install --user devrev-python-sdk
 
 # Or use a virtual environment (recommended)
 python -m venv .venv
 source .venv/bin/activate
-pip install py-devrev
+pip install devrev-python-sdk
 ```
 
 ## Next Steps

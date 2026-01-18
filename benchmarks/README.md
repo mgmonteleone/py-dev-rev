@@ -13,7 +13,7 @@ These benchmarks measure SDK performance in key areas:
 ## Requirements
 
 ```bash
-pip install py-devrev[benchmark]
+pip install devrev-python-sdk[benchmark]
 # or
 pip install pytest-benchmark
 ```

@@ -96,7 +96,7 @@ A modern, type-safe Python SDK for the [DevRev API](https://devrev.ai).
 ## Installation
 
 ```bash
-pip install py-devrev
+pip install devrev-python-sdk
 ```
 
 See the [Installation Guide](getting-started/installation.md) for more options.
