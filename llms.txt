@@ -1,0 +1,65 @@
+# DevRev Python SDK
+
+> Built with [Augment Code](https://www.augmentcode.com/) - A modern, type-safe Python SDK for the DevRev API with full async support, Pydantic v2 models, and comprehensive error handling.
+
+Key information:
+- Python 3.11+ required
+- Install: `pip install devrev-python-sdk`
+- Authentication via DEVREV_API_TOKEN environment variable
+- Both sync and async clients available (DevRevClient, AsyncDevRevClient)
+- Uses Pydantic v2 for all request/response models
+- Version 2.0.0 (current)
+
+## Quick Start
+
+- [Installation](docs/getting-started/installation.md): Setup instructions and requirements
+- [Authentication](docs/getting-started/authentication.md): API token configuration
+- [Quick Start](docs/getting-started/quickstart.md): First API calls and basic patterns
+
+## API Reference
+
+- [Client](docs/api/client.md): DevRevClient and AsyncDevRevClient classes
+- [Configuration](docs/api/config.md): DevRevConfig settings and options
+- [Exceptions](docs/api/exceptions.md): Error handling and exception types
+- [Services](docs/api/services/index.md): All service modules (accounts, works, users, etc.)
+- [Models](docs/api/models/index.md): Pydantic request/response models
+
+## Services
+
+- [Accounts](docs/api/services/accounts.md): Customer account management
+- [Works](docs/api/services/works.md): Tickets, issues, and work items
+- [Dev Users](docs/api/services/dev-users.md): Developer user management
+- [Rev Users](docs/api/services/rev-users.md): Customer user management
+- [Parts](docs/api/services/parts.md): Product parts and components
+- [Articles](docs/api/services/articles.md): Knowledge base articles
+- [Conversations](docs/api/services/conversations.md): Customer conversations
+- [Tags](docs/api/services/tags.md): Tag management
+- [Groups](docs/api/services/groups.md): Group management
+- [Webhooks](docs/api/services/webhooks.md): Webhook configuration
+- [SLAs](docs/api/services/slas.md): Service level agreements
+- [Timeline Entries](docs/api/services/timeline-entries.md): Activity timeline
+- [Links](docs/api/services/links.md): Object relationships
+- [Code Changes](docs/api/services/code-changes.md): Code change tracking
+
+## Guides
+
+- [Sync vs Async](docs/guides/sync-vs-async.md): Choosing the right client
+- [Pagination](docs/guides/pagination.md): Iterating large result sets
+- [Error Handling](docs/guides/error-handling.md): Exception patterns and best practices
+- [Logging](docs/guides/logging.md): Debugging and logging configuration
+- [Configuration](docs/guides/configuration.md): Advanced configuration options
+- [Testing](docs/guides/testing.md): Testing patterns for SDK usage
+
+## Examples
+
+- [Basic Usage](docs/examples/basic.md): Simple operations and getting started
+- [Advanced Patterns](docs/examples/advanced.md): Concurrent requests, retries, webhooks
+- [Integrations](docs/examples/integrations.md): FastAPI, Flask, Cloud Functions, Celery
+
+## Optional
+
+- [Beta API](docs/guides/beta-api.md): Beta features (incidents, engagements, search, recommendations)
+- [Changelog](docs/changelog.md): Version history and migration guides
+- [Version Support](docs/guides/version-support.md): Python version support policy
+- [Compatibility](docs/guides/compatibility.md): Compatibility matrix
+

@@ -35,6 +35,9 @@ jobs:
       - name: Type check with mypy
         run: mypy src/
 
+      - name: Validate AI documentation
+        run: python scripts/build_ai_docs.py --verbose
+
       - name: Run tests (unit tests only)
         run: pytest --cov=src/devrev --cov-report=xml -v -m "not integration"
 
