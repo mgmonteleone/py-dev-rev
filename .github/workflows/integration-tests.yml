@@ -1,4 +1,6 @@
 name: Integration Tests
+permissions:
+  contents: read
 
 on:
   # Run daily to catch API changes
@@ -59,6 +61,9 @@ jobs:
   backwards-compat:
     runs-on: ubuntu-latest
     if: ${{ secrets.DEVREV_API_TOKEN != '' }}
+    permissions:
+      contents: read
+      issues: write
     
     steps:
       - uses: actions/checkout@v6
