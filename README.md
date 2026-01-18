@@ -2,7 +2,7 @@
 
 A modern, type-safe Python SDK for the DevRev API.
 
-[![PyPI Version](https://img.shields.io/pypi/v/py-devrev.svg)](https://pypi.org/project/py-devrev/)
+[![PyPI Version](https://img.shields.io/pypi/v/devrev-python-sdk.svg)](https://pypi.org/project/devrev-Python-SDK/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)](https://mypy-lang.org/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
@@ -84,10 +84,10 @@ This SDK is generated and maintained from the official DevRev OpenAPI specificat
 
 ## Installation
 
-### From Google Artifact Registry (Recommended)
+### From PyPI (Recommended)
 
 ```bash
-pip install py-devrev
+pip install devrev-python-sdk
 ```
 
 ### From Source
