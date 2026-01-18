@@ -302,9 +302,9 @@ export DEVREV_API_VERSION=beta
 | Service | Description | Endpoints |
 |---------|-------------|-----------|
 | **Incidents** | Incident lifecycle management | 6 endpoints (create, get, list, update, delete, group) |
-| **Engagements** | Customer engagement tracking | 6 endpoints (calls, emails, meetings) |
-| **Brands** | Multi-brand management | 6 endpoints |
-| **UOMs** | Unit of Measurement for metering | 7 endpoints |
+| **Engagements** | Customer engagement tracking | 6 endpoints (create, get, list, update, delete, count) |
+| **Brands** | Multi-brand management | 5 endpoints (create, get, list, update, delete) |
+| **UOMs** | Unit of Measurement for metering | 6 endpoints (create, get, list, update, delete, count) |
 | **Question Answers** | Q&A management | 5 endpoints |
 | **Recommendations** | AI-powered recommendations | 2 endpoints (chat completions, reply suggestions) |
 | **Search** | Advanced search | 2 endpoints (core search, hybrid search) |

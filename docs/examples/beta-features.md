@@ -148,11 +148,20 @@ email_engagement = client.engagements.create(
     members=["don:identity:dvrv-us-1:devo/1:devu/456"],
     tags=["don:core:dvrv-us-1:devo/1:tag/sales"]
 )
+```
 
+## Search
+
+Use DevRev's powerful search capabilities to find content across your workspace.
 
 ### Core Search with Query Language
 
 ```python
+from devrev import DevRevClient, APIVersion
+from devrev.models.search import SearchNamespace
+
+client = DevRevClient(api_version=APIVersion.BETA)
+
 # Use DevRev query language for precise filtering
 results = client.search.core(
     query="type:ticket AND priority:p0 AND status:open",

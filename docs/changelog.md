@@ -28,15 +28,15 @@ This release introduces Beta API support alongside the existing Public API, prov
   - Support for incident stages: acknowledged, identified, mitigated, resolved
   - Severity levels: SEV0, SEV1, SEV2, SEV3
 - **EngagementsService** - Customer engagement tracking (6 endpoints)
-  - Track calls, emails, meetings, and other customer interactions
+  - Create, get, list, update, delete, and count engagements
   - Support for engagement types: call, email, meeting, default
   - Member and parent relationship tracking
-- **BrandsService** - Multi-brand management (6 endpoints)
-  - Create, get, list, update, delete, and count brands
+- **BrandsService** - Multi-brand management (5 endpoints)
+  - Create, get, list, update, delete brands
   - Brand configuration and customization
-- **UomsService** - Unit of Measurement for metering (7 endpoints)
+- **UomsService** - Unit of Measurement for metering (6 endpoints)
   - Create, get, list, update, delete, count UOMs
-  - Aggregation types: sum, count, average, min, max
+  - Aggregation types: sum, minimum, maximum, unique_count, running_total, duration, latest, oldest
   - Metric scopes for usage tracking
 - **QuestionAnswersService** - Q&A management (5 endpoints)
   - Create, get, list, update, delete question-answer pairs
@@ -50,9 +50,9 @@ This release introduces Beta API support alongside the existing Public API, prov
   - Search across multiple namespaces: accounts, articles, conversations, work, users
 
 #### Additional Beta Services (#79)
-- **PreferencesService** - User preference management (3 endpoints)
-- **NotificationsService** - Notification management (3 endpoints)
-- **TrackEventsService** - Event tracking and analytics (1 endpoint)
+- **PreferencesService** - User preference management (2 endpoints: get, update)
+- **NotificationsService** - Notification sending (1 endpoint: send)
+- **TrackEventsService** - Event tracking and analytics (1 endpoint: publish)
 
 #### Configuration & API Version Selection (#79)
 - `APIVersion` enum for selecting Public or Beta API
