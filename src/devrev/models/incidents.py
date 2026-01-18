@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pydantic import Field
 
@@ -14,7 +15,7 @@ from devrev.models.base import DevRevBaseModel, DevRevResponseModel, PaginatedRe
 
 
 class IncidentStage(str, Enum):
-    """Incident stage enumeration."""
+    """Incident stage enumeration (for request filters)."""
 
     ACKNOWLEDGED = "acknowledged"
     IDENTIFIED = "identified"
@@ -23,12 +24,42 @@ class IncidentStage(str, Enum):
 
 
 class IncidentSeverity(str, Enum):
-    """Incident severity enumeration."""
+    """Incident severity enumeration (for request filters)."""
 
     SEV0 = "sev0"
     SEV1 = "sev1"
     SEV2 = "sev2"
     SEV3 = "sev3"
+
+
+class EnumValue(DevRevResponseModel):
+    """Represents an enum value from DevRev API."""
+
+    id: int | None = Field(default=None, description="Unique ID of the enum value")
+    label: str | None = Field(default=None, description="Display label of the enum value")
+    ordinal: int | None = Field(default=None, description="Order of the enum value")
+
+
+class CustomStageSummary(DevRevResponseModel):
+    """Summary of a custom stage."""
+
+    id: str | None = Field(default=None, description="Stage ID")
+    name: str | None = Field(default=None, description="Stage name")
+
+
+class CustomStateSummary(DevRevResponseModel):
+    """Summary of a custom state."""
+
+    id: str | None = Field(default=None, description="State ID")
+    name: str | None = Field(default=None, description="State name")
+    is_final: bool | None = Field(default=None, description="Whether this is a final state")
+
+
+class Stage(DevRevResponseModel):
+    """Describes the current stage of an object."""
+
+    stage: CustomStageSummary | None = Field(default=None, description="Current stage")
+    state: CustomStateSummary | None = Field(default=None, description="Current state")
 
 
 class Incident(DevRevResponseModel):
@@ -39,18 +70,17 @@ class Incident(DevRevResponseModel):
 
     id: str = Field(..., description="Incident ID")
     display_id: str | None = Field(default=None, description="Human-readable display ID")
-    title: str = Field(..., description="Incident title")
+    title: str | None = Field(default=None, description="Incident title")
     body: str | None = Field(default=None, description="Incident description")
-    stage: IncidentStage | None = Field(default=None, description="Incident stage")
-    severity: IncidentSeverity | None = Field(default=None, description="Incident severity")
-    created_date: datetime | None = Field(
-        default=None, alias="created_at", description="Creation timestamp"
+    stage: Stage | dict[str, Any] | None = Field(default=None, description="Incident stage")
+    severity: EnumValue | dict[str, Any] | None = Field(
+        default=None, description="Incident severity"
     )
-    modified_date: datetime | None = Field(
-        default=None, alias="modified_at", description="Last modification timestamp"
-    )
-    owned_by: list[str] | None = Field(default=None, description="Owner user IDs")
-    applies_to_parts: list[str] | None = Field(
+    created_date: datetime | None = Field(default=None, description="Creation timestamp")
+    modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
+    identified_date: datetime | None = Field(default=None, description="Time when incident was identified")
+    owned_by: list[Any] | None = Field(default=None, description="Owner users")
+    applies_to_parts: list[Any] | None = Field(
         default=None, description="Parts this incident applies to"
     )
 
