@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-01-18
+## [2.0.0] - 2026-01-18
+
+🚀 **Major Release** - Beta API support, performance enhancements, and 100% integration test coverage!
 
 ### Breaking Changes
 
@@ -318,20 +320,25 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 1.1.0 | 2026-01-18 | 🚀 Beta API support, performance enhancements, 100% integration test coverage |
+| 2.0.0 | 2026-01-18 | 🚀 Beta API support, performance enhancements, breaking change |
 | 1.0.0 | 2026-01-13 | 🎉 First stable release - Production ready |
 | 0.1.0 | 2026-01-12 | Initial development release |
 
 ## Upgrading
 
-### From 1.0.0 to 1.1.0
+### From 1.0.0 to 2.0.0
 
-The v1.1.0 release includes Beta API support and performance enhancements:
+The v2.0.0 release includes Beta API support, performance enhancements, and one breaking change:
+
+#### Breaking Change
+
+- **GroupsMembersCountRequest Parameter Rename**: `members_count(id=...)` → `members_count(group_id=...)`
+
+#### New Features
 
 - **Beta API Support**: 7 new beta services with 74 endpoints available when you enable beta API
 - **Performance Enhancements**: Connection pooling, circuit breaker, ETag caching
 - **Integration Tests**: 100% coverage of read-only endpoints
-- **One Breaking Change**: `GroupsMembersCountRequest` parameter renamed (see above)
 
 To use beta features, enable the beta API:
 

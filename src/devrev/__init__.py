@@ -29,7 +29,7 @@ from devrev.utils.http import (
 )
 from devrev.utils.logging import JSONFormatter, configure_logging
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"
 __all__ = [
     # Version
     "__version__",
