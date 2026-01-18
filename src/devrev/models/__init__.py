@@ -855,3 +855,18 @@ __all__ = [
     "WidgetsListRequest",
     "WidgetsListResponse",
 ]
+
+# Rebuild models with forward references after all imports are complete
+# This is necessary for TagWithValue which references Tag
+from devrev.models.base import TagWithValue
+from devrev.models.accounts import AccountsListResponse, AccountsExportResponse, Account
+from devrev.models.works import WorksListResponse, WorksExportResponse, Work
+
+# Rebuild models that use TagWithValue (which has forward ref to Tag)
+TagWithValue.model_rebuild()
+Account.model_rebuild()
+AccountsListResponse.model_rebuild()
+AccountsExportResponse.model_rebuild()
+Work.model_rebuild()
+WorksListResponse.model_rebuild()
+WorksExportResponse.model_rebuild()

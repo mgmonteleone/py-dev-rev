@@ -1,0 +1,222 @@
+# DevRev OpenAPI Spec Corrections
+# Based on actual API responses observed during integration testing
+# Date: 2026-01-18
+# API Version: PUBLIC (https://api.devrev.ai)
+#
+# This file documents the corrections needed to the DevRev OpenAPI specification
+# to match the actual API behavior.
+
+openapi: 3.0.3
+info:
+  title: DevRev API - Spec Corrections
+  description: |
+    Corrections to the DevRev OpenAPI specification based on actual API responses.
+    
+    These corrections were discovered through comprehensive integration testing
+    against the live DevRev PUBLIC API. The discrepancies cause validation errors
+    in client SDKs that rely on the OpenAPI spec for model generation.
+    
+    **Testing Methodology**:
+    - Tested against PUBLIC API (https://api.devrev.ai)
+    - 16 read-only endpoints tested
+    - Real API responses captured and validated
+    - Pydantic models used for validation
+    
+    **Impact**: These issues affect any SDK or client that generates models from
+    the OpenAPI spec, causing validation errors when parsing actual API responses.
+  version: corrections-2026-01-18
+  contact:
+    name: Python SDK Maintainer
+    url: https://github.com/mgmonteleone/py-dev-rev
+
+components:
+  schemas:
+    # ============================================================================
+    # CORRECTION #1: TagWithValue.tag Field Type
+    # ============================================================================
+    # 
+    # Issue: OpenAPI spec defines 'tag' as a string, but API returns full Tag object
+    # Affected Endpoints: accounts.list, accounts.export, works.list, works.export
+    # Severity: CRITICAL - Breaks SDK validation
+    # 
+    # Current (INCORRECT):
+    #   TagWithValue:
+    #     properties:
+    #       tag:
+    #         type: string
+    #         description: Tag name or ID
+    # 
+    # Corrected (CORRECT):
+    TagWithValue:
+      type: object
+      description: |
+        Tag with optional value for resource tagging.
+        
+        **Important**: The 'tag' field behaves differently in requests vs responses:
+        - In requests: Can be a string (tag ID)
+        - In responses: Returns a full Tag object with all fields
+      required:
+        - tag
+      properties:
+        tag:
+          oneOf:
+            - type: string
+              description: Tag ID (when used in request payloads)
+              example: "TAG:dvrv-us-1:devo/abc123:tag/1"
+            - $ref: '#/components/schemas/Tag'
+          description: |
+            Tag reference - can be either a tag ID string or a full Tag object.
+            
+            **In API Responses** (list, export endpoints): Returns full Tag object
+            **In API Requests** (create, update endpoints): Accepts tag ID string
+        value:
+          type: string
+          nullable: true
+          description: Optional value associated with the tag
+          example: "production"
+      example:
+        tag:
+          id: "TAG:dvrv-us-1:devo/abc123:tag/6"
+          display_id: "TAG-6"
+          name: "SalesforceService import"
+          description: "item imported from external source"
+          color: "#AAF0BD"
+        value: null
+
+    # ============================================================================
+    # CORRECTION #2: Article.authored_by Field Type
+    # ============================================================================
+    # 
+    # Issue: OpenAPI spec defines 'authored_by' as single UserSummary, but API returns array
+    # Affected Endpoints: articles.list
+    # Severity: CRITICAL - Breaks SDK validation
+    # 
+    # Current (INCORRECT):
+    #   Article:
+    #     properties:
+    #       authored_by:
+    #         $ref: '#/components/schemas/UserSummary'
+    # 
+    # Corrected (CORRECT):
+    Article:
+      type: object
+      description: Knowledge base article
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: string
+          description: Article ID
+          example: "don:core:dvrv-us-1:devo/abc123:article/1"
+        display_id:
+          type: string
+          nullable: true
+          description: Human-readable display ID
+          example: "ART-1"
+        title:
+          type: string
+          description: Article title
+          example: "Getting Started Guide"
+        content:
+          type: string
+          nullable: true
+          description: Article content in markdown or HTML
+        status:
+          type: string
+          enum: [draft, published, archived]
+          nullable: true
+          description: Article publication status
+        authored_by:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: |
+            List of article authors.
+            
+            **Note**: API returns an array, not a single UserSummary object.
+            Articles can have multiple authors.
+          example:
+            - type: "sys_user"
+              display_id: "DEVU-1"
+              id: "don:identity:dvrv-us-1:devo/abc123:devu/1"
+              state: "active"
+        created_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Article creation timestamp
+        modified_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last modification timestamp
+
+    # ============================================================================
+    # Reference Schemas (for completeness)
+    # ============================================================================
+    
+    Tag:
+      type: object
+      description: Tag for categorizing and organizing resources
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Unique tag identifier
+          example: "TAG:dvrv-us-1:devo/abc123:tag/6"
+        display_id:
+          type: string
+          nullable: true
+          description: Human-readable tag ID
+          example: "TAG-6"
+        name:
+          type: string
+          description: Tag name
+          example: "SalesforceService import"
+        description:
+          type: string
+          nullable: true
+          description: Tag description
+          example: "item imported from external source in a specific import unit"
+        color:
+          type: string
+          nullable: true
+          description: Tag color in hex format
+          example: "#AAF0BD"
+        created_date:
+          type: string
+          format: date-time
+          nullable: true
+        modified_date:
+          type: string
+          format: date-time
+          nullable: true
+
+    UserSummary:
+      type: object
+      description: Summary of a user (dev user or rev user)
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: User ID
+        display_id:
+          type: string
+          nullable: true
+          description: Human-readable user ID
+        type:
+          type: string
+          enum: [sys_user, dev_user, rev_user]
+          nullable: true
+          description: User type
+        state:
+          type: string
+          enum: [active, inactive, deleted]
+          nullable: true
+          description: User state
+
