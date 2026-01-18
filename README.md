@@ -51,6 +51,7 @@ This SDK is generated and maintained from the official DevRev OpenAPI specificat
 ### Core Capabilities
 
 - ✅ **Full API Coverage** - All DevRev public API endpoints supported
+- ✅ **Beta API Support** - Access to 74 new beta endpoints with advanced features
 - ✅ **Type-Safe Models** - Pydantic v2 models for all request/response objects
 - ✅ **Async Support** - Native async/await support for high-performance applications
 - ✅ **Automatic Retries** - Configurable retry logic with exponential backoff
@@ -274,6 +275,82 @@ The SDK provides complete coverage of all 209 DevRev public API endpoints, organ
 
 ---
 
+## Beta API
+
+The SDK supports both **Public API** (stable) and **Beta API** (new features). The Beta API includes 74 additional endpoints across 7 new services.
+
+### Enabling Beta API
+
+```python
+from devrev import DevRevClient, APIVersion
+
+# Enable beta API
+client = DevRevClient(api_version=APIVersion.BETA)
+
+# Now you can access beta services
+incidents = client.incidents.list()
+```
+
+Or use environment variable:
+
+```bash
+export DEVREV_API_VERSION=beta
+```
+
+### Beta-Only Services
+
+| Service | Description | Endpoints |
+|---------|-------------|-----------|
+| **Incidents** | Incident lifecycle management | 6 endpoints (create, get, list, update, delete, group) |
+| **Engagements** | Customer engagement tracking | 6 endpoints (create, get, list, update, delete, count) |
+| **Brands** | Multi-brand management | 5 endpoints (create, get, list, update, delete) |
+| **UOMs** | Unit of Measurement for metering | 6 endpoints (create, get, list, update, delete, count) |
+| **Question Answers** | Q&A management | 5 endpoints |
+| **Recommendations** | AI-powered recommendations | 2 endpoints (chat completions, reply suggestions) |
+| **Search** | Advanced search | 2 endpoints (core search, hybrid search) |
+
+### Quick Example
+
+```python
+from devrev import DevRevClient, APIVersion
+from devrev.models.incidents import IncidentSeverity, IncidentStage
+
+# Enable beta API
+client = DevRevClient(api_version=APIVersion.BETA)
+
+# Create an incident
+incident = client.incidents.create(
+    title="Database connection timeout",
+    severity=IncidentSeverity.SEV1,
+    body="Users experiencing 5-second delays"
+)
+
+# Update incident stage
+client.incidents.update(
+    id=incident.id,
+    stage=IncidentStage.RESOLVED
+)
+
+# Use hybrid search
+results = client.search.hybrid(
+    query="authentication issues",
+    semantic_weight=0.7
+)
+```
+
+### Beta API Features
+
+- **Incident Management** - Full lifecycle tracking with SLA integration
+- **Customer Engagement** - Track calls, emails, and meetings
+- **AI Recommendations** - OpenAI-compatible chat completions
+- **Hybrid Search** - Combine keyword and semantic search
+- **Brand Management** - Multi-brand support
+- **Usage Metering** - Track and aggregate usage metrics
+
+See the [Beta API Migration Guide](docs/guides/beta-api.md) and [Beta Features Examples](docs/examples/beta-features.md) for complete documentation.
+
+---
+
 ## Usage Examples
 
 ### Working with Accounts
@@ -395,6 +472,7 @@ client.webhooks.update(
 |----------|----------|---------|-------------|
 | `DEVREV_API_TOKEN` | Yes* | - | API authentication token |
 | `DEVREV_BASE_URL` | No | `https://api.devrev.ai` | API base URL |
+| `DEVREV_API_VERSION` | No | `public` | API version (public, beta) |
 | `DEVREV_TIMEOUT` | No | `30` | Request timeout in seconds |
 | `DEVREV_MAX_RETRIES` | No | `3` | Maximum retry attempts |
 | `DEVREV_LOG_LEVEL` | No | `WARN` | Logging level (DEBUG, INFO, WARN, ERROR) |
@@ -482,7 +560,8 @@ DevRevError (base)
 ├── ServiceUnavailableError (503)
 ├── TimeoutError
 ├── NetworkError
-└── CircuitBreakerError
+├── CircuitBreakerError
+└── BetaAPIRequiredError
 ```
 
 ---
@@ -681,7 +760,22 @@ On tagged releases (`v*`), the package is automatically published to Google Arti
 - [x] Example applications
 - [x] Security audit passed
 
-### Phase 5: Maintenance 🔄
+### Phase 5: Performance & Reliability ✅
+- [x] Connection pooling and HTTP/2 support
+- [x] Circuit breaker pattern
+- [x] ETag caching
+- [x] Structured JSON logging
+
+### Phase 6: Beta API Support ✅
+- [x] Beta API version selection
+- [x] 7 new beta-only services (74 endpoints)
+- [x] Incident management
+- [x] Customer engagement tracking
+- [x] AI-powered recommendations
+- [x] Hybrid search
+- [x] Migration guide and examples
+
+### Phase 7: Maintenance 🔄
 - [x] Automated release workflow
 - [x] Dependency updates (Dependabot)
 - [ ] Community contributions

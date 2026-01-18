@@ -92,7 +92,7 @@ asyncio.run(main())
 Both clients accept the same configuration:
 
 ```python
-from devrev import DevRevClient, DevRevConfig
+from devrev import DevRevClient, DevRevConfig, APIVersion
 
 # Direct parameters
 client = DevRevClient(
@@ -110,5 +110,31 @@ config = DevRevConfig(
 client = DevRevClient(config=config)
 ```
 
-See [Configuration Guide](../guides/configuration.md) for details.
+### API Version Selection
+
+The SDK supports both Public (stable) and Beta (preview) APIs:
+
+```python
+from devrev import DevRevClient, APIVersion
+
+# Use public API (default, stable)
+client = DevRevClient()
+
+# Use beta API (preview features)
+client = DevRevClient(api_version=APIVersion.BETA)
+```
+
+When using the beta API, you gain access to additional services:
+
+- Incidents - Production incident management
+- Engagements - Customer engagement tracking
+- Brands - Brand identity management
+- UOMs - Units of measure for metrics
+- Question Answers - Q&A knowledge base
+- Recommendations - AI-powered recommendations
+- Search - Advanced search capabilities
+
+See [Beta API Overview](beta/index.md) for details.
+
+See [Configuration Guide](../guides/configuration.md) for more configuration options.
 
