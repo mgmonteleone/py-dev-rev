@@ -708,6 +708,20 @@ pytest tests/integration/ -m integration
 pytest tests/unit/test_accounts.py
 ```
 
+### GitHub Actions Integration Tests
+
+To run integration tests in CI/CD, configure the `DEVREV_API_TOKEN` secret:
+
+```bash
+# Quick setup with provided script
+./scripts/setup-github-secrets.sh
+
+# Or manually with GitHub CLI
+gh secret set DEVREV_API_TOKEN --body "your-token-here"
+```
+
+**📖 See [GITHUB_INTEGRATION_SETUP.md](GITHUB_INTEGRATION_SETUP.md) for complete setup instructions.**
+
 ### Coverage Requirements
 
 - **Minimum**: 80% line coverage

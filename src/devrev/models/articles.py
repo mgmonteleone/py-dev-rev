@@ -24,14 +24,21 @@ class ArticleStatus(str, Enum):
 
 
 class Article(DevRevResponseModel):
-    """DevRev Article model."""
+    """DevRev Article model.
+
+    Note: The API returns authored_by as an array of UserSummary objects,
+    not a single UserSummary object as documented in the OpenAPI spec.
+    """
 
     id: str = Field(..., description="Article ID")
     display_id: str | None = Field(default=None, description="Display ID")
     title: str = Field(..., description="Article title")
     content: str | None = Field(default=None, description="Article content")
     status: ArticleStatus | None = Field(default=None, description="Article status")
-    authored_by: UserSummary | None = Field(default=None, description="Author")
+    authored_by: list[UserSummary] | None = Field(
+        default=None,
+        description="Authors of the article (API returns array, not single object)"
+    )
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")
 

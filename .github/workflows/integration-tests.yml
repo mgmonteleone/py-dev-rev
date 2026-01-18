@@ -1,0 +1,120 @@
+name: Integration Tests
+permissions:
+  contents: read
+
+on:
+  # Run daily to catch API changes
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+  # Run on main branch pushes (optional)
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/integration/**'
+      - 'pyproject.toml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    # Only run if API token is available
+    if: ${{ secrets.DEVREV_API_TOKEN != '' }}
+    
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    
+    steps:
+      - uses: actions/checkout@v6
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      
+      - name: Run integration tests
+        id: integration_tests
+        env:
+          DEVREV_API_TOKEN: ${{ secrets.DEVREV_API_TOKEN }}
+        run: |
+          echo "Running integration tests against DevRev API..."
+          pytest tests/integration/ -v -m integration --tb=short
+
+      - name: Report results
+        if: always()
+        run: |
+          if [ "${{ steps.integration_tests.outcome }}" == "success" ]; then
+            echo "✅ Integration tests passed"
+          else
+            echo "❌ Integration tests failed - API may have changed"
+          fi
+
+  # Backwards compatibility check
+  backwards-compat:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.DEVREV_API_TOKEN != '' }}
+    permissions:
+      contents: read
+      issues: write
+    
+    steps:
+      - uses: actions/checkout@v6
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      
+      - name: Run backwards compatibility tests
+        env:
+          DEVREV_API_TOKEN: ${{ secrets.DEVREV_API_TOKEN }}
+        run: |
+          echo "Running backwards compatibility tests..."
+          pytest tests/integration/test_readonly_endpoints.py -v -m integration
+      
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Integration Tests Failed - Possible API Breaking Change',
+              body: `Integration tests failed on scheduled run.
+              
+              **Details:**
+              - Workflow: ${context.workflow}
+              - Run: ${context.runNumber}
+              - Commit: ${context.sha}
+              
+              This may indicate a breaking change in the DevRev API.
+              
+              **Action Required:**
+              1. Review the [failed workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+              2. Check DevRev API changelog for breaking changes
+              3. Update SDK if necessary
+              4. Update tests if API behavior changed intentionally
+              
+              cc: @${context.actor}`,
+              labels: ['bug', 'api-change', 'automated']
+            })
+

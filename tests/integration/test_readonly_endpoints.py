@@ -66,10 +66,13 @@ class TestTagsReadOnly:
     """Read-only tests for tags endpoint."""
 
     def test_list_tags(self, client: DevRevClient) -> None:
-        """Test listing tags (read-only)."""
+        """Test listing tags (read-only).
+
+        Note: The API returns a list directly, not wrapped in a response object.
+        """
         result = client.tags.list()
-        assert hasattr(result, "tags")
-        assert isinstance(result.tags, list)
+        # API returns list directly, not wrapped in response object
+        assert isinstance(result, list)
 
 
 class TestPartsReadOnly:

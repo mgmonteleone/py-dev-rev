@@ -6,8 +6,12 @@ This module provides base classes and shared configuration for all models.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING, Union
 
 from pydantic import BaseModel, ConfigDict, Field
+
+if TYPE_CHECKING:
+    from devrev.models.tags import Tag
 
 
 class DevRevBaseModel(BaseModel):
@@ -108,9 +112,16 @@ class ObjectSummary(DevRevResponseModel):
 
 
 class TagWithValue(DevRevResponseModel):
-    """Tag with value for resource tagging."""
+    """Tag with value for resource tagging.
 
-    tag: str = Field(..., description="Tag name or ID")
+    Note: The API returns a full Tag object in responses (list/export endpoints),
+    but may accept a string tag ID in requests. This model handles both cases.
+    """
+
+    tag: Union["Tag", str] = Field(
+        ...,
+        description="Tag object (in responses) or tag ID string (in requests)"
+    )
     value: str | None = Field(default=None, description="Tag value")
 
 

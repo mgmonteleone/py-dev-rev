@@ -2,9 +2,16 @@
 
 import os
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from dotenv import load_dotenv
+
+# Load .env file if it exists (for integration tests)
+env_file = Path(__file__).parent.parent / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
 
 
 @pytest.fixture(autouse=True)
