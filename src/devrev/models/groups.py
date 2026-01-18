@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pydantic import Field
 
@@ -41,10 +42,14 @@ class GroupSummary(DevRevResponseModel):
 
 
 class GroupMember(DevRevResponseModel):
-    """Group member model."""
+    """Group member model.
 
-    id: str = Field(..., description="Member ID")
-    member: UserSummary | None = Field(default=None, description="Member details")
+    Note: This model matches the group-members-list-response-member schema.
+    The API returns member details directly, not wrapped with an ID.
+    """
+
+    member: UserSummary = Field(..., description="Member details")
+    member_rev_org: Any | None = Field(default=None, description="Member's Rev org")
 
 
 class GroupsCreateRequest(DevRevBaseModel):
@@ -143,7 +148,7 @@ class GroupMembersListResponse(PaginatedResponse):
 class GroupsMembersCountRequest(DevRevBaseModel):
     """Request to count group members (beta only)."""
 
-    id: str = Field(..., description="Group ID")
+    group: str = Field(..., description="Group ID")
 
 
 class GroupsMembersCountResponse(DevRevResponseModel):

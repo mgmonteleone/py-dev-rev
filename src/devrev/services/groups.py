@@ -54,25 +54,25 @@ class GroupsService(BaseService):
 
     def add_member(self, request: GroupMembersAddRequest) -> None:
         """Add a member to a group."""
-        self._post("/group-members.add", request, GroupMembersAddResponse)
+        self._post("/groups.members.add", request, GroupMembersAddResponse)
 
     def remove_member(self, request: GroupMembersRemoveRequest) -> None:
         """Remove a member from a group."""
-        self._post("/group-members.remove", request, GroupMembersRemoveResponse)
+        self._post("/groups.members.remove", request, GroupMembersRemoveResponse)
 
     def list_members(self, request: GroupMembersListRequest) -> Sequence[GroupMember]:
         """List members of a group."""
-        response = self._post("/group-members.list", request, GroupMembersListResponse)
+        response = self._post("/groups.members.list", request, GroupMembersListResponse)
         return response.members
 
     def members_count(
         self,
-        id: str,
+        group_id: str,
     ) -> int:
         """Count members in a group (beta only).
 
         Args:
-            id: Group ID
+            group_id: Group ID
 
         Returns:
             Count of group members
@@ -80,7 +80,7 @@ class GroupsService(BaseService):
         Raises:
             BetaAPIRequiredError: If not using beta API
         """
-        request = GroupsMembersCountRequest(id=id)
+        request = GroupsMembersCountRequest(group=group_id)
         response = self._post("/groups.members.count", request, GroupsMembersCountResponse)
         return response.count
 
@@ -112,25 +112,25 @@ class AsyncGroupsService(AsyncBaseService):
 
     async def add_member(self, request: GroupMembersAddRequest) -> None:
         """Add a member to a group."""
-        await self._post("/group-members.add", request, GroupMembersAddResponse)
+        await self._post("/groups.members.add", request, GroupMembersAddResponse)
 
     async def remove_member(self, request: GroupMembersRemoveRequest) -> None:
         """Remove a member from a group."""
-        await self._post("/group-members.remove", request, GroupMembersRemoveResponse)
+        await self._post("/groups.members.remove", request, GroupMembersRemoveResponse)
 
     async def list_members(self, request: GroupMembersListRequest) -> Sequence[GroupMember]:
         """List members of a group."""
-        response = await self._post("/group-members.list", request, GroupMembersListResponse)
+        response = await self._post("/groups.members.list", request, GroupMembersListResponse)
         return response.members
 
     async def members_count(
         self,
-        id: str,
+        group_id: str,
     ) -> int:
         """Count members in a group (beta only).
 
         Args:
-            id: Group ID
+            group_id: Group ID
 
         Returns:
             Count of group members
@@ -138,6 +138,6 @@ class AsyncGroupsService(AsyncBaseService):
         Raises:
             BetaAPIRequiredError: If not using beta API
         """
-        request = GroupsMembersCountRequest(id=id)
+        request = GroupsMembersCountRequest(group=group_id)
         response = await self._post("/groups.members.count", request, GroupsMembersCountResponse)
         return response.count
