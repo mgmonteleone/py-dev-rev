@@ -1,6 +1,6 @@
 # DevRev Python SDK
 
-> A modern, type-safe Python SDK for the DevRev API with full async support, Pydantic v2 models, and comprehensive error handling.
+> Built with [Augment Code](https://www.augmentcode.com/) - A modern, type-safe Python SDK for the DevRev API with full async support, Pydantic v2 models, and comprehensive error handling.
 
 Key information:
 - Python 3.11+ required
