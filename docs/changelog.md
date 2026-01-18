@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-18
+
 ### Breaking Changes
 
 #### GroupsMembersCountRequest Parameter Rename (#107)
@@ -29,8 +31,6 @@ count = client.groups.members_count(group_id="don:identity:dvrv-us-1:devo/abc123
 ```
 
 **Note**: There are no known existing consumers of this SDK, so the impact is minimal.
-
-## [2.0.0] - 2026-01-18
 
 🚀 **Beta API Support** - Major release adding support for DevRev Beta API with 74 new endpoints!
 
@@ -139,24 +139,38 @@ search_results = client.search.hybrid("authentication issues")
 
 See the [Beta API Migration Guide](guides/beta-api.md) for complete details.
 
-## [1.1.0] - 2026-01-15
+### Performance & Reliability (#78)
 
-### Added
-- Connection pooling with configurable limits for improved performance (#78)
-- Fine-grained timeout configuration with `TimeoutConfig` class (#78)
-- ETag caching for conditional requests to reduce bandwidth (#78)
-- Circuit breaker pattern for automatic failure detection and recovery (#78)
-- Structured JSON logging with `JSONFormatter` for production environments (#78)
-- Health check methods (`health_check()`) for monitoring service availability (#78)
-- `CircuitBreakerError` exception for circuit breaker state handling (#78)
-- HTTP/2 support (optional, disabled by default) (#78)
+- Connection pooling with configurable limits for improved performance
+- Fine-grained timeout configuration with `TimeoutConfig` class
+- ETag caching for conditional requests to reduce bandwidth
+- Circuit breaker pattern for automatic failure detection and recovery
+- Structured JSON logging with `JSONFormatter` for production environments
+- Health check methods (`health_check()`) for monitoring service availability
+- `CircuitBreakerError` exception for circuit breaker state handling
+- HTTP/2 support (optional, disabled by default)
+
+### Integration Testing (#103, #104, #105, #106)
+
+- 100% integration test coverage for all read-only endpoints
+- Write operation testing strategy with TestDataManager
+- Comprehensive integration test suite with 81 tests
+
+### Bug Fixes
+
+- Fix httpx URL resolution issues with leading slashes (#78)
+- Fix circuit breaker off-by-one bug in HALF_OPEN transition (#78)
+- Fix request attribute on synthetic 304 response (#78)
+- Remove unused exception variables for linting (#76, #77)
+- Address security audit findings (#76, #77)
 
 ### Changed
-- Enhanced `DevRevConfig` with new performance and reliability settings (#78)
-- Improved HTTP client with connection pooling and keep-alive support (#78)
-- Updated logging to support both text and JSON formats (#78)
+- Enhanced `DevRevConfig` with new performance and reliability settings
+- Improved HTTP client with connection pooling and keep-alive support
+- Updated logging to support both text and JSON formats
 
 ### Configuration
+
 New environment variables and configuration options:
 - `DEVREV_LOG_FORMAT` - Log format: `text` or `json` (default: `text`)
 - `DEVREV_MAX_CONNECTIONS` - Maximum connection pool size (default: `100`)
@@ -167,6 +181,7 @@ New environment variables and configuration options:
 - `DEVREV_CIRCUIT_BREAKER_THRESHOLD` - Failure threshold (default: `5`)
 - `DEVREV_CIRCUIT_BREAKER_RECOVERY_TIMEOUT` - Recovery timeout in seconds (default: `30`)
 - `DEVREV_CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS` - Test requests in half-open state (default: `3`)
+- `DEVREV_API_VERSION` - API version selection: `public` or `beta` (default: `public`)
 
 ## [1.0.0] - 2026-01-13
 
@@ -303,23 +318,22 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 2.0.0 | 2026-01-18 | 🚀 Beta API support with 74 new endpoints |
-| 1.1.0 | 2026-01-15 | Performance & reliability enhancements |
+| 1.1.0 | 2026-01-18 | 🚀 Beta API support, performance enhancements, 100% integration test coverage |
 | 1.0.0 | 2026-01-13 | 🎉 First stable release - Production ready |
 | 0.1.0 | 2026-01-12 | Initial development release |
 
 ## Upgrading
 
-### From 1.x to 2.0.0
+### From 1.0.0 to 1.1.0
 
-The v2.0.0 release is **fully backwards compatible** with v1.x:
+The v1.1.0 release includes Beta API support and performance enhancements:
 
-- **No Breaking Changes**: All existing Public API code continues to work
-- **Beta API is Opt-In**: Default API version remains `public`
-- **New Features**: 7 new beta services with 74 endpoints available when you enable beta API
-- **New Exception**: `BetaAPIRequiredError` raised when accessing beta features without beta API enabled
+- **Beta API Support**: 7 new beta services with 74 endpoints available when you enable beta API
+- **Performance Enhancements**: Connection pooling, circuit breaker, ETag caching
+- **Integration Tests**: 100% coverage of read-only endpoints
+- **One Breaking Change**: `GroupsMembersCountRequest` parameter renamed (see above)
 
-To use beta features, simply enable the beta API:
+To use beta features, enable the beta API:
 
 ```python
 from devrev import DevRevClient, APIVersion
