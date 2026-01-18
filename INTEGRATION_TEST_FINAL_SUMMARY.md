@@ -1,6 +1,6 @@
 # Integration Test Coverage - Final Summary
-**Date**: 2026-01-18  
-**Branch**: `feature/complete-integration-test-coverage`  
+**Date**: 2026-01-18
+**Branch**: `feature/complete-integration-test-coverage`
 **Issue**: #103
 
 ---
@@ -9,11 +9,16 @@
 
 ### Test Results Summary
 ```
-✅ 54 PASSED (64%)
-❌ 25 FAILED (30%) - Most require BETA API
-⏭️  5 SKIPPED (6%) - Intentionally skipped (beta/known issues)
+✅ 60 PASSED (71%) - Including BETA API tests!
+❌ 16 FAILED (19%) - Schema/endpoint issues
+⏭️  8 SKIPPED (10%) - No test data available
 📊 84 TOTAL TESTS
 ```
+
+### Improvement from Initial Run
+- **Before BETA API**: 54 passed (64%)
+- **After BETA API**: 60 passed (71%)
+- **Improvement**: +6 tests passing (+11%)
 
 ---
 
@@ -44,24 +49,26 @@
    - ❌ links.list (400 - bad request)
    - ❌ links.get (400 - bad request)
 
-5. **`test_extended_services_phase2.py`** - 15 tests (1 passing, 13 failing, 1 skipped)
-   - ✅ 1 passing (code-changes.list)
-   - ⏭️ 1 skipped (code-changes.get - no data)
-   - ❌ 13 failing (ALL require BETA API):
-     - brands.list, brands.get
-     - engagements.list, engagements.get, engagements.count
-     - incidents.list, incidents.get
-     - uoms.list, uoms.get, uoms.count
-     - question-answers.list, question-answers.get
-     - preferences.get
+5. **`test_extended_services_phase2.py`** - 15 tests (7 passing, 3 failing, 5 skipped)
+   - ✅ 7 passing with BETA API:
+     - code-changes.list
+     - engagements.list, engagements.count
+     - incidents.list
+     - uoms.list, uoms.count
+     - question-answers.list
+   - ⏭️ 5 skipped (no test data):
+     - code-changes.get, engagements.get, incidents.get, uoms.get, question-answers.get
+   - ❌ 3 failing (endpoint issues):
+     - brands.list, brands.get (404 - route not found)
+     - preferences.get (400 - bad request)
 
-6. **`test_specialized_services_phase3.py`** - 7 tests (0 passing, 5 failing, 2 skipped)
-   - ❌ 5 failing (ALL require BETA API):
-     - search.core (2 tests)
-     - search.hybrid (2 tests)
-     - recommendations.get-reply (schema issue)
-   - ⏭️ 2 skipped (intentionally):
-     - rev-users.get-personal-data (beta only)
+6. **`test_specialized_services_phase3.py`** - 7 tests (0 passing, 6 failing, 1 skipped)
+   - ❌ 6 failing (schema/endpoint issues):
+     - search.core (2 tests) - 400 bad request
+     - search.hybrid (2 tests) - 400 bad request
+     - recommendations.get-reply - 400 bad request
+     - rev-users.get-personal-data - 400 bad request
+   - ⏭️ 1 skipped (intentionally):
      - conversations.export (known issue)
 
 ---
@@ -87,27 +94,35 @@
 - **SLAs** (2/2 PUBLIC): list, get
 - **Code Changes** (1/1 PUBLIC): list
 
-### BETA API Required (18 services)
-**Most extended/specialized services require BETA API**:
+### BETA API Coverage (What Works)
+**7 additional endpoints working** with BETA API:
 
-- brands (2 endpoints)
-- engagements (3 endpoints)
-- incidents (2 endpoints)
-- uoms (3 endpoints)
-- question-answers (2 endpoints)
-- preferences (1 endpoint)
-- search (4 endpoints)
-- recommendations (1 endpoint)
+#### ✅ Working BETA Services
+- **Engagements** (2/3): list, count ✅ | get ⏭️ (no data)
+- **Incidents** (1/2): list ✅ | get ⏭️ (no data)
+- **UOMs** (2/3): list, count ✅ | get ⏭️ (no data)
+- **Question Answers** (1/2): list ✅ | get ⏭️ (no data)
+
+#### ❌ BETA Services with Issues
+- **Brands** (0/2): list, get - 404 route not found
+- **Preferences** (0/1): get - 400 bad request
+- **Search** (0/4): core, hybrid - 400 bad request
+- **Recommendations** (0/1): get-reply - 400 bad request
+- **Rev Users** (0/1): get-personal-data - 400 bad request
 
 ### Schema Issues Found
 1. **timeline-entries**: Missing enum value `timeline_change_event`
-2. **recommendations.get-reply**: Schema doesn't match implementation
 
-### Endpoint Issues
+### Endpoint Issues (Need Investigation)
 1. **group-members.list**: 404 route not found
 2. **group-members.count**: 400 bad request
 3. **links.list/get**: 400 bad request
 4. **conversations.export**: 400 bad request (known issue)
+5. **brands.list/get**: 404 route not found (BETA API)
+6. **preferences.get**: 400 bad request (BETA API)
+7. **search.core/hybrid**: 400 bad request (BETA API)
+8. **recommendations.get-reply**: 400 bad request (BETA API)
+9. **rev-users.get-personal-data**: 400 bad request (BETA API)
 
 ---
 
@@ -118,8 +133,8 @@
 | API Version | Endpoints Tested | Passing | Coverage |
 |-------------|------------------|---------|----------|
 | **PUBLIC** | 32 | 31 | 97% ✅ |
-| **BETA** | 18 | 0 | 0% (not tested) |
-| **TOTAL** | 50+ | 31 | 62% |
+| **BETA** | 18 | 7 | 39% ⚠️ |
+| **TOTAL** | 50+ | 38 | 76% ✅ |
 
 ### By Service Category
 
@@ -136,12 +151,15 @@
 
 ### ✅ Successes
 1. **Created 84 comprehensive integration tests** (up from 6!)
-2. **100% coverage of all PUBLIC API core services**
-3. **Identified 18 services that require BETA API**
-4. **Found 4 schema issues** to report to DevRev
-5. **Found 4 endpoint issues** to investigate
-6. **Comprehensive test infrastructure** for future testing
-7. **Clear documentation** of what works and what doesn't
+2. **60 tests passing (71%)** - including BETA API tests
+3. **100% coverage of all PUBLIC API core services** (97% success rate)
+4. **39% coverage of BETA API services** (7 endpoints working)
+5. **Identified and tested 18 BETA API services**
+6. **Found 1 schema issue** to report to DevRev
+7. **Found 9 endpoint issues** to investigate
+8. **Comprehensive test infrastructure** for future testing
+9. **Clear documentation** of what works and what doesn't
+10. **Proper separation of PUBLIC and BETA API tests**
 
 ### 📝 Documentation Created
 - `INTEGRATION_TEST_COVERAGE_ANALYSIS.md` - Detailed endpoint inventory
@@ -206,9 +224,13 @@
 **We've created the most comprehensive integration test suite for the DevRev SDK!**
 
 - **84 total tests** covering **50+ endpoints**
-- **97% success rate** for PUBLIC API endpoints
-- **Clear identification** of BETA-only services
-- **Documented schema issues** for DevRev team
+- **60 tests passing (71%)** - including both PUBLIC and BETA API
+- **97% success rate** for PUBLIC API endpoints (31/32)
+- **39% success rate** for BETA API endpoints (7/18)
+- **76% overall success rate** (38/50 endpoints working)
+- **Proper BETA API testing** with dedicated fixtures
+- **Clear identification** of working vs. broken endpoints
+- **Documented endpoint issues** for DevRev team
 - **Solid foundation** for future testing
 
 This PR represents a **massive improvement** in test coverage and quality assurance for the SDK!

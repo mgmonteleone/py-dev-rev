@@ -13,6 +13,7 @@ import logging
 import pytest
 
 from devrev import DevRevClient
+from devrev.config import APIVersion
 from devrev.models.search import CoreSearchRequest, HybridSearchRequest, SearchNamespace
 from devrev.models.recommendations import GetReplyRequest
 
@@ -22,17 +23,23 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")
 def client() -> DevRevClient:
-    """Create a DevRev client for integration tests."""
+    """Create a DevRev client for PUBLIC API integration tests."""
     return DevRevClient()
 
 
-class TestSearchEndpoints:
-    """Tests for search endpoints."""
+@pytest.fixture(scope="module")
+def beta_client() -> DevRevClient:
+    """Create a DevRev client for BETA API integration tests."""
+    return DevRevClient(api_version=APIVersion.BETA)
 
-    def test_search_core(self, client: DevRevClient) -> None:
+
+class TestSearchEndpoints:
+    """Tests for search endpoints (BETA API)."""
+
+    def test_search_core(self, beta_client: DevRevClient) -> None:
         """Test search.core endpoint."""
         # Search for works
-        result = client.search.core(
+        result = beta_client.search.core(
             "test",
             namespaces=[SearchNamespace.WORK],
             limit=5
@@ -41,22 +48,22 @@ class TestSearchEndpoints:
         assert hasattr(result, "results")
         logger.info(f"✅ search.core: {len(result.results)} results")
 
-    def test_search_core_with_request(self, client: DevRevClient) -> None:
+    def test_search_core_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.core endpoint with request object."""
         request = CoreSearchRequest(
             query="test",
             namespaces=[SearchNamespace.WORK],
             limit=5
         )
-        result = client.search.core(request)
+        result = beta_client.search.core(request)
         assert result is not None
         assert hasattr(result, "results")
         logger.info(f"✅ search.core (with request): {len(result.results)} results")
 
-    def test_search_hybrid(self, client: DevRevClient) -> None:
+    def test_search_hybrid(self, beta_client: DevRevClient) -> None:
         """Test search.hybrid endpoint."""
         # Hybrid search for works
-        result = client.search.hybrid(
+        result = beta_client.search.hybrid(
             "test",
             namespaces=[SearchNamespace.WORK],
             limit=5,
@@ -66,7 +73,7 @@ class TestSearchEndpoints:
         assert hasattr(result, "results")
         logger.info(f"✅ search.hybrid: {len(result.results)} results")
 
-    def test_search_hybrid_with_request(self, client: DevRevClient) -> None:
+    def test_search_hybrid_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.hybrid endpoint with request object."""
         request = HybridSearchRequest(
             query="test",
@@ -74,34 +81,31 @@ class TestSearchEndpoints:
             limit=5,
             semantic_weight=0.5
         )
-        result = client.search.hybrid(request)
+        result = beta_client.search.hybrid(request)
         assert result is not None
         assert hasattr(result, "results")
         logger.info(f"✅ search.hybrid (with request): {len(result.results)} results")
 
 
 class TestRecommendationsEndpoints:
-    """Tests for recommendations endpoints."""
+    """Tests for recommendations endpoints (BETA API)."""
 
-    def test_recommendations_get_reply(self, client: DevRevClient) -> None:
+    def test_recommendations_get_reply(self, beta_client: DevRevClient) -> None:
         """Test recommendations.get-reply endpoint.
-        
+
         Note: This is an AI-based endpoint that may require specific setup
         or permissions. Test may be skipped if not available.
         """
         # Get a conversation to get a reply for
-        conversations = client.conversations.list()
+        conversations = beta_client.conversations.list()
         if not conversations or len(conversations) == 0:
             pytest.skip("No conversations available for testing recommendations")
-        
+
         conversation_id = conversations[0].id
-        
+
         try:
-            request = GetReplyRequest(
-                object_id=conversation_id,
-                object_type="conversation"
-            )
-            result = client.recommendations.get_reply(request)
+            request = GetReplyRequest(object_id=conversation_id)
+            result = beta_client.recommendations.get_reply(request)
             assert result is not None
             logger.info(f"✅ recommendations.get-reply: Got reply recommendation")
         except Exception as e:
@@ -114,28 +118,27 @@ class TestRecommendationsEndpoints:
 
 class TestBetaEndpoints:
     """Tests for beta-only endpoints.
-    
+
     These endpoints are only available in BETA API version.
     """
 
-    def test_rev_users_get_personal_data(self, client: DevRevClient) -> None:
+    def test_rev_users_get_personal_data(self, beta_client: DevRevClient) -> None:
         """Test rev-users.get-personal-data endpoint (beta only).
-        
+
         Note: This endpoint is only available in BETA API.
-        Test will be skipped if using PUBLIC API.
         """
-        pytest.skip("Beta endpoint - requires BETA API version")
-        
-        # This would be the implementation if using BETA API:
-        # list_result = client.rev_users.list(limit=1)
-        # if not list_result.rev_users:
-        #     pytest.skip("No rev users available for testing")
-        # 
-        # user_id = list_result.rev_users[0].id
-        # 
-        # result = client.rev_users.get_personal_data(user_id)
-        # assert result is not None
-        # logger.info(f"✅ rev-users.get-personal-data: Retrieved personal data")
+        list_result = beta_client.rev_users.list(limit=1)
+        if not list_result.rev_users:
+            pytest.skip("No rev users available for testing")
+
+        user_id = list_result.rev_users[0].id
+
+        try:
+            result = beta_client.rev_users.get_personal_data(user_id)
+            assert result is not None
+            logger.info(f"✅ rev-users.get-personal-data: Retrieved personal data")
+        except AttributeError:
+            pytest.skip("get_personal_data method not yet implemented")
 
 
 class TestKnownIssues:
