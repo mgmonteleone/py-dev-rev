@@ -91,6 +91,7 @@ def client() -> DevRevClient:
 def beta_client() -> DevRevClient:
     """Create a DevRev client for BETA API integration tests."""
     from devrev.config import APIVersion
+
     return DevRevClient(api_version=APIVersion.BETA)
 
 
@@ -432,4 +433,3 @@ class TestSlasReadOnly:
                 error_message=str(e),
             )
             raise
-

@@ -18,8 +18,8 @@ import pytest
 
 from devrev import DevRevClient
 from devrev.models.groups import GroupMembersListRequest
-from devrev.models.timeline_entries import TimelineEntriesListRequest, TimelineEntriesGetRequest
-from devrev.models.links import LinksListRequest, LinksGetRequest
+from devrev.models.links import LinksGetRequest, LinksListRequest
+from devrev.models.timeline_entries import TimelineEntriesGetRequest, TimelineEntriesListRequest
 
 # Skip all integration tests if DEVREV_API_TOKEN is not set
 pytestmark = [
@@ -44,6 +44,7 @@ def client() -> DevRevClient:
 def beta_client() -> DevRevClient:
     """Create a DevRev client for BETA API integration tests."""
     from devrev.config import APIVersion
+
     return DevRevClient(api_version=APIVersion.BETA)
 
 
@@ -56,9 +57,9 @@ class TestGroupMembersEndpoints:
         groups_result = client.groups.list()
         if not groups_result or len(groups_result) == 0:
             pytest.skip("No groups available for testing")
-        
+
         group_id = groups_result[0].id
-        
+
         # Test list members
         request = GroupMembersListRequest(group=group_id)
         result = client.groups.list_members(request)
@@ -90,9 +91,9 @@ class TestTimelineEntriesEndpoints:
         works_result = client.works.list(limit=1)
         if not works_result.works:
             pytest.skip("No works available for testing timeline entries")
-        
+
         object_id = works_result.works[0].id
-        
+
         # Test list timeline entries
         request = TimelineEntriesListRequest(object=object_id)
         result = client.timeline_entries.list(request)
@@ -105,18 +106,18 @@ class TestTimelineEntriesEndpoints:
         works_result = client.works.list(limit=1)
         if not works_result.works:
             pytest.skip("No works available for testing timeline entries")
-        
+
         object_id = works_result.works[0].id
-        
+
         # Get timeline entries to find a valid entry ID
         list_request = TimelineEntriesListRequest(object=object_id)
         list_result = client.timeline_entries.list(list_request)
-        
+
         if not list_result or len(list_result) == 0:
             pytest.skip("No timeline entries available for testing")
-        
+
         entry_id = list_result[0].id
-        
+
         # Test get timeline entry
         request = TimelineEntriesGetRequest(id=entry_id)
         result = client.timeline_entries.get(request)
@@ -171,4 +172,3 @@ class TestLinksEndpoints:
         result = client.links.get(request)
         assert result.id == link_id
         logger.info(f"✅ links.get: {result.id}")
-

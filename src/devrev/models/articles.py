@@ -36,8 +36,7 @@ class Article(DevRevResponseModel):
     content: str | None = Field(default=None, description="Article content")
     status: ArticleStatus | None = Field(default=None, description="Article status")
     authored_by: list[UserSummary] | None = Field(
-        default=None,
-        description="Authors of the article (API returns array, not single object)"
+        default=None, description="Authors of the article (API returns array, not single object)"
     )
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")

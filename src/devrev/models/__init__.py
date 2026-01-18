@@ -858,15 +858,33 @@ __all__ = [
 
 # Rebuild models with forward references after all imports are complete
 # This is necessary for TagWithValue which references Tag
-from devrev.models.base import TagWithValue
-from devrev.models.accounts import AccountsListResponse, AccountsExportResponse, Account
-from devrev.models.works import WorksListResponse, WorksExportResponse, Work
+# The explicit re-imports are needed because at module load time, only names
+# are imported - we need access to the actual model classes to call model_rebuild()
+from devrev.models.accounts import (  # noqa: F811
+    Account as _Account,
+)
+from devrev.models.accounts import (
+    AccountsExportResponse as _AccountsExportResponse,
+)
+from devrev.models.accounts import (
+    AccountsListResponse as _AccountsListResponse,
+)
+from devrev.models.base import TagWithValue as _TagWithValue  # noqa: F811
+from devrev.models.works import (  # noqa: F811
+    Work as _Work,
+)
+from devrev.models.works import (
+    WorksExportResponse as _WorksExportResponse,
+)
+from devrev.models.works import (
+    WorksListResponse as _WorksListResponse,
+)
 
 # Rebuild models that use TagWithValue (which has forward ref to Tag)
-TagWithValue.model_rebuild()
-Account.model_rebuild()
-AccountsListResponse.model_rebuild()
-AccountsExportResponse.model_rebuild()
-Work.model_rebuild()
-WorksListResponse.model_rebuild()
-WorksExportResponse.model_rebuild()
+_TagWithValue.model_rebuild()
+_Account.model_rebuild()
+_AccountsListResponse.model_rebuild()
+_AccountsExportResponse.model_rebuild()
+_Work.model_rebuild()
+_WorksListResponse.model_rebuild()
+_WorksExportResponse.model_rebuild()

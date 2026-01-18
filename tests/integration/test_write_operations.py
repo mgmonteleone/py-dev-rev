@@ -33,9 +33,7 @@ logger = logging.getLogger(__name__)
 
 # Mark all tests in this module
 # Check for either DEVREV_API_TOKEN or DEVREV_TEST_API_TOKEN (matches write_client fixture)
-_has_api_token = bool(
-    os.environ.get("DEVREV_API_TOKEN") or os.environ.get("DEVREV_TEST_API_TOKEN")
-)
+_has_api_token = bool(os.environ.get("DEVREV_API_TOKEN") or os.environ.get("DEVREV_TEST_API_TOKEN"))
 
 pytestmark = [
     pytest.mark.integration,

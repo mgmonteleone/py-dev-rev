@@ -16,8 +16,8 @@ import pytest
 from devrev import DevRevClient
 from devrev.config import APIVersion
 from devrev.exceptions import DevRevError
-from devrev.models.search import CoreSearchRequest, HybridSearchRequest, SearchNamespace
 from devrev.models.recommendations import GetReplyRequest
+from devrev.models.search import CoreSearchRequest, HybridSearchRequest, SearchNamespace
 
 # Skip all integration tests if DEVREV_API_TOKEN is not set
 pytestmark = [
@@ -58,11 +58,7 @@ class TestSearchEndpoints:
     def test_search_core(self, beta_client: DevRevClient) -> None:
         """Test search.core endpoint."""
         # Search for works
-        result = beta_client.search.core(
-            "test",
-            namespaces=[SearchNamespace.WORK],
-            limit=5
-        )
+        result = beta_client.search.core("test", namespaces=[SearchNamespace.WORK], limit=5)
         assert result is not None
         assert hasattr(result, "results")
         logger.info(f"✅ search.core: {len(result.results)} results")
@@ -73,11 +69,7 @@ class TestSearchEndpoints:
     )
     def test_search_core_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.core endpoint with request object."""
-        request = CoreSearchRequest(
-            query="test",
-            namespaces=[SearchNamespace.WORK],
-            limit=5
-        )
+        request = CoreSearchRequest(query="test", namespaces=[SearchNamespace.WORK], limit=5)
         result = beta_client.search.core(request)
         assert result is not None
         assert hasattr(result, "results")
@@ -91,10 +83,7 @@ class TestSearchEndpoints:
         """Test search.hybrid endpoint."""
         # Hybrid search for works
         result = beta_client.search.hybrid(
-            "test",
-            namespaces=[SearchNamespace.WORK],
-            limit=5,
-            semantic_weight=0.5
+            "test", namespaces=[SearchNamespace.WORK], limit=5, semantic_weight=0.5
         )
         assert result is not None
         assert hasattr(result, "results")
@@ -107,10 +96,7 @@ class TestSearchEndpoints:
     def test_search_hybrid_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.hybrid endpoint with request object."""
         request = HybridSearchRequest(
-            query="test",
-            namespaces=[SearchNamespace.WORK],
-            limit=5,
-            semantic_weight=0.5
+            query="test", namespaces=[SearchNamespace.WORK], limit=5, semantic_weight=0.5
         )
         result = beta_client.search.hybrid(request)
         assert result is not None
@@ -144,7 +130,7 @@ class TestRecommendationsEndpoints:
         request = GetReplyRequest(object_id=conversation_id)
         result = beta_client.recommendations.get_reply(request)
         assert result is not None
-        logger.info(f"✅ recommendations.get-reply: Got reply recommendation")
+        logger.info("✅ recommendations.get-reply: Got reply recommendation")
 
 
 class TestBetaEndpoints:
@@ -170,24 +156,23 @@ class TestBetaEndpoints:
 
         result = beta_client.rev_users.get_personal_data(user_id)
         assert result is not None
-        logger.info(f"✅ rev-users.get-personal-data: Retrieved personal data")
+        logger.info("✅ rev-users.get-personal-data: Retrieved personal data")
 
 
 class TestKnownIssues:
     """Tests for endpoints with known issues.
-    
+
     These tests document known issues that need investigation.
     """
 
     def test_conversations_export_known_issue(self, client: DevRevClient) -> None:
         """Test conversations.export endpoint - Known to return 400 error.
-        
+
         This test documents the known issue with conversations.export.
         Issue needs investigation with DevRev team.
         """
         pytest.skip("Known issue: conversations.export returns 400 Bad Request")
-        
+
         # This is the failing test:
         # result = client.conversations.export(limit=5)
         # assert isinstance(result, list)
-

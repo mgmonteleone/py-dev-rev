@@ -10,13 +10,13 @@ import os
 import pytest
 
 from devrev import DevRevClient
-from devrev.models.tags import TagsGetRequest
-from devrev.models.parts import PartsGetRequest
 from devrev.models.articles import ArticlesGetRequest
 from devrev.models.conversations import ConversationsGetRequest
 from devrev.models.groups import GroupsGetRequest
-from devrev.models.webhooks import WebhooksGetRequest
+from devrev.models.parts import PartsGetRequest
 from devrev.models.slas import SlasGetRequest
+from devrev.models.tags import TagsGetRequest
+from devrev.models.webhooks import WebhooksGetRequest
 
 # Skip all integration tests if DEVREV_API_TOKEN is not set
 pytestmark = [
@@ -46,9 +46,9 @@ class TestGetEndpoints:
         list_result = client.works.list(limit=1)
         if not list_result.works:
             pytest.skip("No works available for testing")
-        
+
         work_id = list_result.works[0].id
-        
+
         # Test get
         result = client.works.get(work_id)
         assert result.id == work_id
@@ -61,9 +61,9 @@ class TestGetEndpoints:
         list_result = client.tags.list()
         if not list_result or len(list_result) == 0:
             pytest.skip("No tags available for testing")
-        
+
         tag_id = list_result[0].id
-        
+
         # Test get
         request = TagsGetRequest(id=tag_id)
         result = client.tags.get(request)
@@ -77,9 +77,9 @@ class TestGetEndpoints:
         list_result = client.parts.list(limit=1)
         if not list_result.parts:
             pytest.skip("No parts available for testing")
-        
+
         part_id = list_result.parts[0].id
-        
+
         # Test get
         request = PartsGetRequest(id=part_id)
         result = client.parts.get(request)
@@ -93,9 +93,9 @@ class TestGetEndpoints:
         list_result = client.dev_users.list(limit=1)
         if not list_result.dev_users:
             pytest.skip("No dev users available for testing")
-        
+
         user_id = list_result.dev_users[0].id
-        
+
         # Test get
         result = client.dev_users.get(user_id)
         assert result.id == user_id
@@ -108,9 +108,9 @@ class TestGetEndpoints:
         list_result = client.rev_users.list(limit=1)
         if not list_result.rev_users:
             pytest.skip("No rev users available for testing")
-        
+
         user_id = list_result.rev_users[0].id
-        
+
         # Test get
         result = client.rev_users.get(user_id)
         assert result.id == user_id
@@ -123,9 +123,9 @@ class TestGetEndpoints:
         list_result = client.articles.list()
         if not list_result or len(list_result) == 0:
             pytest.skip("No articles available for testing")
-        
+
         article_id = list_result[0].id
-        
+
         # Test get
         request = ArticlesGetRequest(id=article_id)
         result = client.articles.get(request)
@@ -139,9 +139,9 @@ class TestGetEndpoints:
         list_result = client.conversations.list()
         if not list_result or len(list_result) == 0:
             pytest.skip("No conversations available for testing")
-        
+
         conversation_id = list_result[0].id
-        
+
         # Test get
         request = ConversationsGetRequest(id=conversation_id)
         result = client.conversations.get(request)
@@ -154,9 +154,9 @@ class TestGetEndpoints:
         list_result = client.groups.list()
         if not list_result or len(list_result) == 0:
             pytest.skip("No groups available for testing")
-        
+
         group_id = list_result[0].id
-        
+
         # Test get
         request = GroupsGetRequest(id=group_id)
         result = client.groups.get(request)
@@ -195,4 +195,3 @@ class TestGetEndpoints:
         assert result.id == sla_id
         assert hasattr(result, "name")
         logger.info(f"✅ slas.get: {result.name}")
-

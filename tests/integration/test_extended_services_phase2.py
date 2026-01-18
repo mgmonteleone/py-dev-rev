@@ -20,9 +20,8 @@ import pytest
 from devrev import DevRevClient
 from devrev.config import APIVersion
 from devrev.exceptions import DevRevError
-from devrev.models.code_changes import CodeChangesListRequest, CodeChangesGetRequest
-from devrev.models.brands import BrandsListRequest, BrandsGetRequest
-from devrev.models.question_answers import QuestionAnswersListRequest, QuestionAnswersGetRequest
+from devrev.models.code_changes import CodeChangesGetRequest
+from devrev.models.question_answers import QuestionAnswersGetRequest
 
 # Skip all integration tests if DEVREV_API_TOKEN is not set
 pytestmark = [
@@ -63,9 +62,9 @@ class TestCodeChangesEndpoints:
         list_result = client.code_changes.list()
         if not list_result or len(list_result) == 0:
             pytest.skip("No code changes available for testing")
-        
+
         code_change_id = list_result[0].id
-        
+
         request = CodeChangesGetRequest(id=code_change_id)
         result = client.code_changes.get(request)
         assert result.id == code_change_id
@@ -235,5 +234,4 @@ class TestPreferencesEndpoints:
         # Get current user's preferences
         result = beta_client.preferences.get()
         assert result is not None
-        logger.info(f"✅ preferences.get: Retrieved user preferences")
-
+        logger.info("✅ preferences.get: Retrieved user preferences")
