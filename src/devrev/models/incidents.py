@@ -78,7 +78,9 @@ class Incident(DevRevResponseModel):
     )
     created_date: datetime | None = Field(default=None, description="Creation timestamp")
     modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
-    identified_date: datetime | None = Field(default=None, description="Time when incident was identified")
+    identified_date: datetime | None = Field(
+        default=None, description="Time when incident was identified"
+    )
     owned_by: list[Any] | None = Field(default=None, description="Owner users")
     applies_to_parts: list[Any] | None = Field(
         default=None, description="Parts this incident applies to"

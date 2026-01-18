@@ -33,7 +33,9 @@ class TimelineEntry(DevRevResponseModel):
     """DevRev Timeline Entry model."""
 
     id: str = Field(..., description="Timeline entry ID")
-    type: str | None = Field(default=None, description="Entry type (may be TimelineEntryType value or other)")
+    type: str | None = Field(
+        default=None, description="Entry type (may be TimelineEntryType value or other)"
+    )
     body: str | None = Field(default=None, description="Entry content")
     object: str | None = Field(default=None, description="Parent object ID")
     created_by: UserSummary | None = Field(default=None, description="Creator")

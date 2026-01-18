@@ -6,7 +6,6 @@ import pytest
 
 from devrev import DevRevClient
 
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
