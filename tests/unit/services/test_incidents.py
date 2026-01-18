@@ -4,10 +4,12 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from devrev.models.incidents import (
+    EnumValue,
     Incident,
     IncidentGroupItem,
     IncidentSeverity,
     IncidentStage,
+    Stage,
 )
 from devrev.services.incidents import IncidentsService
 
@@ -37,7 +39,9 @@ class TestIncidentsService:
         assert isinstance(result, Incident)
         assert result.id == "don:core:incident:123"
         assert result.title == "Test Incident"
-        assert result.severity == IncidentSeverity.SEV1
+        # Severity is now a complex EnumValue object from API response
+        assert isinstance(result.severity, EnumValue)
+        assert result.severity.label == "Sev1"
         mock_http_client.post.assert_called_once()
 
     def test_get_incident(
@@ -94,8 +98,12 @@ class TestIncidentsService:
         )
 
         assert len(result.incidents) == 1
-        assert result.incidents[0].stage == IncidentStage.ACKNOWLEDGED
-        assert result.incidents[0].severity == IncidentSeverity.SEV1
+        # Stage is now a complex Stage object with nested stage/state
+        assert isinstance(result.incidents[0].stage, Stage)
+        assert result.incidents[0].stage.stage.name == "Acknowledged"
+        # Severity is now a complex EnumValue object
+        assert isinstance(result.incidents[0].severity, EnumValue)
+        assert result.incidents[0].severity.label == "Sev1"
         mock_http_client.post.assert_called_once()
 
     def test_list_incidents_empty(
@@ -120,7 +128,10 @@ class TestIncidentsService:
         updated_data = {
             **sample_incident_data,
             "title": "Updated Incident",
-            "stage": "resolved",
+            "stage": {
+                "stage": {"id": "don:core:custom_stage:789", "name": "Resolved"},
+                "state": {"id": "don:core:custom_state:999", "name": "Done", "is_final": True},
+            },
         }
         mock_http_client.post.return_value = create_mock_response({"incident": updated_data})
 
@@ -133,7 +144,9 @@ class TestIncidentsService:
 
         assert isinstance(result, Incident)
         assert result.title == "Updated Incident"
-        assert result.stage == IncidentStage.RESOLVED
+        # Stage is now a complex Stage object
+        assert isinstance(result.stage, Stage)
+        assert result.stage.stage.name == "Resolved"
         mock_http_client.post.assert_called_once()
 
     def test_delete_incident(

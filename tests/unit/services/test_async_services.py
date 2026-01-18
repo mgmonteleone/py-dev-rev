@@ -282,8 +282,11 @@ class TestAsyncQuestionAnswersService:
         mock_async_http_client: AsyncMock,
         sample_question_answer_data: dict[str, Any],
     ) -> None:
-        """Test getting a question answer asynchronously."""
-        mock_async_http_client.post.return_value = create_mock_response(
+        """Test getting a question answer asynchronously.
+
+        Note: The service uses GET (not POST) per OpenAPI spec.
+        """
+        mock_async_http_client.get.return_value = create_mock_response(
             {"question_answer": sample_question_answer_data}
         )
 
