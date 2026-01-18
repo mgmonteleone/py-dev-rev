@@ -20,6 +20,8 @@ client = DevRevClient()
 Always use context managers for proper resource cleanup:
 
 ```python
+from devrev import DevRevClient, AsyncDevRevClient
+
 # Sync client
 with DevRevClient() as client:
     accounts = client.accounts.list()
@@ -34,6 +36,7 @@ async with AsyncDevRevClient() as client:
 For custom configuration:
 
 ```python
+import os
 from devrev import DevRevClient, DevRevConfig
 
 config = DevRevConfig(
@@ -49,6 +52,10 @@ client = DevRevClient(config=config)
 Response objects contain data in nested attributes - always access the correct attribute:
 
 ```python
+from devrev import DevRevClient
+
+client = DevRevClient()
+
 # CORRECT
 accounts_response = client.accounts.list()
 for account in accounts_response.accounts:  # Note: .accounts
@@ -67,12 +74,19 @@ print(work_response.work.title)  # Note: .work
 Always handle exceptions from `devrev.exceptions`:
 
 ```python
+import time
+import logging
+from devrev import DevRevClient
 from devrev.exceptions import (
     DevRevError,
     NotFoundError,
     ValidationError,
     RateLimitError,
 )
+
+logger = logging.getLogger(__name__)
+client = DevRevClient()
+work_id = "don:core:dvrv-us-1:devo/1:work/123"  # Example work ID
 
 try:
     work = client.works.get(id=work_id)
@@ -92,6 +106,10 @@ except DevRevError as e:
 DevRev uses cursor-based pagination - never use page numbers:
 
 ```python
+from devrev import DevRevClient
+
+client = DevRevClient()
+
 # CORRECT - cursor-based pagination
 cursor = None
 all_items = []
@@ -109,7 +127,10 @@ while True:
 Always use the `WorkType` enum and provide required fields:
 
 ```python
+from devrev import DevRevClient
 from devrev.models import WorkType
+
+client = DevRevClient()
 
 # Creating a ticket (customer-facing)
 response = client.works.create(

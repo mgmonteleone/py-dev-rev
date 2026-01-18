@@ -7,7 +7,7 @@ This script generates and validates AI-friendly documentation:
 - llms-ctx-full.txt: Full context file with all documentation
 
 Usage:
-    python scripts/build_ai_docs.py [--validate-only] [--verbose]
+    python scripts/build_ai_docs.py [--verbose]
 """
 
 from __future__ import annotations
@@ -98,6 +98,13 @@ def validate_context_file(path: Path, max_tokens: int = 50000) -> list[str]:
     if "```python" not in content:
         errors.append(f"{path.name}: Should include Python code examples")
 
+    # Check for balanced code blocks
+    code_fence_count = content.count("```")
+    if code_fence_count % 2 != 0:
+        errors.append(
+            f"{path.name}: Unbalanced code blocks - found {code_fence_count} fence markers (should be even)"
+        )
+
     return errors
 
 
@@ -152,12 +159,7 @@ def validate_all(verbose: bool = False) -> bool:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Build and validate AI-optimized documentation")
-    parser.add_argument(
-        "--validate-only",
-        action="store_true",
-        help="Only validate existing files, don't generate",
-    )
+    parser = argparse.ArgumentParser(description="Validate AI-optimized documentation")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
 
     args = parser.parse_args()

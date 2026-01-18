@@ -188,6 +188,7 @@ while True:
         break
 
 print(f"Total: {len(all_works)} works")
+```
 
 ## Error Handling
 
@@ -333,5 +334,3 @@ def list_accounts():
 8. **Async**: Use `AsyncDevRevClient` with `await` for all API calls
 9. **Error Properties**: All exceptions have `.message`, `.status_code`, `.request_id`
 10. **Rate Limits**: `RateLimitError` has `.retry_after` attribute in seconds
-```
-
