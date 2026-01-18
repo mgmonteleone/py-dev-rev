@@ -66,15 +66,56 @@ configure(
 client = DevRevClient()
 ```
 
+## APIVersion Enum
+
+The SDK supports two API versions:
+
+```python
+from devrev import APIVersion
+
+# Public API (default, stable)
+APIVersion.PUBLIC  # "public"
+
+# Beta API (preview features)
+APIVersion.BETA    # "beta"
+```
+
+Use the beta API to access preview features:
+
+```python
+from devrev import DevRevClient, DevRevConfig, APIVersion
+
+# Via client parameter
+client = DevRevClient(api_version=APIVersion.BETA)
+
+# Via config object
+config = DevRevConfig(
+    api_token="your-token",
+    api_version=APIVersion.BETA,
+)
+client = DevRevClient(config=config)
+
+# Via environment variable
+# Set DEVREV_API_VERSION=beta
+client = DevRevClient()  # Automatically uses beta
+```
+
+See [Beta API Overview](beta/index.md) for available beta services.
+
 ## Environment Variables
 
-| Variable | Field | Default |
-|----------|-------|---------|
-| `DEVREV_API_TOKEN` | `api_token` | Required |
-| `DEVREV_BASE_URL` | `base_url` | `https://api.devrev.ai` |
-| `DEVREV_TIMEOUT` | `timeout` | `30` |
-| `DEVREV_MAX_RETRIES` | `max_retries` | `3` |
-| `DEVREV_LOG_LEVEL` | N/A | `WARN` |
+| Variable | Field | Default | Options |
+|----------|-------|---------|---------|
+| `DEVREV_API_TOKEN` | `api_token` | Required | Any valid token |
+| `DEVREV_BASE_URL` | `base_url` | `https://api.devrev.ai` | Any HTTPS URL |
+| `DEVREV_API_VERSION` | `api_version` | `public` | `public`, `beta` |
+| `DEVREV_TIMEOUT` | `timeout` | `30` | 1-300 seconds |
+| `DEVREV_MAX_RETRIES` | `max_retries` | `3` | 0-10 retries |
+| `DEVREV_LOG_LEVEL` | `log_level` | `WARN` | `DEBUG`, `INFO`, `WARN`, `ERROR` |
+| `DEVREV_LOG_FORMAT` | `log_format` | `text` | `text`, `json` |
+| `DEVREV_MAX_CONNECTIONS` | `max_connections` | `100` | 1-1000 |
+| `DEVREV_HTTP2` | `http2` | `false` | `true`, `false` |
+| `DEVREV_CIRCUIT_BREAKER_ENABLED` | `circuit_breaker_enabled` | `true` | `true`, `false` |
 
 ## Validation
 

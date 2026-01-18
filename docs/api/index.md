@@ -33,6 +33,8 @@ The SDK is organized into:
 
 All API operations are organized into service classes:
 
+### Public API Services
+
 | Service | Description | Endpoints |
 |---------|-------------|-----------|
 | [Accounts](services/accounts.md) | Customer account management | 7 |
@@ -49,6 +51,23 @@ All API operations are organized into service classes:
 | [Timeline Entries](services/timeline-entries.md) | Activity tracking | 5 |
 | [Links](services/links.md) | Object relationships | 5 |
 | [Code Changes](services/code-changes.md) | Code tracking | 5 |
+
+### Beta API Services
+
+!!! info "Beta API Required"
+    These services require `api_version=APIVersion.BETA`. See [Beta API Overview](beta/index.md).
+
+| Service | Description | Documentation |
+|---------|-------------|---------------|
+| [Incidents](beta/incidents.md) | Production incident management | [View Docs](beta/incidents.md) |
+| [Engagements](beta/engagements.md) | Customer engagement tracking | [View Docs](beta/engagements.md) |
+| [Brands](beta/brands.md) | Brand identity management | [View Docs](beta/brands.md) |
+| [UOMs](beta/uoms.md) | Units of measure for metrics | [View Docs](beta/uoms.md) |
+| [Question Answers](beta/question-answers.md) | Q&A knowledge base | [View Docs](beta/question-answers.md) |
+| [Recommendations](beta/recommendations.md) | AI-powered recommendations | [View Docs](beta/recommendations.md) |
+| [Search](beta/search.md) | Advanced search capabilities | [View Docs](beta/search.md) |
+
+[:octicons-arrow-right-24: Learn more about Beta API](beta/index.md)
 
 ## Models
 

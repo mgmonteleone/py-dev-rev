@@ -7,6 +7,117 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-01-18
+
+🚀 **Beta API Support** - Major release adding support for DevRev Beta API with 74 new endpoints!
+
+This release introduces Beta API support alongside the existing Public API, providing access to advanced features including incident management, customer engagement tracking, AI-powered recommendations, and hybrid search.
+
+### Highlights
+
+- **Beta API Support**: Choose between Public (stable) and Beta (new features) API versions
+- **7 New Beta Services**: Incidents, Engagements, Brands, UOMs, Question Answers, Recommendations, Search
+- **74 New Endpoints**: Comprehensive coverage of beta API features
+- **Fully Backwards Compatible**: All existing Public API functionality unchanged
+
+### Added
+
+#### Beta API Services (#79)
+- **IncidentsService** - Incident lifecycle management with SLA integration (6 endpoints)
+  - Create, get, list, update, delete, and group incidents
+  - Support for incident stages: acknowledged, identified, mitigated, resolved
+  - Severity levels: SEV0, SEV1, SEV2, SEV3
+- **EngagementsService** - Customer engagement tracking (6 endpoints)
+  - Track calls, emails, meetings, and other customer interactions
+  - Support for engagement types: call, email, meeting, default
+  - Member and parent relationship tracking
+- **BrandsService** - Multi-brand management (6 endpoints)
+  - Create, get, list, update, delete, and count brands
+  - Brand configuration and customization
+- **UomsService** - Unit of Measurement for metering (7 endpoints)
+  - Create, get, list, update, delete, count UOMs
+  - Aggregation types: sum, count, average, min, max
+  - Metric scopes for usage tracking
+- **QuestionAnswersService** - Q&A management (5 endpoints)
+  - Create, get, list, update, delete question-answer pairs
+  - Knowledge base integration
+- **RecommendationsService** - AI-powered recommendations (2 endpoints)
+  - Chat completions with OpenAI-compatible interface
+  - Reply recommendations for support tickets
+- **SearchService** - Advanced search capabilities (2 endpoints)
+  - Core search with DevRev query language
+  - Hybrid search combining keyword and semantic search
+  - Search across multiple namespaces: accounts, articles, conversations, work, users
+
+#### Additional Beta Services (#79)
+- **PreferencesService** - User preference management (3 endpoints)
+- **NotificationsService** - Notification management (3 endpoints)
+- **TrackEventsService** - Event tracking and analytics (1 endpoint)
+
+#### Configuration & API Version Selection (#79)
+- `APIVersion` enum for selecting Public or Beta API
+- `DEVREV_API_VERSION` environment variable (default: `public`)
+- Client parameter: `DevRevClient(api_version=APIVersion.BETA)`
+- Config object support: `DevRevConfig(api_version=APIVersion.BETA)`
+
+#### Exception Handling (#79)
+- `BetaAPIRequiredError` - Raised when accessing beta features without beta API enabled
+- Clear error messages with migration guidance
+
+#### Models & Enums (#79)
+- **Incident Models**: `Incident`, `IncidentStage`, `IncidentSeverity`, `IncidentGroupItem`
+- **Engagement Models**: `Engagement`, `EngagementType`
+- **Brand Models**: `Brand`, `BrandCreate`, `BrandUpdate`
+- **UOM Models**: `Uom`, `UomAggregationType`, `UomMetricScope`
+- **Recommendation Models**: `ChatMessage`, `MessageRole`, `ChatCompletionRequest`, `TokenUsage`
+- **Search Models**: `SearchNamespace`, `SearchResult`, `CoreSearchRequest`, `HybridSearchRequest`
+
+### Changed
+
+#### Enhanced Services with Beta Endpoints (#79)
+- **AccountsService** - Added `count` endpoint (beta only)
+- **ArticlesService** - Added `count` endpoint (beta only)
+- **ConversationsService** - Added `export` endpoint (beta only)
+- **GroupsService** - Added `members.count` endpoint (beta only)
+
+### Configuration
+
+New environment variable:
+- `DEVREV_API_VERSION` - API version selection: `public` or `beta` (default: `public`)
+
+### Documentation
+
+- [Beta API Migration Guide](guides/beta-api.md) - Comprehensive migration guide
+- [Beta Features Examples](examples/beta-features.md) - Runnable code examples
+- [API Differences](api/beta-api-differences.md) - Detailed comparison of Public vs Beta APIs
+
+### Backwards Compatibility
+
+✅ **Fully Backwards Compatible**
+- All Public API endpoints continue to work unchanged
+- Default API version remains `public` for existing code
+- Beta features are opt-in only
+- No breaking changes to existing functionality
+
+### Migration Guide
+
+To use beta features:
+
+```python
+from devrev import DevRevClient, APIVersion
+
+# Enable beta API
+client = DevRevClient(api_version=APIVersion.BETA)
+
+# Access beta services
+incidents = client.incidents.list()
+search_results = client.search.hybrid("authentication issues")
+```
+
+See the [Beta API Migration Guide](guides/beta-api.md) for complete details.
+
+## [1.1.0] - 2026-01-15
+
 ### Added
 - Connection pooling with configurable limits for improved performance (#78)
 - Fine-grained timeout configuration with `TimeoutConfig` class (#78)
@@ -169,10 +280,32 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.0.0 | 2026-01-18 | 🚀 Beta API support with 74 new endpoints |
+| 1.1.0 | 2026-01-15 | Performance & reliability enhancements |
 | 1.0.0 | 2026-01-13 | 🎉 First stable release - Production ready |
 | 0.1.0 | 2026-01-12 | Initial development release |
 
 ## Upgrading
+
+### From 1.x to 2.0.0
+
+The v2.0.0 release is **fully backwards compatible** with v1.x:
+
+- **No Breaking Changes**: All existing Public API code continues to work
+- **Beta API is Opt-In**: Default API version remains `public`
+- **New Features**: 7 new beta services with 74 endpoints available when you enable beta API
+- **New Exception**: `BetaAPIRequiredError` raised when accessing beta features without beta API enabled
+
+To use beta features, simply enable the beta API:
+
+```python
+from devrev import DevRevClient, APIVersion
+
+# Enable beta API
+client = DevRevClient(api_version=APIVersion.BETA)
+```
+
+See the [Beta API Migration Guide](guides/beta-api.md) for complete details.
 
 ### From 0.1.0 to 1.0.0
 
