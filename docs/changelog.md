@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-01-23
+
+### Fixed
+
+- **RevUserState enum missing states** (#115) - Added missing `DEACTIVATED`, `LOCKED`, `SHADOW`, and `UNASSIGNED` states to the `RevUserState` enum to match the DevRev API `user-state` schema. This fixes Pydantic validation errors when the API returns users with these states.
+
 ## [2.0.0] - 2026-01-18
 
 🚀 **Major Release** - Beta API support, performance enhancements, and 100% integration test coverage!
