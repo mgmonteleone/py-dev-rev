@@ -24,10 +24,17 @@ from devrev.models.base import (
 
 
 class RevUserState(str, Enum):
-    """Rev user state enumeration."""
+    """Rev user state enumeration.
+
+    Values match the DevRev API 'user-state' schema.
+    """
 
     ACTIVE = "active"
+    DEACTIVATED = "deactivated"
     DELETED = "deleted"
+    LOCKED = "locked"
+    SHADOW = "shadow"
+    UNASSIGNED = "unassigned"
 
 
 class RevUser(DevRevResponseModel):
