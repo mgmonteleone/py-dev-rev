@@ -38,10 +38,18 @@ class Part(DevRevResponseModel):
 
 
 class PartSummary(DevRevResponseModel):
-    """Summary of a Part."""
+    """Summary of a Part.
+
+    This model represents the part object returned in work item responses.
+    The API returns a rich object with type, display_id, name, etc.
+    """
 
     id: str = Field(..., description="Part ID")
+    type: str | None = Field(default=None, description="Part type (product, capability, etc.)")
+    display_id: str | None = Field(default=None, description="Display ID (e.g., PROD-1)")
     name: str | None = Field(default=None, description="Part name")
+    state: str | None = Field(default=None, description="Part state (active, archived, etc.)")
+    owned_by: list[UserSummary] | None = Field(default=None, description="Part owners")
 
 
 class PartsCreateRequest(DevRevBaseModel):
