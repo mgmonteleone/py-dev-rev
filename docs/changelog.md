@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-01-28
+
+### Fixed
+
+- **Work.applies_to_part fails to parse API response** (#120) - The DevRev API returns `applies_to_part` as a rich `PartSummary` object in responses, not just a string ID. This caused `pydantic.ValidationError` when parsing API responses. Fixed by:
+  - Expanding `PartSummary` model to include `type`, `display_id`, `state`, and `owned_by` fields
+  - Changing `Work.applies_to_part` type from `str | None` to `PartSummary | str | None`
+  - This is fully backward compatible - string IDs are still accepted for requests
+
 ## [2.1.1] - 2026-01-23
 
 ### Fixed
@@ -326,6 +335,8 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.1.2 | 2026-01-28 | 🐛 Fix Work.applies_to_part parsing for API responses |
+| 2.1.1 | 2026-01-23 | 🐛 Fix RevUserState enum missing states |
 | 2.0.0 | 2026-01-18 | 🚀 Beta API support, performance enhancements, breaking change |
 | 1.0.0 | 2026-01-13 | 🎉 First stable release - Production ready |
 | 0.1.0 | 2026-01-12 | Initial development release |
