@@ -187,6 +187,11 @@ class TestWorksService:
         assert result.applies_to_part.type == "product"
         assert result.applies_to_part.display_id == "PROD-1"
         assert result.applies_to_part.state == "active"
+        # Verify owned_by is parsed correctly
+        assert result.applies_to_part.owned_by is not None
+        assert isinstance(result.applies_to_part.owned_by, list)
+        assert len(result.applies_to_part.owned_by) == 1
+        assert result.applies_to_part.owned_by[0].id == "don:identity:dvrv-us-1:devo/org123:sysu/1"
 
     def test_work_with_applies_to_part_as_string(
         self,
