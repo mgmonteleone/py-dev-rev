@@ -24,6 +24,7 @@ from devrev.models.base import (
     TagWithValue,
     UserSummary,
 )
+from devrev.models.parts import PartSummary
 
 
 class WorkType(str, Enum):
@@ -83,7 +84,10 @@ class Work(DevRevResponseModel):
     reported_by: list[UserSummary] | None = Field(
         default=None, description="Users who reported this work"
     )
-    applies_to_part: str | None = Field(default=None, description="Part this work applies to")
+    applies_to_part: PartSummary | str | None = Field(
+        default=None,
+        description="Part this work applies to. API returns a PartSummary object in responses.",
+    )
     stage: StageInfo | None = Field(default=None, description="Work stage")
     tags: list[TagWithValue] | None = Field(default=None, description="Work tags")
     priority: str | None = Field(default=None, description="Issue priority")

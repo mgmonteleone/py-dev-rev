@@ -143,3 +143,62 @@ class TestWorksService:
         )
 
         assert isinstance(result, Work)
+
+    def test_work_with_applies_to_part_as_object(
+        self,
+        mock_http_client: MagicMock,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Test that applies_to_part can be an object (as returned by the API).
+
+        The DevRev API returns applies_to_part as a PartSummary object in responses,
+        not just a string ID. This test validates that the model correctly parses
+        the object format.
+        """
+        sample_work_data["applies_to_part"] = {
+            "type": "product",
+            "display_id": "PROD-1",
+            "id": "don:core:dvrv-us-1:devo/org123:product/1",
+            "name": "Test Product",
+            "state": "active",
+            "owned_by": [
+                {
+                    "type": "sys_user",
+                    "display_id": "SYSU-1",
+                    "display_name": "devrev-bot",
+                    "full_name": "DevRev Bot",
+                    "id": "don:identity:dvrv-us-1:devo/org123:sysu/1",
+                }
+            ],
+        }
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
+
+        service = WorksService(mock_http_client)
+        result = service.get("don:core:issue:123")
+
+        assert isinstance(result, Work)
+        assert result.applies_to_part is not None
+        # The applies_to_part should be parsed as a PartSummary object
+        from devrev.models.parts import PartSummary
+
+        assert isinstance(result.applies_to_part, PartSummary)
+        assert result.applies_to_part.id == "don:core:dvrv-us-1:devo/org123:product/1"
+        assert result.applies_to_part.name == "Test Product"
+        assert result.applies_to_part.type == "product"
+        assert result.applies_to_part.display_id == "PROD-1"
+        assert result.applies_to_part.state == "active"
+
+    def test_work_with_applies_to_part_as_string(
+        self,
+        mock_http_client: MagicMock,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Test that applies_to_part can also be a string (backward compatibility)."""
+        sample_work_data["applies_to_part"] = "don:core:dvrv-us-1:devo/org123:product/1"
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
+
+        service = WorksService(mock_http_client)
+        result = service.get("don:core:issue:123")
+
+        assert isinstance(result, Work)
+        assert result.applies_to_part == "don:core:dvrv-us-1:devo/org123:product/1"
