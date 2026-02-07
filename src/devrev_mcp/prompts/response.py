@@ -20,12 +20,14 @@ async def draft_customer_response(
         tone: Response tone — "formal", "friendly", or "technical" (default: "professional").
         include_kb: Whether to search knowledge base for relevant articles (default: True).
     """
+    step_num = 3
     kb_instruction = ""
     if include_kb:
         kb_instruction = (
-            "\n3. Search the knowledge base using `devrev_search_hybrid` for relevant articles "
+            f"\n{step_num}. Search the knowledge base using `devrev_search_hybrid` for relevant articles "
             "that might help answer the customer's question."
         )
+        step_num += 1
 
     tone_guidance = {
         "formal": "Use formal, business-appropriate language. Be respectful and professional.",
@@ -46,7 +48,7 @@ async def draft_customer_response(
                 f"1. Use `devrev_works_get` to fetch ticket {ticket_id} and understand the customer's issue.\n"
                 "2. Review the ticket description, comments, and any attachments."
                 f"{kb_instruction}\n"
-                f"4. Draft a {tone} response that:\n"
+                f"{step_num}. Draft a {tone} response that:\n"
                 "   - Acknowledges the customer's issue\n"
                 "   - Provides a clear solution or next steps\n"
                 "   - References relevant KB articles if found\n"
