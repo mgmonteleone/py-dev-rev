@@ -86,6 +86,69 @@ def mock_client():
     client.recommendations.get_reply = AsyncMock()
     client.recommendations.chat_completions = AsyncMock()
 
+    # Incidents service (beta)
+    client.incidents = AsyncMock()
+    client.incidents.list = AsyncMock()
+    client.incidents.get = AsyncMock()
+    client.incidents.create = AsyncMock()
+    client.incidents.update = AsyncMock()
+    client.incidents.delete = AsyncMock()
+    client.incidents.group = AsyncMock()
+
+    # Conversations service
+    client.conversations = AsyncMock()
+    client.conversations.list = AsyncMock()
+    client.conversations.get = AsyncMock()
+    client.conversations.create = AsyncMock()
+    client.conversations.update = AsyncMock()
+    client.conversations.delete = AsyncMock()
+    client.conversations.export = AsyncMock()
+
+    # Articles service
+    client.articles = AsyncMock()
+    client.articles.list = AsyncMock()
+    client.articles.get = AsyncMock()
+    client.articles.create = AsyncMock()
+    client.articles.update = AsyncMock()
+    client.articles.delete = AsyncMock()
+    client.articles.count = AsyncMock()
+
+    # Parts service
+    client.parts = AsyncMock()
+    client.parts.list = AsyncMock()
+    client.parts.get = AsyncMock()
+    client.parts.create = AsyncMock()
+    client.parts.update = AsyncMock()
+    client.parts.delete = AsyncMock()
+
+    # Tags service
+    client.tags = AsyncMock()
+    client.tags.list = AsyncMock()
+    client.tags.get = AsyncMock()
+    client.tags.create = AsyncMock()
+    client.tags.update = AsyncMock()
+    client.tags.delete = AsyncMock()
+
+    # Groups service
+    client.groups = AsyncMock()
+    client.groups.list = AsyncMock()
+    client.groups.get = AsyncMock()
+    client.groups.create = AsyncMock()
+    client.groups.update = AsyncMock()
+    client.groups.add_member = AsyncMock()
+    client.groups.remove_member = AsyncMock()
+    client.groups.list_members = AsyncMock()
+    client.groups.members_count = AsyncMock()
+
+    # Engagements service (beta)
+    client.engagements = AsyncMock()
+    client.engagements.list = AsyncMock()
+    client.engagements.get = AsyncMock()
+    client.engagements.create = AsyncMock()
+    client.engagements.update = AsyncMock()
+    client.engagements.delete = AsyncMock()
+    client.engagements.count = AsyncMock()
+
     # Close method
     client.close = AsyncMock()
 

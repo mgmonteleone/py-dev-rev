@@ -1,0 +1,200 @@
+"""DevRev MCP Server - Articles Tools.
+
+This module provides MCP tools for managing DevRev articles.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from mcp.server.fastmcp import Context
+
+from devrev.exceptions import DevRevError
+from devrev.models.articles import (
+    ArticlesCreateRequest,
+    ArticlesDeleteRequest,
+    ArticlesGetRequest,
+    ArticlesListRequest,
+    ArticleStatus,
+    ArticlesUpdateRequest,
+)
+from devrev_mcp.server import mcp
+from devrev_mcp.utils.errors import format_devrev_error
+from devrev_mcp.utils.formatting import serialize_model, serialize_models
+from devrev_mcp.utils.pagination import clamp_page_size
+
+logger = logging.getLogger(__name__)
+
+
+@mcp.tool()
+async def devrev_articles_list(
+    ctx: Context,
+    cursor: str | None = None,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    """List articles in DevRev.
+
+    Args:
+        ctx: MCP context containing the DevRev client.
+        cursor: Pagination cursor for fetching next page.
+        limit: Maximum number of articles to return.
+
+    Returns:
+        Dictionary containing count and list of articles.
+
+    Raises:
+        RuntimeError: If the DevRev API call fails.
+    """
+    app = ctx.request_context.lifespan_context
+    try:
+        request = ArticlesListRequest(cursor=cursor, limit=clamp_page_size(limit))
+        articles = await app.client.articles.list(request)
+        items = serialize_models(list(articles))
+        return {"count": len(items), "articles": items}
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_articles_get(ctx: Context, id: str) -> dict[str, Any]:
+    """Get a specific article by ID.
+
+    Args:
+        ctx: MCP context containing the DevRev client.
+        id: The article ID.
+
+    Returns:
+        Dictionary containing the article details.
+
+    Raises:
+        RuntimeError: If the DevRev API call fails.
+    """
+    app = ctx.request_context.lifespan_context
+    try:
+        request = ArticlesGetRequest(id=id)
+        article = await app.client.articles.get(request)
+        return serialize_model(article)
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_articles_create(
+    ctx: Context,
+    title: str,
+    content: str,
+    status: str | None = None,
+) -> dict[str, Any]:
+    """Create a new article in DevRev.
+
+    Args:
+        ctx: MCP context containing the DevRev client.
+        title: The article title.
+        content: The article content.
+        status: Optional article status (draft, published, archived).
+
+    Returns:
+        Dictionary containing the created article details.
+
+    Raises:
+        RuntimeError: If the DevRev API call fails.
+    """
+    app = ctx.request_context.lifespan_context
+    try:
+        article_status = ArticleStatus[status.upper()] if status else None
+        request = ArticlesCreateRequest(
+            title=title,
+            content=content,
+            status=article_status,
+        )
+        article = await app.client.articles.create(request)
+        return serialize_model(article)
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_articles_update(
+    ctx: Context,
+    id: str,
+    title: str | None = None,
+    content: str | None = None,
+    status: str | None = None,
+) -> dict[str, Any]:
+    """Update an existing article in DevRev.
+
+    Args:
+        ctx: MCP context containing the DevRev client.
+        id: The article ID to update.
+        title: Optional new title.
+        content: Optional new content.
+        status: Optional new status (draft, published, archived).
+
+    Returns:
+        Dictionary containing the updated article details.
+
+    Raises:
+        RuntimeError: If the DevRev API call fails.
+    """
+    app = ctx.request_context.lifespan_context
+    try:
+        article_status = ArticleStatus[status.upper()] if status else None
+        request = ArticlesUpdateRequest(
+            id=id,
+            title=title,
+            content=content,
+            status=article_status,
+        )
+        article = await app.client.articles.update(request)
+        return serialize_model(article)
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_articles_delete(ctx: Context, id: str) -> dict[str, Any]:
+    """Delete an article from DevRev.
+
+    Args:
+        ctx: MCP context containing the DevRev client.
+        id: The article ID to delete.
+
+    Returns:
+        Dictionary confirming deletion.
+
+    Raises:
+        RuntimeError: If the DevRev API call fails.
+    """
+    app = ctx.request_context.lifespan_context
+    try:
+        request = ArticlesDeleteRequest(id=id)
+        await app.client.articles.delete(request)
+        return {"success": True, "id": id}
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_articles_count(
+    ctx: Context,
+    status: list[str] | None = None,
+) -> dict[str, Any]:
+    """Count articles in DevRev (beta).
+
+    Args:
+        ctx: MCP context containing the DevRev client.
+        status: Optional list of status filters.
+
+    Returns:
+        Dictionary containing the count.
+
+    Raises:
+        RuntimeError: If the DevRev API call fails.
+    """
+    app = ctx.request_context.lifespan_context
+    try:
+        count = await app.client.articles.count(status=status)
+        return {"count": count}
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e

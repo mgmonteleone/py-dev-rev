@@ -70,7 +70,14 @@ mcp = FastMCP(
 # These imports MUST be at the bottom to avoid circular imports.
 # Each tool module imports `mcp` from this module to register its tools.
 from devrev_mcp.tools import accounts as _accounts_tools  # noqa: E402, F401
+from devrev_mcp.tools import articles as _articles_tools  # noqa: E402, F401
+from devrev_mcp.tools import conversations as _conversations_tools  # noqa: E402, F401
+from devrev_mcp.tools import engagements as _engagements_tools  # noqa: E402, F401
+from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
+from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
+from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
 from devrev_mcp.tools import recommendations as _recommendations_tools  # noqa: E402, F401
 from devrev_mcp.tools import search as _search_tools  # noqa: E402, F401
+from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
 from devrev_mcp.tools import users as _users_tools  # noqa: E402, F401
 from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
