@@ -80,8 +80,10 @@ from devrev_mcp.tools import conversations as _conversations_tools  # noqa: E402
 from devrev_mcp.tools import engagements as _engagements_tools  # noqa: E402, F401
 from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
 from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
+from devrev_mcp.tools import links as _links_tools  # noqa: E402, F401
 from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
 from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
+from devrev_mcp.tools import timeline as _timeline_tools  # noqa: E402, F401
 from devrev_mcp.tools import users as _users_tools  # noqa: E402, F401
 from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
 
@@ -89,3 +91,22 @@ from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
 if _config.enable_beta_tools:
     from devrev_mcp.tools import recommendations as _recommendations_tools  # noqa: E402, F401
     from devrev_mcp.tools import search as _search_tools  # noqa: E402, F401
+
+# ----- Register resource modules -----
+# These imports MUST be at the bottom to avoid circular imports.
+# Each resource module imports `mcp` from this module to register its resources.
+from devrev_mcp.resources import account as _account_resources  # noqa: E402, F401
+from devrev_mcp.resources import article as _article_resources  # noqa: E402, F401
+from devrev_mcp.resources import conversation as _conversation_resources  # noqa: E402, F401
+from devrev_mcp.resources import part as _part_resources  # noqa: E402, F401
+from devrev_mcp.resources import ticket as _ticket_resources  # noqa: E402, F401
+from devrev_mcp.resources import user as _user_resources  # noqa: E402, F401
+
+# ----- Register prompt modules -----
+# These imports MUST be at the bottom to avoid circular imports.
+# Each prompt module imports `mcp` from this module to register its prompts.
+from devrev_mcp.prompts import escalation as _escalation_prompts  # noqa: E402, F401
+from devrev_mcp.prompts import investigate as _investigate_prompts  # noqa: E402, F401
+from devrev_mcp.prompts import response as _response_prompts  # noqa: E402, F401
+from devrev_mcp.prompts import summarize as _summarize_prompts  # noqa: E402, F401
+from devrev_mcp.prompts import triage as _triage_prompts  # noqa: E402, F401
