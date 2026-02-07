@@ -100,7 +100,13 @@ async def devrev_parts_create(
     """
     app = ctx.request_context.lifespan_context
     try:
-        part_type = PartType[type.upper()]
+        try:
+            part_type = PartType[type.upper()]
+        except KeyError as e:
+            raise RuntimeError(
+                f"Invalid part type: {e.args[0]}. "
+                f"Valid types: {', '.join(t.name for t in PartType)}"
+            ) from e
         request = PartsCreateRequest(
             name=name,
             type=part_type,

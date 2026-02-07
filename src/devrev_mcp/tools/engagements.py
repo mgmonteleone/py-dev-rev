@@ -45,7 +45,15 @@ async def devrev_engagements_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        types = [EngagementType[t.upper()] for t in engagement_type] if engagement_type else None
+        types = None
+        if engagement_type:
+            try:
+                types = [EngagementType[t.upper()] for t in engagement_type]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid engagement type: {e.args[0]}. "
+                    f"Valid types: {', '.join(t.name for t in EngagementType)}"
+                ) from e
         response = await app.client.engagements.list(
             cursor=cursor,
             limit=clamp_page_size(
@@ -110,8 +118,22 @@ async def devrev_engagements_create(
     """
     app = ctx.request_context.lifespan_context
     try:
-        eng_type = EngagementType[engagement_type.upper()]
-        sched = datetime.fromisoformat(scheduled_date) if scheduled_date else None
+        try:
+            eng_type = EngagementType[engagement_type.upper()]
+        except KeyError as e:
+            raise RuntimeError(
+                f"Invalid engagement type: {e.args[0]}. "
+                f"Valid types: {', '.join(t.name for t in EngagementType)}"
+            ) from e
+        sched = None
+        if scheduled_date:
+            try:
+                sched = datetime.fromisoformat(scheduled_date)
+            except ValueError as e:
+                raise RuntimeError(
+                    f"Invalid scheduled_date format: {scheduled_date}. "
+                    "Use ISO format (YYYY-MM-DDTHH:MM:SS)."
+                ) from e
         engagement = await app.client.engagements.create(
             title=title,
             engagement_type=eng_type,
@@ -150,8 +172,24 @@ async def devrev_engagements_update(
     """
     app = ctx.request_context.lifespan_context
     try:
-        eng_type = EngagementType[engagement_type.upper()] if engagement_type else None
-        sched = datetime.fromisoformat(scheduled_date) if scheduled_date else None
+        eng_type = None
+        if engagement_type:
+            try:
+                eng_type = EngagementType[engagement_type.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid engagement type: {e.args[0]}. "
+                    f"Valid types: {', '.join(t.name for t in EngagementType)}"
+                ) from e
+        sched = None
+        if scheduled_date:
+            try:
+                sched = datetime.fromisoformat(scheduled_date)
+            except ValueError as e:
+                raise RuntimeError(
+                    f"Invalid scheduled_date format: {scheduled_date}. "
+                    "Use ISO format (YYYY-MM-DDTHH:MM:SS)."
+                ) from e
         engagement = await app.client.engagements.update(
             id,
             title=title,
@@ -201,7 +239,15 @@ async def devrev_engagements_count(
     """
     app = ctx.request_context.lifespan_context
     try:
-        types = [EngagementType[t.upper()] for t in engagement_type] if engagement_type else None
+        types = None
+        if engagement_type:
+            try:
+                types = [EngagementType[t.upper()] for t in engagement_type]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid engagement type: {e.args[0]}. "
+                    f"Valid types: {', '.join(t.name for t in EngagementType)}"
+                ) from e
         count = await app.client.engagements.count(
             engagement_type=types,
             members=members,

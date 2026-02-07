@@ -35,8 +35,24 @@ async def devrev_incidents_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        stages = [IncidentStage[s.upper()] for s in stage] if stage else None
-        severities = [IncidentSeverity[s.upper()] for s in severity] if severity else None
+        stages = None
+        if stage:
+            try:
+                stages = [IncidentStage[s.upper()] for s in stage]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid incident stage: {e.args[0]}. "
+                    f"Valid stages: {', '.join(t.name for t in IncidentStage)}"
+                ) from e
+        severities = None
+        if severity:
+            try:
+                severities = [IncidentSeverity[s.upper()] for s in severity]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid incident severity: {e.args[0]}. "
+                    f"Valid severities: {', '.join(t.name for t in IncidentSeverity)}"
+                ) from e
         response = await app.client.incidents.list(
             cursor=cursor,
             limit=clamp_page_size(
@@ -89,7 +105,15 @@ async def devrev_incidents_create(
     """
     app = ctx.request_context.lifespan_context
     try:
-        severity_enum = IncidentSeverity[severity.upper()] if severity else None
+        severity_enum = None
+        if severity:
+            try:
+                severity_enum = IncidentSeverity[severity.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid incident severity: {e.args[0]}. "
+                    f"Valid severities: {', '.join(t.name for t in IncidentSeverity)}"
+                ) from e
         incident = await app.client.incidents.create(
             title=title,
             body=body,
@@ -124,8 +148,24 @@ async def devrev_incidents_update(
     """
     app = ctx.request_context.lifespan_context
     try:
-        stage_enum = IncidentStage[stage.upper()] if stage else None
-        severity_enum = IncidentSeverity[severity.upper()] if severity else None
+        stage_enum = None
+        if stage:
+            try:
+                stage_enum = IncidentStage[stage.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid incident stage: {e.args[0]}. "
+                    f"Valid stages: {', '.join(t.name for t in IncidentStage)}"
+                ) from e
+        severity_enum = None
+        if severity:
+            try:
+                severity_enum = IncidentSeverity[severity.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid incident severity: {e.args[0]}. "
+                    f"Valid severities: {', '.join(t.name for t in IncidentSeverity)}"
+                ) from e
         incident = await app.client.incidents.update(
             id,
             title=title,

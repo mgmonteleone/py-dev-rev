@@ -107,7 +107,15 @@ async def devrev_articles_create(
     """
     app = ctx.request_context.lifespan_context
     try:
-        article_status = ArticleStatus[status.upper()] if status else None
+        article_status = None
+        if status:
+            try:
+                article_status = ArticleStatus[status.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid article status: {e.args[0]}. "
+                    f"Valid statuses: {', '.join(s.name for s in ArticleStatus)}"
+                ) from e
         request = ArticlesCreateRequest(
             title=title,
             content=content,
@@ -144,7 +152,15 @@ async def devrev_articles_update(
     """
     app = ctx.request_context.lifespan_context
     try:
-        article_status = ArticleStatus[status.upper()] if status else None
+        article_status = None
+        if status:
+            try:
+                article_status = ArticleStatus[status.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid article status: {e.args[0]}. "
+                    f"Valid statuses: {', '.join(s.name for s in ArticleStatus)}"
+                ) from e
         request = ArticlesUpdateRequest(
             id=id,
             title=title,

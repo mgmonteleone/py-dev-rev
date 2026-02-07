@@ -107,7 +107,15 @@ async def devrev_groups_create(
     """
     app = ctx.request_context.lifespan_context
     try:
-        group_type = GroupType[type.upper()] if type else None
+        group_type = None
+        if type:
+            try:
+                group_type = GroupType[type.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid group type: {e.args[0]}. "
+                    f"Valid types: {', '.join(t.name for t in GroupType)}"
+                ) from e
         request = GroupsCreateRequest(name=name, description=description, type=group_type)
         group = await app.client.groups.create(request)
         return serialize_model(group)
