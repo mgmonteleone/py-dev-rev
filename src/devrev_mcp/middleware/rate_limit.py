@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+import threading
 import time
-from collections import defaultdict
+from collections import OrderedDict
 from collections.abc import Callable
 from typing import Any
 
@@ -14,9 +15,12 @@ from starlette.responses import JSONResponse, Response
 
 logger = logging.getLogger(__name__)
 
+# Maximum number of tracked client buckets before eviction
+_MAX_BUCKETS = 10_000
+
 
 class TokenBucket:
-    """Token bucket rate limiter for a single client.
+    """Thread-safe token bucket rate limiter for a single client.
 
     Args:
         rate: Tokens added per second.
@@ -28,29 +32,34 @@ class TokenBucket:
         self.capacity = capacity
         self.tokens = capacity
         self.last_refill = time.monotonic()
+        self._lock = threading.Lock()
 
     def consume(self) -> bool:
-        """Try to consume one token.
+        """Try to consume one token (thread-safe).
 
         Returns:
             True if a token was consumed, False if rate limited.
         """
-        now = time.monotonic()
-        elapsed = now - self.last_refill
-        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
-        self.last_refill = now
+        with self._lock:
+            now = time.monotonic()
+            elapsed = now - self.last_refill
+            self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
+            self.last_refill = now
 
-        if self.tokens >= 1.0:
-            self.tokens -= 1.0
-            return True
-        return False
+            if self.tokens >= 1.0:
+                self.tokens -= 1.0
+                return True
+            return False
 
     @property
     def retry_after(self) -> float:
         """Seconds until the next token is available."""
-        if self.tokens >= 1.0:
-            return 0.0
-        return (1.0 - self.tokens) / self.rate
+        with self._lock:
+            if self.tokens >= 1.0:
+                return 0.0
+            if self.rate <= 0:
+                return 60.0  # Fallback: suggest 60s if rate is zero
+            return (1.0 - self.tokens) / self.rate
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -59,9 +68,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Rate limits are tracked per client IP address. The MCP session ID is used
     if available (from Mcp-Session-Id header), otherwise falls back to client IP.
 
+    When requests_per_minute is 0, rate limiting is disabled entirely.
+
     Args:
         app: The ASGI application.
-        requests_per_minute: Maximum requests per minute per client.
+        requests_per_minute: Maximum requests per minute per client. 0 to disable.
         skip_paths: Paths to skip rate limiting for (e.g., /health).
     """
 
@@ -72,12 +83,33 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         skip_paths: set[str] | None = None,
     ) -> None:
         super().__init__(app)
-        self._rate = requests_per_minute / 60.0  # tokens per second
-        self._capacity = float(requests_per_minute)
-        self._buckets: dict[str, TokenBucket] = defaultdict(
-            lambda: TokenBucket(self._rate, self._capacity)
-        )
+        self._rpm = requests_per_minute
+        self._rate = requests_per_minute / 60.0 if requests_per_minute > 0 else 0.0
+        self._capacity = float(max(requests_per_minute, 1))
+        self._buckets: OrderedDict[str, TokenBucket] = OrderedDict()
+        self._buckets_lock = threading.Lock()
         self._skip_paths = skip_paths or {"/health"}
+
+    def _get_or_create_bucket(self, key: str) -> TokenBucket:
+        """Get or create a token bucket for the given client key.
+
+        Uses LRU eviction to prevent unbounded memory growth.
+        """
+        with self._buckets_lock:
+            if key in self._buckets:
+                # Move to end (most recently used)
+                self._buckets.move_to_end(key)
+                return self._buckets[key]
+
+            # Create new bucket
+            bucket = TokenBucket(self._rate, self._capacity)
+            self._buckets[key] = bucket
+
+            # Evict oldest entries if over limit
+            while len(self._buckets) > _MAX_BUCKETS:
+                self._buckets.popitem(last=False)
+
+            return bucket
 
     def _get_client_key(self, request: Request) -> str:
         """Get a unique key for the client.
@@ -100,12 +132,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         Returns:
             The response from the next handler, or a 429 error response.
         """
-        # Skip rate limiting for health checks and OPTIONS
-        if request.url.path in self._skip_paths or request.method == "OPTIONS":
+        # Skip rate limiting for health checks, OPTIONS, and when disabled
+        if request.url.path in self._skip_paths or request.method == "OPTIONS" or self._rpm <= 0:
             return await call_next(request)
 
         client_key = self._get_client_key(request)
-        bucket = self._buckets[client_key]
+        bucket = self._get_or_create_bucket(client_key)
 
         if not bucket.consume():
             retry_after = int(bucket.retry_after) + 1

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import secrets
 from collections.abc import Callable
 from typing import Any
 
@@ -69,7 +70,8 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
                 content={"error": "Invalid Authorization header format. Expected: Bearer <token>"},
             )
 
-        if parts[1] != self._token:
+        provided_token = parts[1].strip()
+        if not secrets.compare_digest(provided_token.encode("utf-8"), self._token.encode("utf-8")):
             logger.warning("Invalid Bearer token")
             return JSONResponse(
                 status_code=403,

@@ -11,8 +11,14 @@ from starlette.routing import Route
 
 logger = logging.getLogger(__name__)
 
-# Server start time for uptime calculation
-_start_time = time.monotonic()
+# Server start time — set when init_start_time() is called during server startup
+_start_time: float | None = None
+
+
+def init_start_time() -> None:
+    """Initialize the server start time. Call this during server startup."""
+    global _start_time  # noqa: PLW0603
+    _start_time = time.monotonic()
 
 
 async def health_check(request: Request) -> JSONResponse:  # noqa: ARG001
@@ -30,7 +36,7 @@ async def health_check(request: Request) -> JSONResponse:  # noqa: ARG001
     """
     from devrev_mcp import __version__
 
-    uptime_seconds = int(time.monotonic() - _start_time)
+    uptime_seconds = int(time.monotonic() - _start_time) if _start_time is not None else 0
 
     return JSONResponse(
         {

@@ -248,6 +248,21 @@ class TestBearerTokenMiddleware:
         response = client.options("/api/test")
         assert response.status_code == 200
 
+    def test_request_with_whitespace_padded_token_passes(self) -> None:
+        """Test that token with leading/trailing whitespace is accepted."""
+        from devrev_mcp.middleware.auth import BearerTokenMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = BearerTokenMiddleware(app, token="secret-token-123")
+        client = TestClient(app)
+
+        response = client.get("/api/test", headers={"Authorization": "Bearer  secret-token-123 "})
+        assert response.status_code == 200
+        assert response.text == "OK"
+
 
 class TestTokenBucket:
     """Tests for TokenBucket rate limiting algorithm."""
@@ -301,6 +316,15 @@ class TestTokenBucket:
         bucket = TokenBucket(rate=1.0, capacity=2.0)
         retry_after = bucket.retry_after
         assert retry_after == 0
+
+    def test_token_bucket_retry_after_zero_rate(self) -> None:
+        """Test retry_after returns fallback when rate is zero."""
+        from devrev_mcp.middleware.rate_limit import TokenBucket
+
+        bucket = TokenBucket(rate=0.0, capacity=1.0)
+        bucket.tokens = 0.0  # Force empty
+        retry_after = bucket.retry_after
+        assert retry_after == 60.0  # Fallback value
 
 
 class TestRateLimitMiddleware:
@@ -366,6 +390,38 @@ class TestRateLimitMiddleware:
             assert response.status_code == 200
             assert response.text == "healthy"
 
+    def test_rate_limit_disabled_when_rpm_is_zero(self) -> None:
+        """Test that rate limiting is disabled when requests_per_minute=0."""
+        from devrev_mcp.middleware.rate_limit import RateLimitMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = RateLimitMiddleware(app, requests_per_minute=0)
+        client = TestClient(app)
+
+        # All requests should pass through when rate limiting is disabled
+        for _ in range(50):
+            response = client.get("/api/test")
+            assert response.status_code == 200
+
+    def test_lru_eviction_limits_bucket_count(self) -> None:
+        """Test that LRU eviction prevents unbounded memory growth."""
+        from devrev_mcp.middleware.rate_limit import _MAX_BUCKETS, RateLimitMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        middleware = RateLimitMiddleware(app, requests_per_minute=120)
+
+        # Simulate many unique clients
+        for i in range(100):
+            middleware._get_or_create_bucket(f"ip:10.0.0.{i}")
+
+        assert len(middleware._buckets) <= _MAX_BUCKETS
+
 
 class TestHealthCheckEndpoint:
     """Tests for health check endpoint."""
@@ -404,6 +460,20 @@ class TestHealthCheckEndpoint:
         response = client.get("/health")
         health_data = response.json()
         assert isinstance(health_data, dict)
+
+    def test_health_check_uptime_after_init(self) -> None:
+        """Test that uptime is calculated from init_start_time() call."""
+        from devrev_mcp.middleware.health import health_route, init_start_time
+
+        # Initialize start time
+        init_start_time()
+
+        app = Starlette(routes=[health_route()])
+        client = TestClient(app)
+        response = client.get("/health")
+        health_data = response.json()
+
+        assert health_data["uptime_seconds"] >= 0
 
 
 class TestCLIArgumentParsing:

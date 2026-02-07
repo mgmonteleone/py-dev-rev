@@ -13,6 +13,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from devrev import APIVersion, AsyncDevRevClient
 from devrev_mcp import __version__
 from devrev_mcp.config import MCPServerConfig
+from devrev_mcp.middleware.health import init_start_time
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,10 @@ async def app_lifespan(_server: FastMCP) -> AsyncIterator[AppContext]:
     """
     config = MCPServerConfig()
     logging.basicConfig(level=getattr(logging, config.log_level.upper(), logging.INFO))
+
+    # Mark server start time for health endpoint uptime calculation
+    init_start_time()
+
     logger.info(
         "Starting %s v%s (transport=%s, beta_tools=%s)",
         config.server_name,
@@ -90,22 +95,51 @@ mcp = FastMCP(
     transport_security=_transport_security,
 )
 
+# ----- Register HTTP middleware (only for non-stdio transports) -----
+if _config.transport != "stdio":
+    from devrev_mcp.middleware.auth import BearerTokenMiddleware
+    from devrev_mcp.middleware.health import health_route
+    from devrev_mcp.middleware.rate_limit import RateLimitMiddleware
+
+    # Add health check route
+    if hasattr(mcp, "_app") and mcp._app is not None:
+        mcp._app.routes.insert(0, health_route())
+
+    # Add auth middleware if token is configured
+    if _config.auth_token is not None and hasattr(mcp, "_app") and mcp._app is not None:
+        mcp._app.add_middleware(
+            BearerTokenMiddleware,
+            token=_config.auth_token.get_secret_value(),
+        )
+
+    # Add rate limiting middleware
+    if _config.rate_limit_rpm > 0 and hasattr(mcp, "_app") and mcp._app is not None:
+        mcp._app.add_middleware(
+            RateLimitMiddleware,
+            requests_per_minute=_config.rate_limit_rpm,
+        )
+
 
 # ----- Register tool modules -----
 # These imports MUST be at the bottom to avoid circular imports.
 # Each tool module imports `mcp` from this module to register its tools.
+
+# Read-only tools (always registered)
 from devrev_mcp.tools import accounts as _accounts_tools  # noqa: E402, F401
-from devrev_mcp.tools import articles as _articles_tools  # noqa: E402, F401
-from devrev_mcp.tools import conversations as _conversations_tools  # noqa: E402, F401
-from devrev_mcp.tools import engagements as _engagements_tools  # noqa: E402, F401
-from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
-from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
-from devrev_mcp.tools import links as _links_tools  # noqa: E402, F401
-from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
-from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
-from devrev_mcp.tools import timeline as _timeline_tools  # noqa: E402, F401
 from devrev_mcp.tools import users as _users_tools  # noqa: E402, F401
 from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
+
+# Conditionally register destructive tools (create/update/delete)
+if _config.enable_destructive_tools:
+    from devrev_mcp.tools import articles as _articles_tools  # noqa: E402, F401
+    from devrev_mcp.tools import conversations as _conversations_tools  # noqa: E402, F401
+    from devrev_mcp.tools import engagements as _engagements_tools  # noqa: E402, F401
+    from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
+    from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
+    from devrev_mcp.tools import links as _links_tools  # noqa: E402, F401
+    from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
+    from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
+    from devrev_mcp.tools import timeline as _timeline_tools  # noqa: E402, F401
 
 # Beta tools are only imported if enabled in config
 if _config.enable_beta_tools:
