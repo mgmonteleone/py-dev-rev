@@ -42,6 +42,7 @@ def mock_client():
             - rev_users: Rev users service (list, get, create)
             - search: Search service (hybrid, core)
             - recommendations: Recommendations service (get_reply, chat_completions)
+            - links: Links service (list, get, create, delete)
             - close: Async close method
     """
     client = AsyncMock()
@@ -148,6 +149,29 @@ def mock_client():
     client.engagements.update = AsyncMock()
     client.engagements.delete = AsyncMock()
     client.engagements.count = AsyncMock()
+
+    # Links service
+    client.links = AsyncMock()
+    client.links.list = AsyncMock()
+    client.links.get = AsyncMock()
+    client.links.create = AsyncMock()
+    client.links.delete = AsyncMock()
+
+    # Timeline entries service
+    client.timeline_entries = AsyncMock()
+    client.timeline_entries.list = AsyncMock()
+    client.timeline_entries.get = AsyncMock()
+    client.timeline_entries.create = AsyncMock()
+    client.timeline_entries.update = AsyncMock()
+    client.timeline_entries.delete = AsyncMock()
+
+    # SLAs service
+    client.slas = AsyncMock()
+    client.slas.list = AsyncMock()
+    client.slas.get = AsyncMock()
+    client.slas.create = AsyncMock()
+    client.slas.update = AsyncMock()
+    client.slas.transition = AsyncMock()
 
     # Close method
     client.close = AsyncMock()
