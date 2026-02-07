@@ -57,8 +57,11 @@ security = [
     "bandit>=1.7.0",
     "safety>=2.3.0",
 ]
+mcp = [
+    "mcp>=1.0.0",
+]
 all = [
-    "devrev-Python-SDK[dev,docs,benchmark,security]",
+    "devrev-Python-SDK[dev,docs,benchmark,security,mcp]",
 ]
 
 [project.urls]
@@ -67,8 +70,11 @@ Documentation = "https://github.com/mgmonteleone/py-dev-rev"
 Repository = "https://github.com/mgmonteleone/py-dev-rev.git"
 Issues = "https://github.com/mgmonteleone/py-dev-rev/issues"
 
+[project.scripts]
+devrev-mcp-server = "devrev_mcp.__main__:main"
+
 [tool.hatch.build.targets.wheel]
-packages = ["src/devrev"]
+packages = ["src/devrev", "src/devrev_mcp"]
 
 # Ruff Configuration
 [tool.ruff]
@@ -93,7 +99,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["devrev"]
+known-first-party = ["devrev", "devrev_mcp"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG001", "ARG002"]  # Fixtures may be unused but needed for side effects
@@ -132,7 +138,7 @@ markers = [
 
 # Coverage Configuration
 [tool.coverage.run]
-source = ["src/devrev"]
+source = ["src/devrev", "src/devrev_mcp"]
 branch = true
 omit = ["*/tests/*"]
 
