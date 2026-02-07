@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 async def get_account_resource(account_id: str) -> str:
     """Get a DevRev account as a resource.
 
-    Returns account details including display name, domains, tier,
-    and ownership information.
+    Returns resource metadata with a pointer to the devrev_accounts_get tool
+    for fetching full account details.
 
     Args:
         account_id: The account ID (DON format).

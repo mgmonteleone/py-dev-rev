@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 async def get_part_resource(part_id: str) -> str:
     """Get a DevRev part as a resource.
 
-    Returns part details including name, type (product, capability,
-    feature, enhancement), description, and ownership.
+    Returns resource metadata with a pointer to the devrev_parts_get tool
+    for fetching full part details.
 
     Args:
         part_id: The part ID (DON format).

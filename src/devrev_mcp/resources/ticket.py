@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 async def get_ticket_resource(ticket_id: str) -> str:
     """Get a DevRev ticket as a resource.
 
-    Returns full ticket details including title, body, stage, priority,
-    severity, owner, and creation date.
+    Returns resource metadata with a pointer to the devrev_works_get tool
+    for fetching full ticket details.
 
     Args:
         ticket_id: The ticket ID (DON format).

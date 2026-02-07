@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 async def get_conversation_resource(conversation_id: str) -> str:
     """Get a DevRev conversation as a resource.
 
-    Returns conversation details including title, description,
-    type, and associated metadata.
+    Returns resource metadata with a pointer to the devrev_conversations_get tool
+    for fetching full conversation details.
 
     Args:
         conversation_id: The conversation ID (DON format).

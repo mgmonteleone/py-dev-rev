@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 async def get_article_resource(article_id: str) -> str:
     """Get a DevRev article as a resource.
 
-    Returns article content in markdown format, including title,
-    content, status, and metadata.
+    Returns resource metadata with a pointer to the devrev_articles_get tool
+    for fetching full article details.
 
     Args:
         article_id: The article ID (DON format).

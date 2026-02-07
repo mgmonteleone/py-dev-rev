@@ -37,7 +37,9 @@ async def investigate_issue(ticket_id: str, depth: str = "standard") -> list[Tex
         ),
     }
 
-    investigation_steps = depth_instructions.get(depth, depth_instructions["standard"])
+    if depth not in depth_instructions:
+        depth = "standard"
+    investigation_steps = depth_instructions[depth]
 
     return [
         TextContent(
@@ -115,7 +117,7 @@ async def onboard_customer(
     product_context = ""
     if product_part_id:
         product_context = (
-            f"\n2. Use `devrev_product_parts_get` to fetch details for product part {product_part_id}.\n"
+            f"\n2. Use `devrev_parts_get` to fetch details for product part {product_part_id}.\n"
             "3. Customize the onboarding based on the specific product features."
         )
 

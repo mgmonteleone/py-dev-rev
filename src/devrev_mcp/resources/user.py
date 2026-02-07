@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 async def get_dev_user_resource(user_id: str) -> str:
     """Get a DevRev developer user as a resource.
 
-    Returns dev user details including display name, email,
-    state, and role information.
+    Returns resource metadata with a pointer to the devrev_dev_users_get tool
+    for fetching full dev user details.
 
     Args:
         user_id: The dev user ID (DON format).
@@ -37,8 +37,8 @@ async def get_dev_user_resource(user_id: str) -> str:
 async def get_rev_user_resource(user_id: str) -> str:
     """Get a DevRev customer (rev) user as a resource.
 
-    Returns rev user details including display name, email,
-    phone numbers, and associated rev org.
+    Returns resource metadata with a pointer to the devrev_rev_users_get tool
+    for fetching full rev user details.
 
     Args:
         user_id: The rev user ID (DON format).
