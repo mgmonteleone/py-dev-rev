@@ -39,7 +39,9 @@ async def devrev_incidents_list(
         severities = [IncidentSeverity[s.upper()] for s in severity] if severity else None
         response = await app.client.incidents.list(
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
             stage=stages,
             severity=severities,
         )

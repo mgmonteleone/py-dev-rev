@@ -48,7 +48,12 @@ async def devrev_groups_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        request = GroupsListRequest(cursor=cursor, limit=clamp_page_size(limit))
+        request = GroupsListRequest(
+            cursor=cursor,
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
+        )
         groups = await app.client.groups.list(request)
         items = serialize_models(list(groups))
         return {"count": len(items), "groups": items}
@@ -208,7 +213,13 @@ async def devrev_groups_list_members(
     """
     app = ctx.request_context.lifespan_context
     try:
-        request = GroupMembersListRequest(group=group, cursor=cursor, limit=clamp_page_size(limit))
+        request = GroupMembersListRequest(
+            group=group,
+            cursor=cursor,
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
+        )
         members = await app.client.groups.list_members(request)
         items = serialize_models(list(members))
         return {"count": len(items), "members": items}

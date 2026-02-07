@@ -37,7 +37,12 @@ async def devrev_conversations_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        request = ConversationsListRequest(cursor=cursor, limit=clamp_page_size(limit))
+        request = ConversationsListRequest(
+            cursor=cursor,
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
+        )
         conversations = await app.client.conversations.list(request)
         items = serialize_models(list(conversations))
         return {"count": len(items), "conversations": items}
@@ -147,7 +152,11 @@ async def devrev_conversations_export(
     app = ctx.request_context.lifespan_context
     try:
         response = await app.client.conversations.export(
-            cursor=cursor, limit=clamp_page_size(limit), return_response=True
+            cursor=cursor,
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
+            return_response=True,
         )
         items = serialize_models(list(response.conversations))
         return paginated_response(

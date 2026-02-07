@@ -48,7 +48,9 @@ async def devrev_engagements_list(
         types = [EngagementType[t.upper()] for t in engagement_type] if engagement_type else None
         response = await app.client.engagements.list(
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
             engagement_type=types,
             members=members,
             parent=parent,

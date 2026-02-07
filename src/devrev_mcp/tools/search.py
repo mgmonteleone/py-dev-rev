@@ -42,13 +42,24 @@ async def devrev_search_hybrid(
     """
     app = ctx.request_context.lifespan_context
     try:
-        ns = [SearchNamespace(n.lower()) for n in namespaces] if namespaces else None
+        # Convert namespace strings to enum, catching invalid values
+        ns = None
+        if namespaces:
+            try:
+                ns = [SearchNamespace(n.lower()) for n in namespaces]
+            except ValueError as e:
+                raise RuntimeError(
+                    f"Invalid search namespace: {e.args[0]}. "
+                    f"Valid namespaces: {', '.join(n.value for n in SearchNamespace)}"
+                ) from e
         response = await app.client.search.hybrid(
             query,
             namespaces=ns,
             semantic_weight=semantic_weight,
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
         )
         results = serialize_models(response.results)
         result: dict[str, Any] = {
@@ -85,12 +96,23 @@ async def devrev_search_core(
     """
     app = ctx.request_context.lifespan_context
     try:
-        ns = [SearchNamespace(n.lower()) for n in namespaces] if namespaces else None
+        # Convert namespace strings to enum, catching invalid values
+        ns = None
+        if namespaces:
+            try:
+                ns = [SearchNamespace(n.lower()) for n in namespaces]
+            except ValueError as e:
+                raise RuntimeError(
+                    f"Invalid search namespace: {e.args[0]}. "
+                    f"Valid namespaces: {', '.join(n.value for n in SearchNamespace)}"
+                ) from e
         response = await app.client.search.core(
             query,
             namespaces=ns,
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
         )
         results = serialize_models(response.results)
         result: dict[str, Any] = {

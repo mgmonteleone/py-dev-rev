@@ -45,7 +45,12 @@ async def devrev_parts_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        response = await app.client.parts.list(limit=clamp_page_size(limit), cursor=cursor)
+        response = await app.client.parts.list(
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
+            cursor=cursor,
+        )
         items = serialize_models(response.parts)
         return paginated_response(items, next_cursor=response.next_cursor, total_label="parts")
     except DevRevError as e:

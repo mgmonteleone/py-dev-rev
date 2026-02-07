@@ -40,7 +40,9 @@ async def devrev_dev_users_list(
             email=email,
             state=user_states,
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
         )
         items = serialize_models(response.dev_users)
         return paginated_response(items, next_cursor=response.next_cursor, total_label="dev_users")
@@ -88,7 +90,9 @@ async def devrev_rev_users_list(
             email=email,
             rev_org=rev_org,
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
         )
         items = serialize_models(response.rev_users)
         return paginated_response(items, next_cursor=response.next_cursor, total_label="rev_users")

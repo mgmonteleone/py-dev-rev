@@ -51,7 +51,9 @@ async def app_lifespan(_server: FastMCP) -> AsyncIterator[AppContext]:
         config.enable_beta_tools,
     )
 
-    client = AsyncDevRevClient(api_version=APIVersion.BETA)
+    # Use beta API version only if beta tools are enabled
+    api_version = APIVersion.BETA if config.enable_beta_tools else APIVersion.PUBLIC
+    client = AsyncDevRevClient(api_version=api_version)
     try:
         yield AppContext(client=client, config=config)
     finally:
@@ -60,8 +62,11 @@ async def app_lifespan(_server: FastMCP) -> AsyncIterator[AppContext]:
 
 
 # Create the FastMCP server instance
+# Note: server name is set from config during lifespan, but FastMCP requires a name at init
+# We use the default here, which matches the config default
+_config = MCPServerConfig()
 mcp = FastMCP(
-    "DevRev MCP Server",
+    _config.server_name,
     lifespan=app_lifespan,
 )
 
@@ -76,8 +81,11 @@ from devrev_mcp.tools import engagements as _engagements_tools  # noqa: E402, F4
 from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
 from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
 from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
-from devrev_mcp.tools import recommendations as _recommendations_tools  # noqa: E402, F401
-from devrev_mcp.tools import search as _search_tools  # noqa: E402, F401
 from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
 from devrev_mcp.tools import users as _users_tools  # noqa: E402, F401
 from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
+
+# Beta tools are only imported if enabled in config
+if _config.enable_beta_tools:
+    from devrev_mcp.tools import recommendations as _recommendations_tools  # noqa: E402, F401
+    from devrev_mcp.tools import search as _search_tools  # noqa: E402, F401

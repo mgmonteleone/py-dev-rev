@@ -41,7 +41,12 @@ async def devrev_tags_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        request = TagsListRequest(cursor=cursor, limit=clamp_page_size(limit))
+        request = TagsListRequest(
+            cursor=cursor,
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
+        )
         tags = await app.client.tags.list(request)
         items = serialize_models(list(tags))
         return {"count": len(items), "tags": items}

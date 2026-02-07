@@ -37,13 +37,24 @@ async def devrev_works_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        work_types = [WorkType[t.upper()] for t in type] if type else None
+        # Convert work type strings to enum, catching invalid values
+        work_types = None
+        if type:
+            try:
+                work_types = [WorkType[t.upper()] for t in type]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid work type: {e.args[0]}. "
+                    f"Valid types: {', '.join(wt.name for wt in WorkType)}"
+                ) from e
         response = await app.client.works.list(
             type=work_types,
             applies_to_part=applies_to_part,
             owned_by=owned_by,
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
         )
         items = serialize_models(response.works)
         return paginated_response(items, next_cursor=response.next_cursor, total_label="works")
@@ -93,9 +104,35 @@ async def devrev_works_create(
     """
     app = ctx.request_context.lifespan_context
     try:
-        work_type = WorkType[type.upper()]
-        issue_priority = IssuePriority[priority.upper()] if priority else None
-        ticket_severity = TicketSeverity[severity.upper()] if severity else None
+        # Convert enum strings, catching invalid values
+        try:
+            work_type = WorkType[type.upper()]
+        except KeyError as e:
+            raise RuntimeError(
+                f"Invalid work type: {e.args[0]}. "
+                f"Valid types: {', '.join(wt.name for wt in WorkType)}"
+            ) from e
+
+        issue_priority = None
+        if priority:
+            try:
+                issue_priority = IssuePriority[priority.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid priority: {e.args[0]}. "
+                    f"Valid priorities: {', '.join(p.name for p in IssuePriority)}"
+                ) from e
+
+        ticket_severity = None
+        if severity:
+            try:
+                ticket_severity = TicketSeverity[severity.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid severity: {e.args[0]}. "
+                    f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
+                ) from e
+
         work = await app.client.works.create(
             title=title,
             applies_to_part=applies_to_part,
@@ -134,8 +171,27 @@ async def devrev_works_update(
     """
     app = ctx.request_context.lifespan_context
     try:
-        issue_priority = IssuePriority[priority.upper()] if priority else None
-        ticket_severity = TicketSeverity[severity.upper()] if severity else None
+        # Convert enum strings, catching invalid values
+        issue_priority = None
+        if priority:
+            try:
+                issue_priority = IssuePriority[priority.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid priority: {e.args[0]}. "
+                    f"Valid priorities: {', '.join(p.name for p in IssuePriority)}"
+                ) from e
+
+        ticket_severity = None
+        if severity:
+            try:
+                ticket_severity = TicketSeverity[severity.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid severity: {e.args[0]}. "
+                    f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
+                ) from e
+
         work = await app.client.works.update(
             id,
             title=title,
@@ -181,7 +237,16 @@ async def devrev_works_count(
     """
     app = ctx.request_context.lifespan_context
     try:
-        work_types = [WorkType[t.upper()] for t in type] if type else None
+        # Convert work type strings to enum, catching invalid values
+        work_types = None
+        if type:
+            try:
+                work_types = [WorkType[t.upper()] for t in type]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid work type: {e.args[0]}. "
+                    f"Valid types: {', '.join(wt.name for wt in WorkType)}"
+                ) from e
         count = await app.client.works.count(type=work_types, owned_by=owned_by)
         return {"count": count}
     except DevRevError as e:
@@ -204,7 +269,16 @@ async def devrev_works_export(
     """
     app = ctx.request_context.lifespan_context
     try:
-        work_types = [WorkType[t.upper()] for t in type] if type else None
+        # Convert work type strings to enum, catching invalid values
+        work_types = None
+        if type:
+            try:
+                work_types = [WorkType[t.upper()] for t in type]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid work type: {e.args[0]}. "
+                    f"Valid types: {', '.join(wt.name for wt in WorkType)}"
+                ) from e
         works = await app.client.works.export(type=work_types, first=first)
         items = serialize_models(list(works))
         return {"count": len(items), "works": items}

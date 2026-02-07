@@ -48,7 +48,12 @@ async def devrev_articles_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        request = ArticlesListRequest(cursor=cursor, limit=clamp_page_size(limit))
+        request = ArticlesListRequest(
+            cursor=cursor,
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
+        )
         articles = await app.client.articles.list(request)
         items = serialize_models(list(articles))
         return {"count": len(items), "articles": items}

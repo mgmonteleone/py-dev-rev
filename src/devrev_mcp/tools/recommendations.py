@@ -63,9 +63,22 @@ async def devrev_recommendations_chat(
     """
     app = ctx.request_context.lifespan_context
     try:
-        chat_messages = [
-            ChatMessage(role=MessageRole(m["role"]), content=m["content"]) for m in messages
-        ]
+        # Build chat messages, catching missing keys or invalid values
+        try:
+            chat_messages = [
+                ChatMessage(role=MessageRole(m["role"]), content=m["content"]) for m in messages
+            ]
+        except KeyError as e:
+            raise RuntimeError(
+                f"Invalid message format: missing required key {e.args[0]}. "
+                "Each message must have 'role' and 'content' keys."
+            ) from e
+        except ValueError as e:
+            raise RuntimeError(
+                f"Invalid message role: {e.args[0]}. "
+                f"Valid roles: {', '.join(r.value for r in MessageRole)}"
+            ) from e
+
         request = ChatCompletionRequest(
             messages=chat_messages,
             max_tokens=max_tokens,

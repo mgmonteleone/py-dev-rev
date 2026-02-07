@@ -41,7 +41,9 @@ async def devrev_accounts_list(
             domains=domains,
             owned_by=owned_by,
             cursor=cursor,
-            limit=clamp_page_size(limit),
+            limit=clamp_page_size(
+                limit, default=app.config.default_page_size, maximum=app.config.max_page_size
+            ),
         )
         items = serialize_models(response.accounts)
         return paginated_response(items, next_cursor=response.next_cursor, total_label="accounts")

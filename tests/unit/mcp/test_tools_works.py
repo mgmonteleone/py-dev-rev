@@ -1,10 +1,4 @@
-"""Comprehensive tests for DevRev MCP works tools.
-
-NOTE: Some tests are marked as xfail due to bugs in the implementation where
-.upper() is called instead of using enum member access with []. The implementation
-should use WorkType[t.upper()] instead of WorkType(t.upper()) since enum values
-are lowercase but member names are uppercase.
-"""
+"""Comprehensive tests for DevRev MCP works tools."""
 
 from unittest.mock import MagicMock
 
