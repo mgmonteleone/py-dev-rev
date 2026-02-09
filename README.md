@@ -613,6 +613,7 @@ The DevRev MCP Server exposes the full DevRev platform as [Model Context Protoco
 - **3 Transports** — stdio (local dev), Streamable HTTP (production), SSE (legacy)
 - **Security** — Bearer token auth, rate limiting, DNS rebinding protection, destructive tool gating
 - **MCP 2025-06-18 Compliant** — Latest protocol version with structured content support
+- **E2E Tested** — Validated against live DevRev API with 78 tools, 7 resources, 8 prompts; HTTP middleware (auth, rate limiting, health) verified working
 
 ### Quick Start (stdio)
 
@@ -718,31 +719,48 @@ All settings are configurable via environment variables (prefix `MCP_`):
 ```
 py-devrev/
 ├── src/
-│   └── devrev/
+│   ├── devrev/                 # DevRev Python SDK
+│   │   ├── __init__.py
+│   │   ├── client.py           # Sync & async client classes
+│   │   ├── config.py           # SDK configuration
+│   │   ├── exceptions.py       # Exception hierarchy
+│   │   ├── models/             # Pydantic v2 models
+│   │   ├── services/           # API service classes (14 production + 7 beta)
+│   │   └── utils/              # HTTP, logging, pagination utilities
+│   └── devrev_mcp/             # MCP Server (Model Context Protocol)
 │       ├── __init__.py
-│       ├── client.py           # Main client classes
-│       ├── config.py           # Configuration management
-│       ├── exceptions.py       # Exception definitions
-│       ├── models/             # Pydantic models
-│       │   ├── __init__.py
-│       │   ├── accounts.py
-│       │   ├── works.py
-│       │   └── ...
-│       ├── services/           # API service classes
-│       │   ├── __init__.py
-│       │   ├── accounts.py
-│       │   ├── works.py
-│       │   └── ...
-│       └── utils/              # Utilities
-│           ├── __init__.py
-│           ├── http.py
-│           ├── logging.py
-│           └── pagination.py
+│       ├── __main__.py         # CLI entry point
+│       ├── server.py           # FastMCP server setup & lifecycle
+│       ├── config.py           # MCPServerConfig (pydantic-settings)
+│       ├── tools/              # 78 MCP tools across 15 categories
+│       │   ├── works.py        # Works: list, get, create, update, delete, count, search
+│       │   ├── accounts.py     # Accounts: list, get, create, update, delete, merge
+│       │   ├── users.py        # Users: list/get dev users, list/get rev users, whoami
+│       │   ├── conversations.py # Conversations: list, get, create, update, delete, export
+│       │   ├── articles.py     # Articles: list, get, create, update, delete, count
+│       │   ├── parts.py        # Parts: list, get, create, update, delete
+│       │   ├── tags.py         # Tags: list, get, create, update, delete
+│       │   ├── groups.py       # Groups: CRUD + member management + count
+│       │   ├── timeline.py     # Timeline: list, get, create, update, delete
+│       │   ├── links.py        # Links: list, get, create, delete
+│       │   ├── slas.py         # SLAs: list, get, create, update, transition
+│       │   ├── search.py       # Search (beta): hybrid, count
+│       │   ├── recommendations.py # Recommendations (beta): reply, chat
+│       │   ├── incidents.py    # Incidents (beta): list, get, create, update, delete, group
+│       │   └── engagements.py  # Engagements (beta): list, get, create, update, delete, count
+│       ├── resources/          # 7 MCP resources (devrev:// URI scheme)
+│       ├── prompts/            # 8 workflow prompts (triage, response, escalate, etc.)
+│       ├── middleware/         # HTTP middleware (auth, rate limiting, health)
+│       └── utils/              # Pagination, error formatting, model serialization
 ├── tests/
 │   ├── unit/
+│   │   ├── mcp/               # 315+ MCP server tests
+│   │   └── ...                # SDK unit tests
 │   ├── integration/
 │   └── fixtures/
+├── deploy/                     # Deployment configs (Cloud Run, Docker Compose)
 ├── openapi-public.yaml         # DevRev OpenAPI specification
+├── Dockerfile                  # Multi-stage Docker build
 ├── pyproject.toml
 └── README.md
 ```

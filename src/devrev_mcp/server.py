@@ -96,34 +96,76 @@ mcp = FastMCP(
 )
 
 # ----- Register HTTP middleware (only for non-stdio transports) -----
-# NOTE: mcp._app is a private Starlette ASGI app attribute of FastMCP.
-# This is a known workaround; FastMCP does not yet expose a public API
-# for adding middleware. The hasattr guard ensures forward compatibility.
+# FastMCP creates its Starlette app lazily inside streamable_http_app() and
+# sse_app(). We wrap those methods so that after the Starlette app is created,
+# we inject our health route and middleware into it.
+#
+# NOTE: The closures below capture `_config` (the module-level MCPServerConfig
+# instance). This config is frozen at import time. Runtime config changes (e.g.,
+# from CLI args in __main__.py that set env vars before importing this module)
+# are picked up because __main__.py sets env vars *before* importing server.
 if _config.transport != "stdio":
+    import functools
+
     from devrev_mcp.middleware.auth import BearerTokenMiddleware
     from devrev_mcp.middleware.health import health_route
     from devrev_mcp.middleware.rate_limit import RateLimitMiddleware
 
-    # Add health check route
-    if hasattr(mcp, "_app") and mcp._app is not None:
-        mcp._app.routes.insert(0, health_route())
-
-    # Add auth middleware if token is configured
-    if _config.auth_token is not None and hasattr(mcp, "_app") and mcp._app is not None:
-        mcp._app.add_middleware(
-            BearerTokenMiddleware,
-            token=_config.auth_token.get_secret_value(),
+    def _inject_middleware(starlette_app):  # noqa: ANN001, ANN202
+        """Add health route, auth, and rate limiting to a Starlette app."""
+        logger.debug(
+            "Injecting middleware: health_route=True, auth=%s, rate_limit=%s (rpm=%d)",
+            _config.auth_token is not None,
+            _config.rate_limit_rpm > 0,
+            _config.rate_limit_rpm,
         )
+        # Insert health route at the beginning so it's matched first
+        starlette_app.routes.insert(0, health_route())
 
-    # Add rate limiting middleware
-    if _config.rate_limit_rpm > 0 and hasattr(mcp, "_app") and mcp._app is not None:
-        mcp._app.add_middleware(
-            RateLimitMiddleware,
-            requests_per_minute=_config.rate_limit_rpm,
-        )
+        # Add rate limiting middleware (outermost — runs first)
+        if _config.rate_limit_rpm > 0:
+            starlette_app.add_middleware(
+                RateLimitMiddleware,
+                requests_per_minute=_config.rate_limit_rpm,
+            )
+
+        # Add auth middleware (inner — runs after rate limiting)
+        if _config.auth_token is not None:
+            starlette_app.add_middleware(
+                BearerTokenMiddleware,
+                token=_config.auth_token.get_secret_value(),
+            )
+
+        return starlette_app
+
+    # Wrap streamable_http_app
+    _original_streamable_http_app = mcp.streamable_http_app
+
+    @functools.wraps(_original_streamable_http_app)
+    def _patched_streamable_http_app(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        app = _original_streamable_http_app(*args, **kwargs)
+        return _inject_middleware(app)
+
+    mcp.streamable_http_app = _patched_streamable_http_app  # type: ignore[assignment]
+
+    # Wrap sse_app
+    _original_sse_app = mcp.sse_app
+
+    @functools.wraps(_original_sse_app)
+    def _patched_sse_app(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        app = _original_sse_app(*args, **kwargs)
+        return _inject_middleware(app)
+
+    mcp.sse_app = _patched_sse_app  # type: ignore[assignment]
 
 
 # ----- Register tool modules -----
+# IMPORTANT: These imports MUST come after the middleware patching above.
+# FastMCP tool registration happens at import time via `@mcp.tool()` decorators.
+# The `mcp` instance must be fully configured (including middleware wrapping)
+# before any tool modules are imported, otherwise tool registration could
+# interact with an incompletely configured server.
+#
 # All tool modules are always imported. Each module internally guards
 # destructive tools (create/update/delete) using `_config.enable_destructive_tools`.
 # Beta tools check `_config.enable_beta_tools`.

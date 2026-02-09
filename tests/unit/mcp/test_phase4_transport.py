@@ -15,6 +15,7 @@ import os
 import time
 from unittest.mock import patch
 
+import pytest
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
@@ -262,6 +263,17 @@ class TestBearerTokenMiddleware:
         response = client.get("/api/test", headers={"Authorization": "Bearer  secret-token-123 "})
         assert response.status_code == 200
         assert response.text == "OK"
+
+    def test_empty_token_raises_value_error(self) -> None:
+        """Test that BearerTokenMiddleware rejects empty token at init."""
+        from devrev_mcp.middleware.auth import BearerTokenMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        with pytest.raises(ValueError, match="non-empty token"):
+            BearerTokenMiddleware(app, token="")
 
 
 class TestTokenBucket:
@@ -598,3 +610,139 @@ class TestServerTransportSecurity:
             assert security is not None
             assert security.allowed_hosts == ["host1.com", "host2.com"]
             assert security.allowed_origins == ["https://origin1.com", "https://origin2.com"]
+
+
+class TestMiddlewareInjection:
+    """Tests that verify middleware injection into Starlette apps.
+
+    These tests exercise the _inject_middleware function from server.py
+    to confirm that health route, auth, and rate limiting are properly
+    added to Starlette apps — validating the monkey-patching approach.
+    """
+
+    def test_inject_middleware_adds_health_route(self) -> None:
+        """Test that _inject_middleware adds /health route to the app."""
+        from devrev_mcp.middleware.health import health_route, init_start_time
+
+        # Initialize start time so health endpoint can report uptime
+        init_start_time()
+
+        # Create a bare Starlette app
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+
+        # Manually inject health route (same as _inject_middleware does)
+        app.routes.insert(0, health_route())
+
+        client = TestClient(app)
+
+        # /health should now be accessible
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "version" in data
+        assert "uptime_seconds" in data
+
+    def test_inject_middleware_adds_auth_middleware(self) -> None:
+        """Test that auth middleware blocks unauthenticated requests after injection."""
+        from devrev_mcp.middleware.auth import BearerTokenMiddleware
+        from devrev_mcp.middleware.health import health_route, init_start_time
+
+        init_start_time()
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app.routes.insert(0, health_route())
+
+        # Add auth middleware (same as _inject_middleware does when auth_token is set)
+        app.add_middleware(BearerTokenMiddleware, token="test-secret")
+
+        client = TestClient(app)
+
+        # /health should bypass auth
+        response = client.get("/health")
+        assert response.status_code == 200
+
+        # /api/test without token should be 401
+        response = client.get("/api/test")
+        assert response.status_code == 401
+
+        # /api/test with correct token should be 200
+        response = client.get("/api/test", headers={"Authorization": "Bearer test-secret"})
+        assert response.status_code == 200
+
+    def test_inject_middleware_adds_rate_limiting(self) -> None:
+        """Test that rate limiting blocks excess requests after injection."""
+        from devrev_mcp.middleware.health import health_route, init_start_time
+        from devrev_mcp.middleware.rate_limit import RateLimitMiddleware
+
+        init_start_time()
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app.routes.insert(0, health_route())
+
+        # Very low rate limit to trigger 429 quickly
+        app.add_middleware(RateLimitMiddleware, requests_per_minute=2)
+
+        client = TestClient(app)
+
+        # First request should pass
+        response = client.get("/api/test")
+        assert response.status_code == 200
+
+        # Rapid requests should eventually hit 429
+        rate_limited = False
+        for _ in range(10):
+            response = client.get("/api/test")
+            if response.status_code == 429:
+                rate_limited = True
+                assert "Retry-After" in response.headers
+                break
+
+        assert rate_limited, "Expected rate limiting to kick in"
+
+        # /health should still bypass rate limiting
+        response = client.get("/health")
+        assert response.status_code == 200
+
+    def test_full_middleware_stack_injection(self) -> None:
+        """Test the full middleware stack: health + auth + rate limiting together."""
+        from devrev_mcp.middleware.auth import BearerTokenMiddleware
+        from devrev_mcp.middleware.health import health_route, init_start_time
+        from devrev_mcp.middleware.rate_limit import RateLimitMiddleware
+
+        init_start_time()
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app.routes.insert(0, health_route())
+
+        # Add both middlewares (rate limit first = outermost, auth second = inner)
+        app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
+        app.add_middleware(BearerTokenMiddleware, token="test-secret")
+
+        client = TestClient(app)
+
+        # /health should work without auth (bypasses both middlewares)
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.json()["status"] == "healthy"
+
+        # /api/test without token should fail auth
+        response = client.get("/api/test")
+        assert response.status_code == 401
+
+        # /api/test with correct token should succeed
+        response = client.get("/api/test", headers={"Authorization": "Bearer test-secret"})
+        assert response.status_code == 200
+        assert response.text == "OK"

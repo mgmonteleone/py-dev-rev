@@ -47,6 +47,10 @@ This release introduces a full-featured MCP server that exposes the entire DevRe
 - Comprehensive documentation in README.md
 - This changelog entry
 
+#### Bug Fixes (E2E Testing)
+- **Critical: HTTP middleware never registered** — `FastMCP` creates its internal Starlette app lazily inside `streamable_http_app()` and `sse_app()`, not at construction time. The health endpoint, bearer token auth middleware, and rate limiting middleware were silently never injected. Fixed by monkey-patching `streamable_http_app()` and `sse_app()` on the `mcp` instance to inject middleware after the Starlette app is created.
+- Confirmed 12/14 real API E2E tests pass (2 environmental: SLA 403 permissions, Search 400 beta not enabled)
+
 ### Fixed
 - All enum conversions across tool modules now use bracket access (by name) with KeyError guards
 - `datetime.fromisoformat()` calls wrapped in ValueError handlers
