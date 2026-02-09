@@ -99,6 +99,11 @@ mcp = FastMCP(
 # FastMCP creates its Starlette app lazily inside streamable_http_app() and
 # sse_app(). We wrap those methods so that after the Starlette app is created,
 # we inject our health route and middleware into it.
+#
+# NOTE: The closures below capture `_config` (the module-level MCPServerConfig
+# instance). This config is frozen at import time. Runtime config changes (e.g.,
+# from CLI args in __main__.py that set env vars before importing this module)
+# are picked up because __main__.py sets env vars *before* importing server.
 if _config.transport != "stdio":
     import functools
 
@@ -108,6 +113,12 @@ if _config.transport != "stdio":
 
     def _inject_middleware(starlette_app):  # noqa: ANN001, ANN202
         """Add health route, auth, and rate limiting to a Starlette app."""
+        logger.debug(
+            "Injecting middleware: health_route=True, auth=%s, rate_limit=%s (rpm=%d)",
+            _config.auth_token is not None,
+            _config.rate_limit_rpm > 0,
+            _config.rate_limit_rpm,
+        )
         # Insert health route at the beginning so it's matched first
         starlette_app.routes.insert(0, health_route())
 
@@ -149,6 +160,12 @@ if _config.transport != "stdio":
 
 
 # ----- Register tool modules -----
+# IMPORTANT: These imports MUST come after the middleware patching above.
+# FastMCP tool registration happens at import time via `@mcp.tool()` decorators.
+# The `mcp` instance must be fully configured (including middleware wrapping)
+# before any tool modules are imported, otherwise tool registration could
+# interact with an incompletely configured server.
+#
 # All tool modules are always imported. Each module internally guards
 # destructive tools (create/update/delete) using `_config.enable_destructive_tools`.
 # Beta tools check `_config.enable_beta_tools`.
