@@ -19,7 +19,7 @@ from devrev.models.parts import (
     PartsUpdateRequest,
     PartType,
 )
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -78,95 +78,96 @@ async def devrev_parts_get(ctx: Context, id: str) -> dict[str, Any]:
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_parts_create(
-    ctx: Context,
-    name: str,
-    type: str,
-    description: str | None = None,
-) -> dict[str, Any]:
-    """Create a new DevRev part.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        name: The name of the part.
-        type: The type of part (PRODUCT, CAPABILITY, FEATURE, ENHANCEMENT).
-        description: Optional description of the part.
+    @mcp.tool()
+    async def devrev_parts_create(
+        ctx: Context,
+        name: str,
+        type: str,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a new DevRev part.
 
-    Returns:
-        Dictionary containing the created part details.
+        Args:
+            name: The name of the part.
+            type: The type of part (PRODUCT, CAPABILITY, FEATURE, ENHANCEMENT).
+            description: Optional description of the part.
 
-    Raises:
-        RuntimeError: If the DevRev API call fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
+        Returns:
+            Dictionary containing the created part details.
+
+        Raises:
+            RuntimeError: If the DevRev API call fails.
+        """
+        app = ctx.request_context.lifespan_context
         try:
-            part_type = PartType[type.upper()]
-        except KeyError as e:
-            raise RuntimeError(
-                f"Invalid part type: {e.args[0]}. "
-                f"Valid types: {', '.join(t.name for t in PartType)}"
-            ) from e
-        request = PartsCreateRequest(
-            name=name,
-            type=part_type,
-            description=description,
-        )
-        part = await app.client.parts.create(request)
-        return serialize_model(part)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+            try:
+                part_type = PartType[type.upper()]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid part type: {e.args[0]}. "
+                    f"Valid types: {', '.join(t.name for t in PartType)}"
+                ) from e
+            request = PartsCreateRequest(
+                name=name,
+                type=part_type,
+                description=description,
+            )
+            part = await app.client.parts.create(request)
+            return serialize_model(part)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_parts_update(
+        ctx: Context,
+        id: str,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Update an existing DevRev part.
 
-@mcp.tool()
-async def devrev_parts_update(
-    ctx: Context,
-    id: str,
-    name: str | None = None,
-    description: str | None = None,
-) -> dict[str, Any]:
-    """Update an existing DevRev part.
+        Args:
+            id: The ID of the part to update.
+            name: Optional new name for the part.
+            description: Optional new description for the part.
 
-    Args:
-        id: The ID of the part to update.
-        name: Optional new name for the part.
-        description: Optional new description for the part.
+        Returns:
+            Dictionary containing the updated part details.
 
-    Returns:
-        Dictionary containing the updated part details.
+        Raises:
+            RuntimeError: If the DevRev API call fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = PartsUpdateRequest(
+                id=id,
+                name=name,
+                description=description,
+            )
+            part = await app.client.parts.update(request)
+            return serialize_model(part)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-    Raises:
-        RuntimeError: If the DevRev API call fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = PartsUpdateRequest(
-            id=id,
-            name=name,
-            description=description,
-        )
-        part = await app.client.parts.update(request)
-        return serialize_model(part)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_parts_delete(ctx: Context, id: str) -> dict[str, Any]:
+        """Delete a DevRev part.
 
+        Args:
+            id: The ID of the part to delete.
 
-@mcp.tool()
-async def devrev_parts_delete(ctx: Context, id: str) -> dict[str, Any]:
-    """Delete a DevRev part.
+        Returns:
+            Dictionary confirming the deletion.
 
-    Args:
-        id: The ID of the part to delete.
-
-    Returns:
-        Dictionary confirming the deletion.
-
-    Raises:
-        RuntimeError: If the DevRev API call fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        await app.client.parts.delete(PartsDeleteRequest(id=id))
-        return {"success": True, "message": f"Part {id} deleted successfully"}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Raises:
+            RuntimeError: If the DevRev API call fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            await app.client.parts.delete(PartsDeleteRequest(id=id))
+            return {"success": True, "message": f"Part {id} deleted successfully"}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e

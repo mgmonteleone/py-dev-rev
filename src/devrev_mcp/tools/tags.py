@@ -15,7 +15,7 @@ from devrev.models.tags import (
     TagsListRequest,
     TagsUpdateRequest,
 )
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -76,74 +76,75 @@ async def devrev_tags_get(ctx: Context, id: str) -> dict[str, Any]:
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_tags_create(
-    ctx: Context, name: str, description: str | None = None
-) -> dict[str, Any]:
-    """Create a new DevRev tag.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        name: The tag name.
-        description: Optional tag description.
+    @mcp.tool()
+    async def devrev_tags_create(
+        ctx: Context, name: str, description: str | None = None
+    ) -> dict[str, Any]:
+        """Create a new DevRev tag.
 
-    Returns:
-        The created tag details.
+        Args:
+            name: The tag name.
+            description: Optional tag description.
 
-    Raises:
-        RuntimeError: If the DevRev API request fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = TagsCreateRequest(name=name, description=description)
-        tag = await app.client.tags.create(request)
-        return serialize_model(tag)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Returns:
+            The created tag details.
 
+        Raises:
+            RuntimeError: If the DevRev API request fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = TagsCreateRequest(name=name, description=description)
+            tag = await app.client.tags.create(request)
+            return serialize_model(tag)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-@mcp.tool()
-async def devrev_tags_update(
-    ctx: Context, id: str, name: str | None = None, description: str | None = None
-) -> dict[str, Any]:
-    """Update a DevRev tag.
+    @mcp.tool()
+    async def devrev_tags_update(
+        ctx: Context, id: str, name: str | None = None, description: str | None = None
+    ) -> dict[str, Any]:
+        """Update a DevRev tag.
 
-    Args:
-        id: The tag ID.
-        name: Optional new tag name.
-        description: Optional new tag description.
+        Args:
+            id: The tag ID.
+            name: Optional new tag name.
+            description: Optional new tag description.
 
-    Returns:
-        The updated tag details.
+        Returns:
+            The updated tag details.
 
-    Raises:
-        RuntimeError: If the DevRev API request fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = TagsUpdateRequest(id=id, name=name, description=description)
-        tag = await app.client.tags.update(request)
-        return serialize_model(tag)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Raises:
+            RuntimeError: If the DevRev API request fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = TagsUpdateRequest(id=id, name=name, description=description)
+            tag = await app.client.tags.update(request)
+            return serialize_model(tag)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_tags_delete(ctx: Context, id: str) -> dict[str, Any]:
+        """Delete a DevRev tag.
 
-@mcp.tool()
-async def devrev_tags_delete(ctx: Context, id: str) -> dict[str, Any]:
-    """Delete a DevRev tag.
+        Args:
+            id: The tag ID.
 
-    Args:
-        id: The tag ID.
+        Returns:
+            Confirmation of deletion.
 
-    Returns:
-        Confirmation of deletion.
-
-    Raises:
-        RuntimeError: If the DevRev API request fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = TagsDeleteRequest(id=id)
-        await app.client.tags.delete(request)
-        return {"deleted": True, "id": id}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Raises:
+            RuntimeError: If the DevRev API request fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = TagsDeleteRequest(id=id)
+            await app.client.tags.delete(request)
+            return {"deleted": True, "id": id}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e

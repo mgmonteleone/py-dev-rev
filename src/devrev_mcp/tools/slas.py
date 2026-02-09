@@ -17,7 +17,7 @@ from devrev.models.slas import (
     SlasUpdateRequest,
     SlaTrackerStatus,
 )
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -71,77 +71,78 @@ async def devrev_slas_get(
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_slas_create(
-    ctx: Context,
-    name: str,
-    description: str | None = None,
-    target_time: int | None = None,
-) -> dict[str, Any]:
-    """Create a new DevRev SLA.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        name: SLA name.
-        description: SLA description.
-        target_time: Target time in minutes.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = SlasCreateRequest(name=name, description=description, target_time=target_time)
-        sla = await app.client.slas.create(request)
-        return serialize_model(sla)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_slas_create(
+        ctx: Context,
+        name: str,
+        description: str | None = None,
+        target_time: int | None = None,
+    ) -> dict[str, Any]:
+        """Create a new DevRev SLA.
 
-
-@mcp.tool()
-async def devrev_slas_update(
-    ctx: Context,
-    id: str,
-    name: str | None = None,
-    description: str | None = None,
-) -> dict[str, Any]:
-    """Update a DevRev SLA.
-
-    Args:
-        id: SLA ID to update.
-        name: New SLA name.
-        description: New SLA description.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = SlasUpdateRequest(id=id, name=name, description=description)
-        sla = await app.client.slas.update(request)
-        return serialize_model(sla)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
-
-
-@mcp.tool()
-async def devrev_slas_transition(
-    ctx: Context,
-    id: str,
-    status: str,
-) -> dict[str, Any]:
-    """Transition a DevRev SLA status.
-
-    Args:
-        id: SLA ID to transition.
-        status: New status (draft, published, archived, active, paused, breached, completed).
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        # Try SlaStatus first, then SlaTrackerStatus, then use raw string
+        Args:
+            name: SLA name.
+            description: SLA description.
+            target_time: Target time in minutes.
+        """
+        app = ctx.request_context.lifespan_context
         try:
-            resolved_status = SlaStatus[status.upper()]
-        except KeyError:
-            try:
-                resolved_status = SlaTrackerStatus[status.upper()]
-            except KeyError:
-                resolved_status = status
+            request = SlasCreateRequest(name=name, description=description, target_time=target_time)
+            sla = await app.client.slas.create(request)
+            return serialize_model(sla)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-        request = SlasTransitionRequest(id=id, status=resolved_status)
-        sla = await app.client.slas.transition(request)
-        return serialize_model(sla)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_slas_update(
+        ctx: Context,
+        id: str,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a DevRev SLA.
+
+        Args:
+            id: SLA ID to update.
+            name: New SLA name.
+            description: New SLA description.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = SlasUpdateRequest(id=id, name=name, description=description)
+            sla = await app.client.slas.update(request)
+            return serialize_model(sla)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
+
+    @mcp.tool()
+    async def devrev_slas_transition(
+        ctx: Context,
+        id: str,
+        status: str,
+    ) -> dict[str, Any]:
+        """Transition a DevRev SLA status.
+
+        Args:
+            id: SLA ID to transition.
+            status: New status (draft, published, archived, active, paused, breached, completed).
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            # Try SlaStatus first, then SlaTrackerStatus, then use raw string
+            try:
+                resolved_status = SlaStatus[status.upper()]
+            except KeyError:
+                try:
+                    resolved_status = SlaTrackerStatus[status.upper()]
+                except KeyError:
+                    resolved_status = status
+
+            request = SlasTransitionRequest(id=id, status=resolved_status)
+            sla = await app.client.slas.transition(request)
+            return serialize_model(sla)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e

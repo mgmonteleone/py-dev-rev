@@ -9,7 +9,7 @@ from mcp.server.fastmcp import Context
 
 from devrev.exceptions import DevRevError
 from devrev.models.works import IssuePriority, TicketSeverity, WorkType
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -80,147 +80,148 @@ async def devrev_works_get(
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_works_create(
-    ctx: Context,
-    title: str,
-    applies_to_part: str,
-    type: str,
-    owned_by: list[str],
-    body: str | None = None,
-    priority: str | None = None,
-    severity: str | None = None,
-) -> dict[str, Any]:
-    """Create a new DevRev work item (ticket, issue, or task).
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        title: Title of the work item.
-        applies_to_part: Part ID the work applies to.
-        type: Work type: TICKET, ISSUE, TASK, or OPPORTUNITY.
-        owned_by: List of user IDs who own this work item.
-        body: Description/body of the work item.
-        priority: Issue priority: P0, P1, P2, P3.
-        severity: Ticket severity: BLOCKER, HIGH, MEDIUM, LOW.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        # Convert enum strings, catching invalid values
+    @mcp.tool()
+    async def devrev_works_create(
+        ctx: Context,
+        title: str,
+        applies_to_part: str,
+        type: str,
+        owned_by: list[str],
+        body: str | None = None,
+        priority: str | None = None,
+        severity: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a new DevRev work item (ticket, issue, or task).
+
+        Args:
+            title: Title of the work item.
+            applies_to_part: Part ID the work applies to.
+            type: Work type: TICKET, ISSUE, TASK, or OPPORTUNITY.
+            owned_by: List of user IDs who own this work item.
+            body: Description/body of the work item.
+            priority: Issue priority: P0, P1, P2, P3.
+            severity: Ticket severity: BLOCKER, HIGH, MEDIUM, LOW.
+        """
+        app = ctx.request_context.lifespan_context
         try:
-            work_type = WorkType[type.upper()]
-        except KeyError as e:
-            raise RuntimeError(
-                f"Invalid work type: {e.args[0]}. "
-                f"Valid types: {', '.join(wt.name for wt in WorkType)}"
-            ) from e
-
-        issue_priority = None
-        if priority:
+            # Convert enum strings, catching invalid values
             try:
-                issue_priority = IssuePriority[priority.upper()]
+                work_type = WorkType[type.upper()]
             except KeyError as e:
                 raise RuntimeError(
-                    f"Invalid priority: {e.args[0]}. "
-                    f"Valid priorities: {', '.join(p.name for p in IssuePriority)}"
+                    f"Invalid work type: {e.args[0]}. "
+                    f"Valid types: {', '.join(wt.name for wt in WorkType)}"
                 ) from e
 
-        ticket_severity = None
-        if severity:
-            try:
-                ticket_severity = TicketSeverity[severity.upper()]
-            except KeyError as e:
-                raise RuntimeError(
-                    f"Invalid severity: {e.args[0]}. "
-                    f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
-                ) from e
+            issue_priority = None
+            if priority:
+                try:
+                    issue_priority = IssuePriority[priority.upper()]
+                except KeyError as e:
+                    raise RuntimeError(
+                        f"Invalid priority: {e.args[0]}. "
+                        f"Valid priorities: {', '.join(p.name for p in IssuePriority)}"
+                    ) from e
 
-        work = await app.client.works.create(
-            title=title,
-            applies_to_part=applies_to_part,
-            type=work_type,
-            owned_by=owned_by,
-            body=body,
-            priority=issue_priority,
-            severity=ticket_severity,
-        )
-        return serialize_model(work)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+            ticket_severity = None
+            if severity:
+                try:
+                    ticket_severity = TicketSeverity[severity.upper()]
+                except KeyError as e:
+                    raise RuntimeError(
+                        f"Invalid severity: {e.args[0]}. "
+                        f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
+                    ) from e
 
+            work = await app.client.works.create(
+                title=title,
+                applies_to_part=applies_to_part,
+                type=work_type,
+                owned_by=owned_by,
+                body=body,
+                priority=issue_priority,
+                severity=ticket_severity,
+            )
+            return serialize_model(work)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-@mcp.tool()
-async def devrev_works_update(
-    ctx: Context,
-    id: str,
-    title: str | None = None,
-    body: str | None = None,
-    owned_by: list[str] | None = None,
-    priority: str | None = None,
-    severity: str | None = None,
-) -> dict[str, Any]:
-    """Update an existing DevRev work item.
+    @mcp.tool()
+    async def devrev_works_update(
+        ctx: Context,
+        id: str,
+        title: str | None = None,
+        body: str | None = None,
+        owned_by: list[str] | None = None,
+        priority: str | None = None,
+        severity: str | None = None,
+    ) -> dict[str, Any]:
+        """Update an existing DevRev work item.
 
-    Only provided fields will be updated; others remain unchanged.
+        Only provided fields will be updated; others remain unchanged.
 
-    Args:
-        id: The work item ID to update.
-        title: New title for the work item.
-        body: New description/body.
-        owned_by: New list of owner user IDs.
-        priority: New issue priority: P0, P1, P2, P3.
-        severity: New ticket severity: BLOCKER, HIGH, MEDIUM, LOW.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        # Convert enum strings, catching invalid values
-        issue_priority = None
-        if priority:
-            try:
-                issue_priority = IssuePriority[priority.upper()]
-            except KeyError as e:
-                raise RuntimeError(
-                    f"Invalid priority: {e.args[0]}. "
-                    f"Valid priorities: {', '.join(p.name for p in IssuePriority)}"
-                ) from e
+        Args:
+            id: The work item ID to update.
+            title: New title for the work item.
+            body: New description/body.
+            owned_by: New list of owner user IDs.
+            priority: New issue priority: P0, P1, P2, P3.
+            severity: New ticket severity: BLOCKER, HIGH, MEDIUM, LOW.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            # Convert enum strings, catching invalid values
+            issue_priority = None
+            if priority:
+                try:
+                    issue_priority = IssuePriority[priority.upper()]
+                except KeyError as e:
+                    raise RuntimeError(
+                        f"Invalid priority: {e.args[0]}. "
+                        f"Valid priorities: {', '.join(p.name for p in IssuePriority)}"
+                    ) from e
 
-        ticket_severity = None
-        if severity:
-            try:
-                ticket_severity = TicketSeverity[severity.upper()]
-            except KeyError as e:
-                raise RuntimeError(
-                    f"Invalid severity: {e.args[0]}. "
-                    f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
-                ) from e
+            ticket_severity = None
+            if severity:
+                try:
+                    ticket_severity = TicketSeverity[severity.upper()]
+                except KeyError as e:
+                    raise RuntimeError(
+                        f"Invalid severity: {e.args[0]}. "
+                        f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
+                    ) from e
 
-        work = await app.client.works.update(
-            id,
-            title=title,
-            body=body,
-            owned_by=owned_by,
-            priority=issue_priority,
-            severity=ticket_severity,
-        )
-        return serialize_model(work)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+            work = await app.client.works.update(
+                id,
+                title=title,
+                body=body,
+                owned_by=owned_by,
+                priority=issue_priority,
+                severity=ticket_severity,
+            )
+            return serialize_model(work)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_works_delete(
+        ctx: Context,
+        id: str,
+    ) -> dict[str, Any]:
+        """Delete a DevRev work item.
 
-@mcp.tool()
-async def devrev_works_delete(
-    ctx: Context,
-    id: str,
-) -> dict[str, Any]:
-    """Delete a DevRev work item.
-
-    Args:
-        id: The work item ID to delete.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        await app.client.works.delete(id)
-        return {"deleted": True, "id": id}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Args:
+            id: The work item ID to delete.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            await app.client.works.delete(id)
+            return {"deleted": True, "id": id}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
 
 @mcp.tool()

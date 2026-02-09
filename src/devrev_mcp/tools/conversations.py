@@ -15,7 +15,7 @@ from devrev.models.conversations import (
     ConversationsListRequest,
     ConversationsUpdateRequest,
 )
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -69,69 +69,70 @@ async def devrev_conversations_get(
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_conversations_create(
-    ctx: Context,
-    type: str = "support",
-    title: str | None = None,
-    description: str | None = None,
-) -> dict[str, Any]:
-    """Create a new DevRev conversation.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        type: Conversation type (default: "support").
-        title: Conversation title.
-        description: Conversation description.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = ConversationsCreateRequest(type=type, title=title, description=description)
-        conversation = await app.client.conversations.create(request)
-        return serialize_model(conversation)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_conversations_create(
+        ctx: Context,
+        type: str = "support",
+        title: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a new DevRev conversation.
 
+        Args:
+            type: Conversation type (default: "support").
+            title: Conversation title.
+            description: Conversation description.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = ConversationsCreateRequest(type=type, title=title, description=description)
+            conversation = await app.client.conversations.create(request)
+            return serialize_model(conversation)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-@mcp.tool()
-async def devrev_conversations_update(
-    ctx: Context,
-    id: str,
-    title: str | None = None,
-    description: str | None = None,
-) -> dict[str, Any]:
-    """Update a DevRev conversation.
+    @mcp.tool()
+    async def devrev_conversations_update(
+        ctx: Context,
+        id: str,
+        title: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a DevRev conversation.
 
-    Args:
-        id: Conversation ID to update.
-        title: New conversation title.
-        description: New conversation description.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = ConversationsUpdateRequest(id=id, title=title, description=description)
-        conversation = await app.client.conversations.update(request)
-        return serialize_model(conversation)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Args:
+            id: Conversation ID to update.
+            title: New conversation title.
+            description: New conversation description.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = ConversationsUpdateRequest(id=id, title=title, description=description)
+            conversation = await app.client.conversations.update(request)
+            return serialize_model(conversation)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_conversations_delete(
+        ctx: Context,
+        id: str,
+    ) -> dict[str, Any]:
+        """Delete a DevRev conversation.
 
-@mcp.tool()
-async def devrev_conversations_delete(
-    ctx: Context,
-    id: str,
-) -> dict[str, Any]:
-    """Delete a DevRev conversation.
-
-    Args:
-        id: Conversation ID to delete.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = ConversationsDeleteRequest(id=id)
-        await app.client.conversations.delete(request)
-        return {"deleted": True, "id": id}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Args:
+            id: Conversation ID to delete.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = ConversationsDeleteRequest(id=id)
+            await app.client.conversations.delete(request)
+            return {"deleted": True, "id": id}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
 
 @mcp.tool()

@@ -33,6 +33,8 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
         skip_paths: set[str] | None = None,
     ) -> None:
         super().__init__(app)
+        if not token:
+            raise ValueError("BearerTokenMiddleware requires a non-empty token")
         self._token = token
         self._skip_paths = skip_paths or {"/health"}
 

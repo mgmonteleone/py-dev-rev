@@ -96,6 +96,9 @@ mcp = FastMCP(
 )
 
 # ----- Register HTTP middleware (only for non-stdio transports) -----
+# NOTE: mcp._app is a private Starlette ASGI app attribute of FastMCP.
+# This is a known workaround; FastMCP does not yet expose a public API
+# for adding middleware. The hasattr guard ensures forward compatibility.
 if _config.transport != "stdio":
     from devrev_mcp.middleware.auth import BearerTokenMiddleware
     from devrev_mcp.middleware.health import health_route
@@ -121,27 +124,24 @@ if _config.transport != "stdio":
 
 
 # ----- Register tool modules -----
-# These imports MUST be at the bottom to avoid circular imports.
-# Each tool module imports `mcp` from this module to register its tools.
-
-# Read-only tools (always registered)
+# All tool modules are always imported. Each module internally guards
+# destructive tools (create/update/delete) using `_config.enable_destructive_tools`.
+# Beta tools check `_config.enable_beta_tools`.
 from devrev_mcp.tools import accounts as _accounts_tools  # noqa: E402, F401
+from devrev_mcp.tools import articles as _articles_tools  # noqa: E402, F401
+from devrev_mcp.tools import conversations as _conversations_tools  # noqa: E402, F401
+from devrev_mcp.tools import engagements as _engagements_tools  # noqa: E402, F401
+from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
+from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
+from devrev_mcp.tools import links as _links_tools  # noqa: E402, F401
+from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
+from devrev_mcp.tools import slas as _slas_tools  # noqa: E402, F401
+from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
+from devrev_mcp.tools import timeline as _timeline_tools  # noqa: E402, F401
 from devrev_mcp.tools import users as _users_tools  # noqa: E402, F401
 from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
 
-# Conditionally register destructive tools (create/update/delete)
-if _config.enable_destructive_tools:
-    from devrev_mcp.tools import articles as _articles_tools  # noqa: E402, F401
-    from devrev_mcp.tools import conversations as _conversations_tools  # noqa: E402, F401
-    from devrev_mcp.tools import engagements as _engagements_tools  # noqa: E402, F401
-    from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
-    from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
-    from devrev_mcp.tools import links as _links_tools  # noqa: E402, F401
-    from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
-    from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
-    from devrev_mcp.tools import timeline as _timeline_tools  # noqa: E402, F401
-
-# Beta tools are only imported if enabled in config
+# Beta tools (only if beta tools are enabled)
 if _config.enable_beta_tools:
     from devrev_mcp.tools import recommendations as _recommendations_tools  # noqa: E402, F401
     from devrev_mcp.tools import search as _search_tools  # noqa: E402, F401
