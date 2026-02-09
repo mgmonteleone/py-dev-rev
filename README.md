@@ -613,6 +613,7 @@ The DevRev MCP Server exposes the full DevRev platform as [Model Context Protoco
 - **3 Transports** — stdio (local dev), Streamable HTTP (production), SSE (legacy)
 - **Security** — Bearer token auth, rate limiting, DNS rebinding protection, destructive tool gating
 - **MCP 2025-06-18 Compliant** — Latest protocol version with structured content support
+- **E2E Tested** — Validated against live DevRev API with 78 tools, 7 resources, 8 prompts; HTTP middleware (auth, rate limiting, health) verified working
 
 ### Quick Start (stdio)
 
