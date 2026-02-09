@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-02-09
+
+### Added - DevRev MCP Server (Model Context Protocol)
+
+This release introduces a full-featured MCP server that exposes the entire DevRev platform as AI-accessible tools, resources, and prompts.
+
+#### Phase 1: Core Foundation
+- FastMCP server with async DevRev client lifecycle management
+- `MCPServerConfig` (pydantic-settings) with 14+ configurable environment variables
+- 22 initial tools: Works (7), Accounts (6), Users (5), Search beta (2), Recommendations beta (2)
+- Pagination utilities with configurable page sizes
+- Error formatting and model serialization helpers
+- **SDK bug fix**: Enum conversion — `WorkType("TICKET")` fails because `str` enums have lowercase values; fixed to use `WorkType["TICKET"]` (bracket access by name)
+
+#### Phase 2: Full Tool Coverage
+- 42 additional tools across 7 modules: Conversations (6), Articles (6), Parts (5), Tags (5), Groups (8), Incidents beta (6), Engagements beta (6)
+- Comprehensive KeyError handling for all enum conversions (ArticleStatus, EngagementType, PartType, GroupType, IncidentStage, IncidentSeverity)
+- ValueError handling for datetime parsing in engagements
+
+#### Phase 3: Resources & Prompts
+- 7 resource templates with `devrev://` URI scheme (ticket, account, article, user/dev, user/rev, part, conversation)
+- 8 workflow prompts: triage_ticket, draft_customer_response, escalate_ticket, summarize_account, investigate_issue, weekly_support_report, find_similar_tickets, onboard_customer
+- Timeline tools (5), Links tools (4), SLA tools (5)
+
+#### Phase 4: Transport & Security
+- Multi-transport support: stdio (default), streamable-http (production), SSE (legacy)
+- CLI arguments: `--transport`, `--host`, `--port`
+- Bearer token authentication with timing-attack protection (`secrets.compare_digest`)
+- Token-bucket rate limiting with LRU eviction (bounded memory, thread-safe)
+- Health check endpoint (`GET /health`) with uptime tracking
+- Destructive tool gating via `MCP_ENABLE_DESTRUCTIVE_TOOLS`
+- DNS rebinding protection and CORS configuration
+
+#### Phase 5: Polish & Deployment
+- Dockerfile with multi-stage build and non-root user
+- Docker Compose for local development
+- Cloud Build configuration for Google Cloud Run deployment
+- Comprehensive documentation in README.md
+- This changelog entry
+
+### Fixed
+- All enum conversions across tool modules now use bracket access (by name) with KeyError guards
+- `datetime.fromisoformat()` calls wrapped in ValueError handlers
+- Rate limiter: zero-RPM config no longer causes ZeroDivisionError
+- Auth middleware: timing-safe token comparison prevents side-channel attacks
+- Health endpoint: uptime calculated from lifespan init, not module import
+
 ## [2.1.2] - 2026-01-28
 
 ### Fixed
@@ -335,6 +382,7 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.2.0 | 2026-02-09 | 🤖 MCP Server - Full DevRev platform as AI-accessible tools |
 | 2.1.2 | 2026-01-28 | 🐛 Fix Work.applies_to_part parsing for API responses |
 | 2.1.1 | 2026-01-23 | 🐛 Fix RevUserState enum missing states |
 | 2.0.0 | 2026-01-18 | 🚀 Beta API support, performance enhancements, breaking change |

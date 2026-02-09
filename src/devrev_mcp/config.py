@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -96,3 +96,10 @@ class MCPServerConfig(BaseSettings):
         default_factory=list,
         description="Allowed CORS origins for HTTP transports",
     )
+
+    @model_validator(mode="after")
+    def _validate_auth_token(self) -> MCPServerConfig:
+        """Reject empty auth token strings."""
+        if self.auth_token is not None and not self.auth_token.get_secret_value():
+            self.auth_token = None  # Treat empty string as unset
+        return self

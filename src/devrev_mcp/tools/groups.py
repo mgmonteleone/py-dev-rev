@@ -21,7 +21,7 @@ from devrev.models.groups import (
     GroupsUpdateRequest,
     GroupType,
 )
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -84,121 +84,121 @@ async def devrev_groups_get(ctx: Context, id: str) -> dict[str, Any]:
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_groups_create(
-    ctx: Context,
-    name: str,
-    description: str | None = None,
-    type: str | None = None,
-) -> dict[str, Any]:
-    """Create a new group.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        ctx: MCP context containing the DevRev client.
-        name: The group name.
-        description: Optional group description.
-        type: Optional group type (STATIC or DYNAMIC).
+    @mcp.tool()
+    async def devrev_groups_create(
+        ctx: Context,
+        name: str,
+        description: str | None = None,
+        type: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a new group.
 
-    Returns:
-        The created group details.
+        Args:
+            ctx: MCP context containing the DevRev client.
+            name: The group name.
+            description: Optional group description.
+            type: Optional group type (STATIC or DYNAMIC).
 
-    Raises:
-        RuntimeError: If the DevRev API call fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        group_type = None
-        if type:
-            try:
-                group_type = GroupType[type.upper()]
-            except KeyError as e:
-                raise RuntimeError(
-                    f"Invalid group type: {e.args[0]}. "
-                    f"Valid types: {', '.join(t.name for t in GroupType)}"
-                ) from e
-        request = GroupsCreateRequest(name=name, description=description, type=group_type)
-        group = await app.client.groups.create(request)
-        return serialize_model(group)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Returns:
+            The created group details.
 
+        Raises:
+            RuntimeError: If the DevRev API call fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            group_type = None
+            if type:
+                try:
+                    group_type = GroupType[type.upper()]
+                except KeyError as e:
+                    raise RuntimeError(
+                        f"Invalid group type: {e.args[0]}. "
+                        f"Valid types: {', '.join(t.name for t in GroupType)}"
+                    ) from e
+            request = GroupsCreateRequest(name=name, description=description, type=group_type)
+            group = await app.client.groups.create(request)
+            return serialize_model(group)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-@mcp.tool()
-async def devrev_groups_update(
-    ctx: Context,
-    id: str,
-    name: str | None = None,
-    description: str | None = None,
-) -> dict[str, Any]:
-    """Update an existing group.
+    @mcp.tool()
+    async def devrev_groups_update(
+        ctx: Context,
+        id: str,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """Update an existing group.
 
-    Args:
-        ctx: MCP context containing the DevRev client.
-        id: The group ID.
-        name: Optional new group name.
-        description: Optional new group description.
+        Args:
+            ctx: MCP context containing the DevRev client.
+            id: The group ID.
+            name: Optional new group name.
+            description: Optional new group description.
 
-    Returns:
-        The updated group details.
+        Returns:
+            The updated group details.
 
-    Raises:
-        RuntimeError: If the DevRev API call fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = GroupsUpdateRequest(id=id, name=name, description=description)
-        group = await app.client.groups.update(request)
-        return serialize_model(group)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Raises:
+            RuntimeError: If the DevRev API call fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = GroupsUpdateRequest(id=id, name=name, description=description)
+            group = await app.client.groups.update(request)
+            return serialize_model(group)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_groups_add_member(ctx: Context, group: str, member: str) -> dict[str, Any]:
+        """Add a member to a group.
 
-@mcp.tool()
-async def devrev_groups_add_member(ctx: Context, group: str, member: str) -> dict[str, Any]:
-    """Add a member to a group.
+        Args:
+            ctx: MCP context containing the DevRev client.
+            group: The group ID.
+            member: The member ID to add.
 
-    Args:
-        ctx: MCP context containing the DevRev client.
-        group: The group ID.
-        member: The member ID to add.
+        Returns:
+            Confirmation dictionary with added status.
 
-    Returns:
-        Confirmation dictionary with added status.
+        Raises:
+            RuntimeError: If the DevRev API call fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = GroupMembersAddRequest(group=group, member=member)
+            await app.client.groups.add_member(request)
+            return {"added": True, "group": group, "member": member}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-    Raises:
-        RuntimeError: If the DevRev API call fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = GroupMembersAddRequest(group=group, member=member)
-        await app.client.groups.add_member(request)
-        return {"added": True, "group": group, "member": member}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_groups_remove_member(ctx: Context, group: str, member: str) -> dict[str, Any]:
+        """Remove a member from a group.
 
+        Args:
+            ctx: MCP context containing the DevRev client.
+            group: The group ID.
+            member: The member ID to remove.
 
-@mcp.tool()
-async def devrev_groups_remove_member(ctx: Context, group: str, member: str) -> dict[str, Any]:
-    """Remove a member from a group.
+        Returns:
+            Confirmation dictionary with removed status.
 
-    Args:
-        ctx: MCP context containing the DevRev client.
-        group: The group ID.
-        member: The member ID to remove.
-
-    Returns:
-        Confirmation dictionary with removed status.
-
-    Raises:
-        RuntimeError: If the DevRev API call fails.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = GroupMembersRemoveRequest(group=group, member=member)
-        await app.client.groups.remove_member(request)
-        return {"removed": True, "group": group, "member": member}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Raises:
+            RuntimeError: If the DevRev API call fails.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = GroupMembersRemoveRequest(group=group, member=member)
+            await app.client.groups.remove_member(request)
+            return {"removed": True, "group": group, "member": member}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
 
 @mcp.tool()

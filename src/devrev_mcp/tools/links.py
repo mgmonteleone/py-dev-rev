@@ -15,7 +15,7 @@ from devrev.models.links import (
     LinksListRequest,
     LinkType,
 )
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -72,54 +72,56 @@ async def devrev_links_get(
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_links_create(
-    ctx: Context,
-    link_type: str,
-    source: str,
-    target: str,
-) -> dict[str, Any]:
-    """Create a link between two DevRev objects.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        link_type: Type of link (e.g., "is_blocked_by", "is_related_to", "is_duplicate_of").
-        source: Source object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/123").
-        target: Target object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/456").
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        # Try to convert to LinkType enum, but allow custom link types
+    @mcp.tool()
+    async def devrev_links_create(
+        ctx: Context,
+        link_type: str,
+        source: str,
+        target: str,
+    ) -> dict[str, Any]:
+        """Create a link between two DevRev objects.
+
+        Args:
+            link_type: Type of link (e.g., "is_blocked_by", "is_related_to", "is_duplicate_of").
+            source: Source object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/123").
+            target: Target object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/456").
+        """
+        app = ctx.request_context.lifespan_context
         try:
-            link_type_value = LinkType[link_type.upper()]
-        except KeyError:
-            # Custom link type - pass as raw string
-            link_type_value = link_type
+            # Try to convert to LinkType enum, but allow custom link types
+            try:
+                link_type_value = LinkType[link_type.upper()]
+            except KeyError:
+                # Custom link type - pass as raw string
+                link_type_value = link_type
 
-        request = LinksCreateRequest(
-            link_type=link_type_value,
-            source=source,
-            target=target,
-        )
-        link = await app.client.links.create(request)
-        return serialize_model(link)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+            request = LinksCreateRequest(
+                link_type=link_type_value,
+                source=source,
+                target=target,
+            )
+            link = await app.client.links.create(request)
+            return serialize_model(link)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_links_delete(
+        ctx: Context,
+        id: str,
+    ) -> dict[str, Any]:
+        """Delete a DevRev link.
 
-@mcp.tool()
-async def devrev_links_delete(
-    ctx: Context,
-    id: str,
-) -> dict[str, Any]:
-    """Delete a DevRev link.
-
-    Args:
-        id: Link ID to delete.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = LinksDeleteRequest(id=id)
-        await app.client.links.delete(request)
-        return {"deleted": True, "id": id}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Args:
+            id: Link ID to delete.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = LinksDeleteRequest(id=id)
+            await app.client.links.delete(request)
+            return {"deleted": True, "id": id}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e

@@ -8,7 +8,7 @@ from typing import Any
 from mcp.server.fastmcp import Context
 
 from devrev.exceptions import DevRevError
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -69,110 +69,110 @@ async def devrev_accounts_get(
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_accounts_create(
-    ctx: Context,
-    display_name: str,
-    description: str | None = None,
-    domains: list[str] | None = None,
-    external_refs: list[str] | None = None,
-    owned_by: list[str] | None = None,
-    tier: str | None = None,
-) -> dict[str, Any]:
-    """Create a new DevRev account.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        display_name: Display name for the account.
-        description: Account description.
-        domains: List of domains associated with the account.
-        external_refs: External reference IDs.
-        owned_by: List of owner user IDs.
-        tier: Account tier.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        account = await app.client.accounts.create(
-            display_name=display_name,
-            description=description,
-            domains=domains,
-            external_refs=external_refs,
-            owned_by=owned_by,
-            tier=tier,
-        )
-        return serialize_model(account)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_accounts_create(
+        ctx: Context,
+        display_name: str,
+        description: str | None = None,
+        domains: list[str] | None = None,
+        external_refs: list[str] | None = None,
+        owned_by: list[str] | None = None,
+        tier: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a new DevRev account.
 
+        Args:
+            display_name: Display name for the account.
+            description: Account description.
+            domains: List of domains associated with the account.
+            external_refs: External reference IDs.
+            owned_by: List of owner user IDs.
+            tier: Account tier.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            account = await app.client.accounts.create(
+                display_name=display_name,
+                description=description,
+                domains=domains,
+                external_refs=external_refs,
+                owned_by=owned_by,
+                tier=tier,
+            )
+            return serialize_model(account)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-@mcp.tool()
-async def devrev_accounts_update(
-    ctx: Context,
-    id: str,
-    display_name: str | None = None,
-    description: str | None = None,
-    tier: str | None = None,
-) -> dict[str, Any]:
-    """Update an existing DevRev account.
+    @mcp.tool()
+    async def devrev_accounts_update(
+        ctx: Context,
+        id: str,
+        display_name: str | None = None,
+        description: str | None = None,
+        tier: str | None = None,
+    ) -> dict[str, Any]:
+        """Update an existing DevRev account.
 
-    Only provided fields will be updated; others remain unchanged.
+        Only provided fields will be updated; others remain unchanged.
 
-    Args:
-        id: The account ID to update.
-        display_name: New display name.
-        description: New description.
-        tier: New account tier.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        account = await app.client.accounts.update(
-            id,
-            display_name=display_name,
-            description=description,
-            tier=tier,
-        )
-        return serialize_model(account)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Args:
+            id: The account ID to update.
+            display_name: New display name.
+            description: New description.
+            tier: New account tier.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            account = await app.client.accounts.update(
+                id,
+                display_name=display_name,
+                description=description,
+                tier=tier,
+            )
+            return serialize_model(account)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_accounts_delete(
+        ctx: Context,
+        id: str,
+    ) -> dict[str, Any]:
+        """Delete a DevRev account.
 
-@mcp.tool()
-async def devrev_accounts_delete(
-    ctx: Context,
-    id: str,
-) -> dict[str, Any]:
-    """Delete a DevRev account.
+        Args:
+            id: The account ID to delete.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            await app.client.accounts.delete(id)
+            return {"deleted": True, "id": id}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-    Args:
-        id: The account ID to delete.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        await app.client.accounts.delete(id)
-        return {"deleted": True, "id": id}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_accounts_merge(
+        ctx: Context,
+        primary_account: str,
+        secondary_account: str,
+    ) -> dict[str, Any]:
+        """Merge two DevRev accounts into one.
 
+        The secondary account will be merged into the primary account.
 
-@mcp.tool()
-async def devrev_accounts_merge(
-    ctx: Context,
-    primary_account: str,
-    secondary_account: str,
-) -> dict[str, Any]:
-    """Merge two DevRev accounts into one.
-
-    The secondary account will be merged into the primary account.
-
-    Args:
-        primary_account: ID of the primary (surviving) account.
-        secondary_account: ID of the secondary (merged) account.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        account = await app.client.accounts.merge(
-            primary_account=primary_account,
-            secondary_account=secondary_account,
-        )
-        return serialize_model(account)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Args:
+            primary_account: ID of the primary (surviving) account.
+            secondary_account: ID of the secondary (merged) account.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            account = await app.client.accounts.merge(
+                primary_account=primary_account,
+                secondary_account=secondary_account,
+            )
+            return serialize_model(account)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e

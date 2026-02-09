@@ -1,0 +1,99 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.virtualenv/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+docs/
+*.md
+!README.md
+mkdocs.yml
+
+# Examples and tests
+examples/
+tests/
+benchmarks/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+cloudbuild.yaml
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Logs
+*.log
+logs/
+
+# Lock files (optional - uncomment if you want to exclude)
+# uv.lock
+
+# Context files
+llms-ctx.txt
+llms-ctx-full.txt
+llms.txt
+context7.json
+
+# OpenAPI specs (if not needed at runtime)
+openapi-*.yaml
+
+# Scripts
+scripts/
+
+# Other
+*.bak
+*.tmp
+*.temp
+.cache/
+.mypy_cache/
+.ruff_cache/
+.pre-commit-config.yaml
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md
+DEPRECATIONS.md
+KNOWN_ISSUES.md
+

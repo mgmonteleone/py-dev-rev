@@ -16,7 +16,7 @@ from devrev.models.timeline_entries import (
     TimelineEntriesUpdateRequest,
     TimelineEntryType,
 )
-from devrev_mcp.server import mcp
+from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -73,74 +73,75 @@ async def devrev_timeline_get(
         raise RuntimeError(format_devrev_error(e)) from e
 
 
-@mcp.tool()
-async def devrev_timeline_create(
-    ctx: Context,
-    object_id: str,
-    type: str = "timeline_comment",
-    body: str | None = None,
-) -> dict[str, Any]:
-    """Create a new DevRev timeline entry.
+# Destructive tools (only registered when enabled)
+if _config.enable_destructive_tools:
 
-    Args:
-        object_id: Parent object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/123").
-        type: Entry type (default: "timeline_comment"). Valid values: "timeline_comment",
-            "timeline_note", "timeline_event", "timeline_change_event".
-        body: Entry content/body text.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        # Convert string type to TimelineEntryType enum
+    @mcp.tool()
+    async def devrev_timeline_create(
+        ctx: Context,
+        object_id: str,
+        type: str = "timeline_comment",
+        body: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a new DevRev timeline entry.
+
+        Args:
+            object_id: Parent object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/123").
+            type: Entry type (default: "timeline_comment"). Valid values: "timeline_comment",
+                "timeline_note", "timeline_event", "timeline_change_event".
+            body: Entry content/body text.
+        """
+        app = ctx.request_context.lifespan_context
         try:
-            entry_type = TimelineEntryType[type.upper().replace("TIMELINE_", "")]
-        except KeyError as exc:
-            raise ValueError(
-                f"Invalid timeline entry type: {type}. Valid values: "
-                f"timeline_comment, timeline_note, timeline_event, timeline_change_event"
-            ) from exc
+            # Convert string type to TimelineEntryType enum
+            try:
+                entry_type = TimelineEntryType[type.upper().replace("TIMELINE_", "")]
+            except KeyError as exc:
+                raise ValueError(
+                    f"Invalid timeline entry type: {type}. Valid values: "
+                    f"timeline_comment, timeline_note, timeline_event, timeline_change_event"
+                ) from exc
 
-        request = TimelineEntriesCreateRequest(object=object_id, type=entry_type, body=body)
-        entry = await app.client.timeline_entries.create(request)
-        return serialize_model(entry)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+            request = TimelineEntriesCreateRequest(object=object_id, type=entry_type, body=body)
+            entry = await app.client.timeline_entries.create(request)
+            return serialize_model(entry)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
+    @mcp.tool()
+    async def devrev_timeline_update(
+        ctx: Context,
+        id: str,
+        body: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a DevRev timeline entry.
 
-@mcp.tool()
-async def devrev_timeline_update(
-    ctx: Context,
-    id: str,
-    body: str | None = None,
-) -> dict[str, Any]:
-    """Update a DevRev timeline entry.
+        Args:
+            id: Timeline entry ID to update.
+            body: New entry content/body text.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = TimelineEntriesUpdateRequest(id=id, body=body)
+            entry = await app.client.timeline_entries.update(request)
+            return serialize_model(entry)
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
 
-    Args:
-        id: Timeline entry ID to update.
-        body: New entry content/body text.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = TimelineEntriesUpdateRequest(id=id, body=body)
-        entry = await app.client.timeline_entries.update(request)
-        return serialize_model(entry)
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+    @mcp.tool()
+    async def devrev_timeline_delete(
+        ctx: Context,
+        id: str,
+    ) -> dict[str, Any]:
+        """Delete a DevRev timeline entry.
 
-
-@mcp.tool()
-async def devrev_timeline_delete(
-    ctx: Context,
-    id: str,
-) -> dict[str, Any]:
-    """Delete a DevRev timeline entry.
-
-    Args:
-        id: Timeline entry ID to delete.
-    """
-    app = ctx.request_context.lifespan_context
-    try:
-        request = TimelineEntriesDeleteRequest(id=id)
-        await app.client.timeline_entries.delete(request)
-        return {"deleted": True, "id": id}
-    except DevRevError as e:
-        raise RuntimeError(format_devrev_error(e)) from e
+        Args:
+            id: Timeline entry ID to delete.
+        """
+        app = ctx.request_context.lifespan_context
+        try:
+            request = TimelineEntriesDeleteRequest(id=id)
+            await app.client.timeline_entries.delete(request)
+            return {"deleted": True, "id": id}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e

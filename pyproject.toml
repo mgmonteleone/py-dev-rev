@@ -59,6 +59,8 @@ security = [
 ]
 mcp = [
     "mcp>=1.0.0",
+    "uvicorn>=0.25.0",
+    "structlog>=23.0.0",
 ]
 all = [
     "devrev-Python-SDK[dev,docs,benchmark,security,mcp]",
