@@ -28,8 +28,8 @@ COPY README.md ./
 # Copy source code
 COPY src/ ./src/
 
-# Install the package with MCP extras in editable mode
-RUN pip install --no-cache-dir -e ".[mcp]"
+# Install the package with MCP extras
+RUN pip install --no-cache-dir ".[mcp]"
 
 # =============================================================================
 # Runtime Stage: Slim production image
@@ -68,10 +68,6 @@ WORKDIR /app
 # Copy Python packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin/devrev-mcp-server /usr/local/bin/devrev-mcp-server
-
-# Copy source code (needed for editable install)
-COPY --chown=mcp:mcp src/ /app/src/
-COPY --chown=mcp:mcp pyproject.toml README.md /app/
 
 # Switch to non-root user
 USER mcp

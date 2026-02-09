@@ -35,7 +35,7 @@ steps:
       - '--image=gcr.io/$PROJECT_ID/devrev-mcp-server:$COMMIT_SHA'
       - '--region=${_REGION}'
       - '--platform=managed'
-      - '--allow-unauthenticated'
+      - '--no-allow-unauthenticated'
       - '--port=8080'
       - '--memory=512Mi'
       - '--cpu=1'
@@ -44,7 +44,7 @@ steps:
       - '--timeout=300s'
       - '--concurrency=80'
       - '--set-env-vars=MCP_TRANSPORT=streamable-http,MCP_HOST=0.0.0.0,MCP_PORT=8080,MCP_LOG_FORMAT=json,MCP_LOG_LEVEL=INFO'
-      - '--set-secrets=DEVREV_API_TOKEN=devrev-api-token:latest'
+      - '--set-secrets=DEVREV_API_TOKEN=devrev-api-token:latest,MCP_AUTH_TOKEN=mcp-auth-token:latest'
     waitFor: ['push']
 
 # Substitution variables with defaults

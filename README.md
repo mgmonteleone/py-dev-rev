@@ -667,7 +667,11 @@ devrev-mcp-server --transport streamable-http --host 0.0.0.0 --port 8080
 docker compose up -d
 
 # Or deploy to Google Cloud Run
-gcloud builds submit --config cloudbuild.yaml
+# Note: Cloud Run deployment requires MCP_AUTH_TOKEN and DEVREV_API_TOKEN
+# secrets to be created in Google Secret Manager first:
+# gcloud secrets create mcp-auth-token --data-file=-
+# gcloud secrets create devrev-api-token --data-file=-
+gcloud builds submit --config deploy/cloudbuild.yaml
 ```
 
 ### MCP Server Configuration

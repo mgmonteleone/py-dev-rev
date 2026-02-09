@@ -41,6 +41,11 @@ spec:
                 secretKeyRef:
                   name: devrev-api-token
                   key: latest
+            - name: MCP_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-auth-token
+                  key: latest
           resources:
             limits:
               cpu: '1'
