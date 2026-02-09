@@ -1,0 +1,66 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: devrev-mcp-server
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '0'
+        autoscaling.knative.dev/maxScale: '10'
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: PROJECT_NUMBER-compute@developer.gserviceaccount.com
+      containers:
+        - name: devrev-mcp-server
+          image: gcr.io/PROJECT_ID/devrev-mcp-server:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: MCP_TRANSPORT
+              value: streamable-http
+            - name: MCP_HOST
+              value: 0.0.0.0
+            - name: MCP_PORT
+              value: '8080'
+            - name: MCP_LOG_FORMAT
+              value: json
+            - name: MCP_LOG_LEVEL
+              value: INFO
+            - name: DEVREV_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: devrev-api-token
+                  key: latest
+          resources:
+            limits:
+              cpu: '1'
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 0
+            timeoutSeconds: 1
+            periodSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 0
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+

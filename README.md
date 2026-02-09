@@ -601,6 +601,112 @@ client = DevRevClient(logger=my_logger)
 
 ---
 
+## MCP Server
+
+The DevRev MCP Server exposes the full DevRev platform as [Model Context Protocol](https://modelcontextprotocol.io/) tools, resources, and prompts. It enables AI assistants (Augment, Claude Desktop, Cursor, etc.) to interact with DevRev for support ticket management, customer engagement, and knowledge base operations.
+
+### MCP Server Features
+
+- **78+ MCP Tools** — Full CRUD for tickets, accounts, users, conversations, articles, parts, tags, groups, timeline, links, SLAs, plus beta tools (search, recommendations, incidents, engagements)
+- **7 Resource Templates** — `devrev://` URI scheme for browsing tickets, accounts, articles, users, parts, conversations
+- **8 Workflow Prompts** — Triage, draft response, escalate, summarize account, investigate, weekly report, find similar, onboard customer
+- **3 Transports** — stdio (local dev), Streamable HTTP (production), SSE (legacy)
+- **Security** — Bearer token auth, rate limiting, DNS rebinding protection, destructive tool gating
+- **MCP 2025-06-18 Compliant** — Latest protocol version with structured content support
+
+### Quick Start (stdio)
+
+```bash
+# Install with MCP extras
+pip install -e ".[mcp]"
+
+# Set your DevRev API token
+export DEVREV_API_TOKEN="your-token-here"
+
+# Run the MCP server (stdio transport for local use)
+devrev-mcp-server
+```
+
+### MCP Client Configuration
+
+**Claude Desktop** (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "command": "devrev-mcp-server",
+      "env": {
+        "DEVREV_API_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+**Augment Code** (workspace config):
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "command": "devrev-mcp-server",
+      "env": {
+        "DEVREV_API_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+### Production Deployment (HTTP)
+
+```bash
+# Run with Streamable HTTP transport
+devrev-mcp-server --transport streamable-http --host 0.0.0.0 --port 8080
+
+# Or with Docker
+docker compose up -d
+
+# Or deploy to Google Cloud Run
+gcloud builds submit --config cloudbuild.yaml
+```
+
+### MCP Server Configuration
+
+All settings are configurable via environment variables (prefix `MCP_`):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `streamable-http`, `sse` |
+| `MCP_HOST` | `127.0.0.1` | HTTP bind host |
+| `MCP_PORT` | `8080` | HTTP bind port |
+| `MCP_LOG_LEVEL` | `INFO` | Log level |
+| `MCP_AUTH_TOKEN` | — | Bearer token for HTTP auth |
+| `MCP_RATE_LIMIT_RPM` | `120` | Rate limit (requests/min, 0=disabled) |
+| `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta API tools |
+| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `true` | Enable create/update/delete tools |
+
+### Available Tool Categories
+
+| Category | Tools | Operations |
+|----------|-------|------------|
+| Works (Tickets/Issues) | 7 | list, get, create, update, delete, count, export |
+| Accounts | 6 | list, get, create, update, delete, merge |
+| Users | 5 | dev list/get, rev list/get/create |
+| Conversations | 6 | list, get, create, update, delete, export |
+| Articles | 6 | list, get, create, update, delete, count |
+| Parts | 5 | list, get, create, update, delete |
+| Tags | 5 | list, get, create, update, delete |
+| Groups | 8 | list, get, create, update, delete, add/remove member, count |
+| Timeline | 5 | list, get, create, update, delete |
+| Links | 4 | list, get, create, delete |
+| SLAs | 5 | list, get, create, update, transition |
+| Search (beta) | 2 | hybrid search, search count |
+| Recommendations (beta) | 2 | reply, chat |
+| Incidents (beta) | 6 | list, get, create, update, delete, group |
+| Engagements (beta) | 6 | list, get, create, update, delete, count |
+
+---
+
 ## Development
 
 ### Project Structure
