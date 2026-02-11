@@ -27,7 +27,7 @@ class SearchService(BaseService):
         self,
         request_or_query: CoreSearchRequest,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
     ) -> SearchResponse: ...
@@ -37,7 +37,7 @@ class SearchService(BaseService):
         self,
         request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
     ) -> SearchResponse: ...
@@ -46,7 +46,7 @@ class SearchService(BaseService):
         self,
         request_or_query: CoreSearchRequest | str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
+        namespace: SearchNamespace | None = None,
         limit: int | None = None,
         cursor: str | None = None,
     ) -> SearchResponse:
@@ -56,8 +56,8 @@ class SearchService(BaseService):
 
         Args:
             request_or_query: Either a CoreSearchRequest object or a search query string.
-            namespaces: Limit search to specific object types.
-                If None, searches all namespaces.
+            namespace: Object type to search in (e.g. WORK, ACCOUNT, ARTICLE).
+                Required by the DevRev API when using keyword arguments.
             limit: Maximum number of results to return.
             cursor: Pagination cursor from previous response.
 
@@ -68,7 +68,7 @@ class SearchService(BaseService):
             >>> # Using keyword arguments
             >>> results = client.search.core(
             ...     query="type:ticket AND priority:p0",
-            ...     namespaces=[SearchNamespace.WORK],
+            ...     namespace=SearchNamespace.WORK,
             ...     limit=20,
             ... )
             >>> for result in results.results:
@@ -77,7 +77,7 @@ class SearchService(BaseService):
             >>> # Using request object
             >>> request = CoreSearchRequest(
             ...     query="type:ticket AND status:open",
-            ...     namespaces=[SearchNamespace.WORK],
+            ...     namespace=SearchNamespace.WORK,
             ... )
             >>> results = client.search.core(request)
 
@@ -87,9 +87,14 @@ class SearchService(BaseService):
         if isinstance(request_or_query, CoreSearchRequest):
             request = request_or_query
         else:
+            if namespace is None:
+                raise ValueError(
+                    "namespace is required for search. "
+                    "Provide a SearchNamespace value (e.g. SearchNamespace.WORK)."
+                )
             request = CoreSearchRequest(
                 query=request_or_query,
-                namespaces=namespaces,
+                namespace=namespace,
                 limit=limit,
                 cursor=cursor,
             )
@@ -100,7 +105,7 @@ class SearchService(BaseService):
         self,
         request_or_query: HybridSearchRequest,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         semantic_weight: float | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
@@ -111,7 +116,7 @@ class SearchService(BaseService):
         self,
         request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         semantic_weight: float | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
@@ -121,7 +126,7 @@ class SearchService(BaseService):
         self,
         request_or_query: HybridSearchRequest | str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
+        namespace: SearchNamespace | None = None,
         semantic_weight: float | None = None,
         limit: int | None = None,
         cursor: str | None = None,
@@ -133,8 +138,8 @@ class SearchService(BaseService):
 
         Args:
             request_or_query: Either a HybridSearchRequest object or a search query string.
-            namespaces: Limit search to specific object types.
-                If None, searches all namespaces.
+            namespace: Object type to search in (e.g. WORK, ACCOUNT, ARTICLE).
+                Required by the DevRev API when using keyword arguments.
             semantic_weight: Weight for semantic search component (0-1).
                 Higher values favor semantic matching over keyword matching.
             limit: Maximum number of results to return.
@@ -147,7 +152,7 @@ class SearchService(BaseService):
             >>> # Using keyword arguments
             >>> results = client.search.hybrid(
             ...     query="authentication issues",
-            ...     namespaces=[SearchNamespace.CONVERSATION, SearchNamespace.ARTICLE],
+            ...     namespace=SearchNamespace.CONVERSATION,
             ...     semantic_weight=0.7,
             ...     limit=10,
             ... )
@@ -157,6 +162,7 @@ class SearchService(BaseService):
             >>> # Using request object
             >>> request = HybridSearchRequest(
             ...     query="login problems",
+            ...     namespace=SearchNamespace.WORK,
             ...     semantic_weight=0.5,
             ... )
             >>> results = client.search.hybrid(request)
@@ -167,9 +173,14 @@ class SearchService(BaseService):
         if isinstance(request_or_query, HybridSearchRequest):
             request = request_or_query
         else:
+            if namespace is None:
+                raise ValueError(
+                    "namespace is required for search. "
+                    "Provide a SearchNamespace value (e.g. SearchNamespace.WORK)."
+                )
             request = HybridSearchRequest(
                 query=request_or_query,
-                namespaces=namespaces,
+                namespace=namespace,
                 semantic_weight=semantic_weight,
                 limit=limit,
                 cursor=cursor,
@@ -188,7 +199,7 @@ class AsyncSearchService(AsyncBaseService):
         self,
         request_or_query: CoreSearchRequest,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
     ) -> SearchResponse: ...
@@ -198,7 +209,7 @@ class AsyncSearchService(AsyncBaseService):
         self,
         request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
     ) -> SearchResponse: ...
@@ -207,7 +218,7 @@ class AsyncSearchService(AsyncBaseService):
         self,
         request_or_query: CoreSearchRequest | str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
+        namespace: SearchNamespace | None = None,
         limit: int | None = None,
         cursor: str | None = None,
     ) -> SearchResponse:
@@ -217,8 +228,8 @@ class AsyncSearchService(AsyncBaseService):
 
         Args:
             request_or_query: Either a CoreSearchRequest object or a search query string.
-            namespaces: Limit search to specific object types.
-                If None, searches all namespaces.
+            namespace: Object type to search in (e.g. WORK, ACCOUNT, ARTICLE).
+                Required by the DevRev API when using keyword arguments.
             limit: Maximum number of results to return.
             cursor: Pagination cursor from previous response.
 
@@ -229,7 +240,7 @@ class AsyncSearchService(AsyncBaseService):
             >>> # Using keyword arguments
             >>> results = await client.search.core(
             ...     query="type:ticket AND priority:p0",
-            ...     namespaces=[SearchNamespace.WORK],
+            ...     namespace=SearchNamespace.WORK,
             ...     limit=20,
             ... )
             >>> for result in results.results:
@@ -238,7 +249,7 @@ class AsyncSearchService(AsyncBaseService):
             >>> # Using request object
             >>> request = CoreSearchRequest(
             ...     query="type:ticket AND status:open",
-            ...     namespaces=[SearchNamespace.WORK],
+            ...     namespace=SearchNamespace.WORK,
             ... )
             >>> results = await client.search.core(request)
 
@@ -248,9 +259,14 @@ class AsyncSearchService(AsyncBaseService):
         if isinstance(request_or_query, CoreSearchRequest):
             request = request_or_query
         else:
+            if namespace is None:
+                raise ValueError(
+                    "namespace is required for search. "
+                    "Provide a SearchNamespace value (e.g. SearchNamespace.WORK)."
+                )
             request = CoreSearchRequest(
                 query=request_or_query,
-                namespaces=namespaces,
+                namespace=namespace,
                 limit=limit,
                 cursor=cursor,
             )
@@ -261,7 +277,7 @@ class AsyncSearchService(AsyncBaseService):
         self,
         request_or_query: HybridSearchRequest,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         semantic_weight: float | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
@@ -272,7 +288,7 @@ class AsyncSearchService(AsyncBaseService):
         self,
         request_or_query: str,
         *,
-        namespaces: list[SearchNamespace] | None = ...,
+        namespace: SearchNamespace | None = ...,
         semantic_weight: float | None = ...,
         limit: int | None = ...,
         cursor: str | None = ...,
@@ -282,7 +298,7 @@ class AsyncSearchService(AsyncBaseService):
         self,
         request_or_query: HybridSearchRequest | str,
         *,
-        namespaces: list[SearchNamespace] | None = None,
+        namespace: SearchNamespace | None = None,
         semantic_weight: float | None = None,
         limit: int | None = None,
         cursor: str | None = None,
@@ -294,8 +310,8 @@ class AsyncSearchService(AsyncBaseService):
 
         Args:
             request_or_query: Either a HybridSearchRequest object or a search query string.
-            namespaces: Limit search to specific object types.
-                If None, searches all namespaces.
+            namespace: Object type to search in (e.g. WORK, ACCOUNT, ARTICLE).
+                Required by the DevRev API when using keyword arguments.
             semantic_weight: Weight for semantic search component (0-1).
                 Higher values favor semantic matching over keyword matching.
             limit: Maximum number of results to return.
@@ -308,7 +324,7 @@ class AsyncSearchService(AsyncBaseService):
             >>> # Using keyword arguments
             >>> results = await client.search.hybrid(
             ...     query="authentication issues",
-            ...     namespaces=[SearchNamespace.CONVERSATION, SearchNamespace.ARTICLE],
+            ...     namespace=SearchNamespace.CONVERSATION,
             ...     semantic_weight=0.7,
             ...     limit=10,
             ... )
@@ -318,6 +334,7 @@ class AsyncSearchService(AsyncBaseService):
             >>> # Using request object
             >>> request = HybridSearchRequest(
             ...     query="login problems",
+            ...     namespace=SearchNamespace.WORK,
             ...     semantic_weight=0.5,
             ... )
             >>> results = await client.search.hybrid(request)
@@ -328,9 +345,14 @@ class AsyncSearchService(AsyncBaseService):
         if isinstance(request_or_query, HybridSearchRequest):
             request = request_or_query
         else:
+            if namespace is None:
+                raise ValueError(
+                    "namespace is required for search. "
+                    "Provide a SearchNamespace value (e.g. SearchNamespace.WORK)."
+                )
             request = HybridSearchRequest(
                 query=request_or_query,
-                namespaces=namespaces,
+                namespace=namespace,
                 semantic_weight=semantic_weight,
                 limit=limit,
                 cursor=cursor,

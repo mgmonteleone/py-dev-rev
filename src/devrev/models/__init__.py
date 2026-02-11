@@ -275,18 +275,11 @@ from devrev.models.rev_users import (
     RevUsersUpdateResponse,
 )
 from devrev.models.search import (
-    AccountSearchSummary,
-    ArticleSearchSummary,
-    ConversationSearchSummary,
     CoreSearchRequest,
     HybridSearchRequest,
-    PartSearchSummary,
     SearchNamespace,
     SearchResponse,
     SearchResult,
-    TagSearchSummary,
-    UserSearchSummary,
-    WorkSearchSummary,
 )
 from devrev.models.slas import (
     Sla,
@@ -704,13 +697,6 @@ __all__ = [
     "CoreSearchRequest",
     "HybridSearchRequest",
     "SearchResponse",
-    "AccountSearchSummary",
-    "ArticleSearchSummary",
-    "WorkSearchSummary",
-    "UserSearchSummary",
-    "ConversationSearchSummary",
-    "PartSearchSummary",
-    "TagSearchSummary",
     # Sync
     "SyncStatus",
     "SyncDirection",

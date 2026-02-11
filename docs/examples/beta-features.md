@@ -165,12 +165,13 @@ client = DevRevClient(api_version=APIVersion.BETA)
 # Use DevRev query language for precise filtering
 results = client.search.core(
     query="type:ticket AND priority:p0 AND status:open",
-    namespaces=[SearchNamespace.WORK],
+    namespace=SearchNamespace.WORK,
     limit=20
 )
 
 for result in results.results:
-    print(f"{result.id}: Score {result.score:.2f}")
+    if result.work:
+        print(f"{result.work['id']}: {result.snippet}")
 ```
 
 ### Search with Pagination
@@ -183,7 +184,7 @@ all_results = []
 while True:
     results = client.search.hybrid(
         query="login problems",
-        namespaces=[SearchNamespace.CONVERSATION],
+        namespace=SearchNamespace.CONVERSATION,
         limit=50,
         cursor=cursor
     )
@@ -243,9 +244,9 @@ async def search_multiple():
     async with AsyncDevRevClient(api_version=APIVersion.BETA) as client:
         # Search multiple namespaces concurrently
         tasks = [
-            client.search.hybrid("authentication", namespaces=[SearchNamespace.ARTICLE]),
-            client.search.hybrid("authentication", namespaces=[SearchNamespace.CONVERSATION]),
-            client.search.hybrid("authentication", namespaces=[SearchNamespace.WORK])
+            client.search.hybrid("authentication", namespace=SearchNamespace.ARTICLE),
+            client.search.hybrid("authentication", namespace=SearchNamespace.CONVERSATION),
+            client.search.hybrid("authentication", namespace=SearchNamespace.WORK)
         ]
 
         results = await asyncio.gather(*tasks)
