@@ -5,7 +5,7 @@
       "env": {
         "DEVREV_API_TOKEN": "<your-devrev-api-token>",
         "MCP_ENABLE_BETA_TOOLS": "true",
-        "MCP_ENABLE_DESTRUCTIVE_TOOLS": "true",
+        "MCP_ENABLE_DESTRUCTIVE_TOOLS": "false",
         "MCP_LOG_LEVEL": "INFO"
       }
     },

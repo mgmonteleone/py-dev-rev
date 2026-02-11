@@ -661,7 +661,7 @@ devrev-mcp-server
       "env": {
         "DEVREV_API_TOKEN": "<your-devrev-api-token>",
         "MCP_ENABLE_BETA_TOOLS": "true",
-        "MCP_ENABLE_DESTRUCTIVE_TOOLS": "true",
+        "MCP_ENABLE_DESTRUCTIVE_TOOLS": "false",
         "MCP_LOG_LEVEL": "INFO"
       }
     }
@@ -682,7 +682,7 @@ devrev-mcp-server
 4. Add environment variables:
    - `DEVREV_API_TOKEN` = `<your-devrev-api-token>`
    - `MCP_ENABLE_BETA_TOOLS` = `true`
-   - `MCP_ENABLE_DESTRUCTIVE_TOOLS` = `true`
+   - `MCP_ENABLE_DESTRUCTIVE_TOOLS` = `false`
    - `MCP_LOG_LEVEL` = `INFO`
 
 For a **remote** Cloud Run deployment, click **+ Add remote MCP** instead:
@@ -703,11 +703,11 @@ auggie mcp add devrev \
   --command devrev-mcp-server \
   -e DEVREV_API_TOKEN=<your-devrev-api-token> \
   -e MCP_ENABLE_BETA_TOOLS=true \
-  -e MCP_ENABLE_DESTRUCTIVE_TOOLS=true \
+  -e MCP_ENABLE_DESTRUCTIVE_TOOLS=false \
   -e MCP_LOG_LEVEL=INFO
 
 # Or add from JSON
-auggie mcp add-json devrev '{"command":"devrev-mcp-server","env":{"DEVREV_API_TOKEN":"<your-token>","MCP_ENABLE_BETA_TOOLS":"true","MCP_ENABLE_DESTRUCTIVE_TOOLS":"true"}}'
+auggie mcp add-json devrev '{"command":"devrev-mcp-server","env":{"DEVREV_API_TOKEN":"<your-devrev-api-token>","MCP_ENABLE_BETA_TOOLS":"true","MCP_ENABLE_DESTRUCTIVE_TOOLS":"false"}}'
 
 # Verify
 auggie mcp list
@@ -739,7 +739,7 @@ Or via Auggie CLI:
 auggie mcp add devrev \
   --transport http \
   --url https://devrev-mcp-server-<hash>-uc.a.run.app/mcp \
-  --header "Authorization:Bearer <your-mcp-auth-token>"
+  --header "Authorization: Bearer <your-mcp-auth-token>"
 ```
 
 </details>
@@ -774,7 +774,9 @@ All settings are configurable via environment variables (prefix `MCP_`):
 | `MCP_AUTH_TOKEN` | — | Bearer token for HTTP auth |
 | `MCP_RATE_LIMIT_RPM` | `120` | Rate limit (requests/min, 0=disabled) |
 | `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta API tools |
-| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `true` | Enable create/update/delete tools |
+| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `false` | Enable create/update/delete tools (set to `true` only if you need write access) |
+
+> **Note on Destructive Tools**: By default, `MCP_ENABLE_DESTRUCTIVE_TOOLS` is set to `false` for safety, which restricts the MCP server to read-only operations (list, get, count, export). Setting it to `true` enables create, update, and delete operations. Only enable this if you intentionally need write access to your DevRev workspace.
 
 ### Available Tool Categories
 
