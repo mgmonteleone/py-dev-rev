@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "devrev-local": {
+      "command": "devrev-mcp-server",
+      "env": {
+        "DEVREV_API_TOKEN": "<your-devrev-api-token>",
+        "MCP_ENABLE_BETA_TOOLS": "true",
+        "MCP_ENABLE_DESTRUCTIVE_TOOLS": "false",
+        "MCP_LOG_LEVEL": "INFO"
+      }
+    },
+    "devrev-cloud": {
+      "type": "http",
+      "url": "https://devrev-mcp-server-<hash>-uc.a.run.app/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-mcp-auth-token>"
+      }
+    }
+  }
+}
+

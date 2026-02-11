@@ -644,19 +644,105 @@ devrev-mcp-server
 }
 ```
 
-**Augment Code** (workspace config):
+**Augment Code** — Four setup options:
+
+<details>
+<summary><strong>Option 1: Import JSON (VS Code)</strong></summary>
+
+1. Open VS Code → Augment settings (gear icon)
+2. In the MCP section, click **Import from JSON**
+3. Paste the contents of [`augment-mcp-config.json`](augment-mcp-config.json):
+
 ```json
 {
   "mcpServers": {
     "devrev": {
       "command": "devrev-mcp-server",
       "env": {
-        "DEVREV_API_TOKEN": "your-token-here"
+        "DEVREV_API_TOKEN": "<your-devrev-api-token>",
+        "MCP_ENABLE_BETA_TOOLS": "true",
+        "MCP_ENABLE_DESTRUCTIVE_TOOLS": "false",
+        "MCP_LOG_LEVEL": "INFO"
       }
     }
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><strong>Option 2: JetBrains IDE (IntelliJ, PyCharm, WebStorm)</strong></summary>
+
+1. Open your JetBrains IDE → Augment panel (gear icon in upper right)
+2. In the **MCP** section, click the **+** button
+3. Fill in the fields:
+   - **Name**: `devrev`
+   - **Command**: `devrev-mcp-server`
+4. Add environment variables:
+   - `DEVREV_API_TOKEN` = `<your-devrev-api-token>`
+   - `MCP_ENABLE_BETA_TOOLS` = `true`
+   - `MCP_ENABLE_DESTRUCTIVE_TOOLS` = `false`
+   - `MCP_LOG_LEVEL` = `INFO`
+
+For a **remote** Cloud Run deployment, click **+ Add remote MCP** instead:
+   - **Connection Type**: HTTP
+   - **Name**: `devrev`
+   - **URL**: `https://devrev-mcp-server-<hash>-uc.a.run.app/mcp`
+
+> See [Augment JetBrains MCP docs](https://docs.augmentcode.com/jetbrains/setup-augment/mcp) for screenshots and details.
+
+</details>
+
+<details>
+<summary><strong>Option 3: Auggie CLI</strong></summary>
+
+```bash
+# Add local stdio server
+auggie mcp add devrev \
+  --command devrev-mcp-server \
+  -e DEVREV_API_TOKEN=<your-devrev-api-token> \
+  -e MCP_ENABLE_BETA_TOOLS=true \
+  -e MCP_ENABLE_DESTRUCTIVE_TOOLS=false \
+  -e MCP_LOG_LEVEL=INFO
+
+# Or add from JSON
+auggie mcp add-json devrev '{"command":"devrev-mcp-server","env":{"DEVREV_API_TOKEN":"<your-devrev-api-token>","MCP_ENABLE_BETA_TOOLS":"true","MCP_ENABLE_DESTRUCTIVE_TOOLS":"false"}}'
+
+# Verify
+auggie mcp list
+```
+
+</details>
+
+<details>
+<summary><strong>Option 4: Remote HTTP (Cloud Run)</strong></summary>
+
+For teams using the hosted Cloud Run deployment, use [`augment-mcp-config-remote.json`](augment-mcp-config-remote.json):
+
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "type": "http",
+      "url": "https://devrev-mcp-server-<hash>-uc.a.run.app/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-mcp-auth-token>"
+      }
+    }
+  }
+}
+```
+
+Or via Auggie CLI:
+```bash
+auggie mcp add devrev \
+  --transport http \
+  --url https://devrev-mcp-server-<hash>-uc.a.run.app/mcp \
+  --header "Authorization: Bearer <your-mcp-auth-token>"
+```
+
+</details>
 
 ### Production Deployment (HTTP)
 
@@ -688,7 +774,9 @@ All settings are configurable via environment variables (prefix `MCP_`):
 | `MCP_AUTH_TOKEN` | — | Bearer token for HTTP auth |
 | `MCP_RATE_LIMIT_RPM` | `120` | Rate limit (requests/min, 0=disabled) |
 | `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta API tools |
-| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `true` | Enable create/update/delete tools |
+| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `false` | Enable create/update/delete tools (set to `true` only if you need write access) |
+
+> **Note on Destructive Tools**: By default, `MCP_ENABLE_DESTRUCTIVE_TOOLS` is set to `false` for safety, which restricts the MCP server to read-only operations (list, get, count, export). Setting it to `true` enables create, update, and delete operations. Only enable this if you intentionally need write access to your DevRev workspace.
 
 ### Available Tool Categories
 
