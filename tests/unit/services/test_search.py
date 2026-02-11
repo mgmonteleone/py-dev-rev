@@ -26,12 +26,13 @@ class TestSearchService:
         mock_http_client.post.return_value = create_mock_response(sample_search_response_data)
 
         service = SearchService(mock_http_client)
-        result = service.core("type:ticket AND priority:p0")
+        result = service.core("type:ticket AND priority:p0", namespace=SearchNamespace.WORK)
 
         assert isinstance(result, SearchResponse)
         assert len(result.results) == 2
-        assert result.results[0].id == "don:core:work:123"
-        assert result.results[0].score == 0.95
+        assert result.results[0].type == "work"
+        assert result.results[0].work is not None
+        assert result.results[0].work["id"] == "don:core:work:123"
         mock_http_client.post.assert_called_once()
 
     def test_core_search_with_request_object(
@@ -45,7 +46,7 @@ class TestSearchService:
         service = SearchService(mock_http_client)
         request = CoreSearchRequest(
             query="type:ticket AND status:open",
-            namespaces=[SearchNamespace.WORK],
+            namespace=SearchNamespace.WORK,
             limit=20,
         )
         result = service.core(request)
@@ -54,7 +55,7 @@ class TestSearchService:
         assert len(result.results) == 2
         mock_http_client.post.assert_called_once()
 
-    def test_core_search_with_namespaces(
+    def test_core_search_with_namespace(
         self,
         mock_http_client: MagicMock,
         sample_search_response_data: dict[str, Any],
@@ -65,7 +66,7 @@ class TestSearchService:
         service = SearchService(mock_http_client)
         result = service.core(
             "authentication issues",
-            namespaces=[SearchNamespace.ARTICLE, SearchNamespace.CONVERSATION],
+            namespace=SearchNamespace.ARTICLE,
             limit=10,
         )
 
@@ -82,7 +83,7 @@ class TestSearchService:
         mock_http_client.post.return_value = create_mock_response(sample_search_response_data)
 
         service = SearchService(mock_http_client)
-        result = service.hybrid("login problems")
+        result = service.hybrid("login problems", namespace=SearchNamespace.WORK)
 
         assert isinstance(result, SearchResponse)
         assert len(result.results) == 2
@@ -100,7 +101,7 @@ class TestSearchService:
         service = SearchService(mock_http_client)
         request = HybridSearchRequest(
             query="authentication issues",
-            namespaces=[SearchNamespace.CONVERSATION, SearchNamespace.ARTICLE],
+            namespace=SearchNamespace.CONVERSATION,
             semantic_weight=0.7,
             limit=10,
         )
@@ -123,7 +124,7 @@ class TestSearchService:
         mock_http_client.post.return_value = create_mock_response(empty_response)
 
         service = SearchService(mock_http_client)
-        result = service.core("nonexistent query")
+        result = service.core("nonexistent query", namespace=SearchNamespace.WORK)
 
         assert isinstance(result, SearchResponse)
         assert len(result.results) == 0

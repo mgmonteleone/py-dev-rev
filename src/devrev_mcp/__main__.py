@@ -30,7 +30,7 @@ def main() -> None:
         help="HTTP server bind port (default: from MCP_PORT env var, or 8080)",
     )
 
-    args = parser.parse_args()
+    args, _unknown = parser.parse_known_args()
 
     # CLI args override environment variables (which override defaults in config)
     if args.transport:

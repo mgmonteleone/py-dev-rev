@@ -213,15 +213,13 @@ def sample_brand_data() -> dict[str, Any]:
 # Search fixtures
 @pytest.fixture
 def sample_search_response_data() -> dict[str, Any]:
-    """Sample search response data."""
+    """Sample search response data matching actual DevRev API format."""
     return {
         "results": [
             {
-                "id": "don:core:work:123",
                 "type": "work",
-                "score": 0.95,
-                "highlights": ["priority:p0", "status:open"],
-                "work_summary": {
+                "snippet": "Critical bug in authentication with priority:p0 and status:open",
+                "work": {
                     "id": "don:core:work:123",
                     "display_id": "ISS-123",
                     "title": "Critical bug in authentication",
@@ -231,12 +229,11 @@ def sample_search_response_data() -> dict[str, Any]:
                 },
             },
             {
-                "id": "don:core:article:456",
                 "type": "article",
-                "score": 0.87,
-                "highlights": ["authentication", "login"],
-                "article_summary": {
+                "snippet": "Authentication troubleshooting guide for login issues",
+                "article": {
                     "id": "don:core:article:456",
+                    "display_id": "ART-456",
                     "title": "Authentication troubleshooting guide",
                     "status": "published",
                 },

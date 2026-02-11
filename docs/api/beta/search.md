@@ -33,15 +33,17 @@ from devrev.models.search import SearchNamespace
 client = DevRevClient(api_version=APIVersion.BETA)
 
 # Simple query
-results = client.search.core("authentication issues")
+results = client.search.core("authentication issues", namespace=SearchNamespace.WORK)
 
 for result in results.results:
-    print(f"{result.id}: {result.score}")
+    print(f"{result.type}: {result.snippet}")
+    if result.work:
+        print(f"  Work ID: {result.work['id']}")
 
 # Advanced query with filters
 results = client.search.core(
     query="type:ticket AND priority:p0 AND status:open",
-    namespaces=[SearchNamespace.WORK],
+    namespace=SearchNamespace.WORK,
     limit=20,
 )
 ```
@@ -56,15 +58,15 @@ from devrev.models.search import SearchNamespace
 # Semantic search for similar concepts
 results = client.search.hybrid(
     query="login problems",
-    namespaces=[SearchNamespace.CONVERSATION, SearchNamespace.ARTICLE],
+    namespace=SearchNamespace.CONVERSATION,
     semantic_weight=0.7,  # Favor semantic matching
     limit=10,
 )
 
 for result in results.results:
-    print(f"{result.id}: {result.score}")
-    if result.highlights:
-        print(f"  Highlights: {result.highlights}")
+    print(f"{result.type}: {result.snippet}")
+    if result.conversation:
+        print(f"  Conversation ID: {result.conversation['id']}")
 ```
 
 ### Search Across Multiple Namespaces
@@ -72,14 +74,10 @@ for result in results.results:
 ```python
 from devrev.models.search import SearchNamespace
 
-# Search across tickets, conversations, and articles
+# Search for work items
 results = client.search.hybrid(
     query="API authentication",
-    namespaces=[
-        SearchNamespace.WORK,
-        SearchNamespace.CONVERSATION,
-        SearchNamespace.ARTICLE,
-    ],
+    namespace=SearchNamespace.WORK,
     semantic_weight=0.5,
 )
 ```
@@ -92,7 +90,7 @@ from devrev.models.search import CoreSearchRequest, HybridSearchRequest, SearchN
 # Core search with request object
 request = CoreSearchRequest(
     query="type:incident AND severity:sev0",
-    namespaces=[SearchNamespace.WORK],
+    namespace=SearchNamespace.WORK,
     limit=50,
 )
 results = client.search.core(request)
@@ -112,17 +110,20 @@ results = client.search.hybrid(request)
 # Get first page
 results = client.search.core(
     query="status:open",
+    namespace=SearchNamespace.WORK,
     limit=50,
 )
 
 # Process results
 for result in results.results:
-    print(result.id)
+    if result.work:
+        print(result.work['id'])
 
 # Get next page
 if results.next_cursor:
     next_results = client.search.core(
         query="status:open",
+        namespace=SearchNamespace.WORK,
         cursor=results.next_cursor,
         limit=50,
     )
@@ -140,12 +141,13 @@ async def main():
         # Core search
         results = await client.search.core(
             query="type:ticket",
-            namespaces=[SearchNamespace.WORK],
+            namespace=SearchNamespace.WORK,
         )
-        
+
         # Hybrid search
         results = await client.search.hybrid(
             query="authentication issues",
+            namespace=SearchNamespace.WORK,
             semantic_weight=0.7,
         )
 
@@ -180,11 +182,9 @@ Response model containing:
 
 Individual search result with:
 
-- `id` - Object ID
-- `namespace` - Object type
-- `score` - Relevance score
-- `highlights` - Highlighted matching text
-- `summary` - Object summary data
+- `type` - Object type (e.g. 'work', 'account', 'article')
+- `snippet` - Text snippet with highlighted matching text
+- Type-specific fields (`work`, `account`, `article`, etc.) - Contains the full object data based on the `type` field
 
 ## Query Language (Core Search)
 

@@ -8,160 +8,100 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
 class SearchNamespace(str, Enum):
-    """Search namespace enumeration."""
+    """Search namespace enumeration — 35 supported values."""
 
     ACCOUNT = "account"
     ARTICLE = "article"
+    CAPABILITY = "capability"
+    COMPONENT = "component"
     CONVERSATION = "conversation"
-    WORK = "work"
-    USER = "user"
-    TAG = "tag"
-    PART = "part"
-    REV_USER = "rev_user"
+    CUSTOM_OBJECT = "custom_object"
+    CUSTOM_PART = "custom_part"
+    CUSTOM_WORK = "custom_work"
+    DASHBOARD = "dashboard"
+    DATASET = "dataset"
     DEV_USER = "dev_user"
-
-
-# Search Summary Types for type-specific search results
-
-
-class AccountSearchSummary(DevRevResponseModel):
-    """Search summary for accounts.
-
-    Provides a condensed view of account information in search results.
-    """
-
-    id: str = Field(..., description="Account ID")
-    display_name: str = Field(..., description="Account display name")
-    domains: list[str] | None = Field(default=None, description="Associated domains")
-    tier: str | None = Field(default=None, description="Account tier")
-    external_refs: list[str] | None = Field(default=None, description="External references")
-
-
-class ArticleSearchSummary(DevRevResponseModel):
-    """Search summary for articles.
-
-    Provides a condensed view of article information in search results.
-    """
-
-    id: str = Field(..., description="Article ID")
-    title: str = Field(..., description="Article title")
-    status: str | None = Field(default=None, description="Article status")
-    published_date: str | None = Field(default=None, description="Published date")
-    author_id: str | None = Field(default=None, description="Author user ID")
-
-
-class WorkSearchSummary(DevRevResponseModel):
-    """Search summary for work items.
-
-    Provides a condensed view of work item information in search results.
-    """
-
-    id: str = Field(..., description="Work item ID")
-    display_id: str | None = Field(default=None, description="Display ID")
-    title: str = Field(..., description="Work item title")
-    type: str = Field(..., description="Work item type")
-    stage: str | None = Field(default=None, description="Current stage")
-    priority: str | None = Field(default=None, description="Priority level")
-    owner_id: str | None = Field(default=None, description="Owner user ID")
-
-
-class UserSearchSummary(DevRevResponseModel):
-    """Search summary for users.
-
-    Provides a condensed view of user information in search results.
-    """
-
-    id: str = Field(..., description="User ID")
-    display_name: str = Field(..., description="User display name")
-    email: str | None = Field(default=None, description="User email")
-    user_type: str | None = Field(default=None, description="User type (dev/rev)")
-    state: str | None = Field(default=None, description="User state")
-
-
-class ConversationSearchSummary(DevRevResponseModel):
-    """Search summary for conversations.
-
-    Provides a condensed view of conversation information in search results.
-    """
-
-    id: str = Field(..., description="Conversation ID")
-    title: str | None = Field(default=None, description="Conversation title")
-    group_id: str | None = Field(default=None, description="Group ID")
-    members_count: int | None = Field(default=None, description="Number of members")
-    stage: str | None = Field(default=None, description="Conversation stage")
-
-
-class PartSearchSummary(DevRevResponseModel):
-    """Search summary for parts.
-
-    Provides a condensed view of part information in search results.
-    """
-
-    id: str = Field(..., description="Part ID")
-    name: str = Field(..., description="Part name")
-    type: str | None = Field(default=None, description="Part type")
-    owned_by_id: str | None = Field(default=None, description="Owner ID")
-
-
-class TagSearchSummary(DevRevResponseModel):
-    """Search summary for tags.
-
-    Provides a condensed view of tag information in search results.
-    """
-
-    id: str = Field(..., description="Tag ID")
-    name: str = Field(..., description="Tag name")
-    description: str | None = Field(default=None, description="Tag description")
+    ENHANCEMENT = "enhancement"
+    FEATURE = "feature"
+    GROUP = "group"
+    INCIDENT = "incident"
+    ISSUE = "issue"
+    LINKABLE = "linkable"
+    MICROSERVICE = "microservice"
+    OBJECT_MEMBER = "object_member"
+    OPPORTUNITY = "opportunity"
+    PART = "part"
+    PRODUCT = "product"
+    PROJECT = "project"
+    QUESTION_ANSWER = "question_answer"
+    REV_ORG = "rev_org"
+    REV_USER = "rev_user"
+    RUNNABLE = "runnable"
+    SERVICE_ACCOUNT = "service_account"
+    SYS_USER = "sys_user"
+    TAG = "tag"
+    TASK = "task"
+    TICKET = "ticket"
+    USER = "user"
+    VISTA = "vista"
+    WIDGET = "widget"
+    WORK = "work"
 
 
 class SearchResult(DevRevResponseModel):
-    """Search result model.
+    """Individual search result from DevRev search API.
 
-    Inherits from DevRevResponseModel to allow extra fields from API responses.
+    The result contains a `type` field indicating the object type,
+    a `snippet` with highlighted matching text, and a type-specific
+    field containing the object data (e.g. `account`, `work`, `article`).
     """
 
-    id: str = Field(..., description="Result ID")
-    type: str = Field(..., description="Result type")
-    score: float | None = Field(default=None, description="Relevance score")
-    highlights: list[str] | None = Field(default=None, description="Highlighted text snippets")
-    summary: dict[str, Any] | None = Field(default=None, description="Result summary")
+    model_config = ConfigDict(extra="allow")
 
-    # Type-specific summaries (populated based on result type)
-    account_summary: AccountSearchSummary | None = Field(
-        default=None, description="Account-specific summary"
+    type: str = Field(..., description="Result type (e.g. account, work, article)")
+    snippet: str | None = Field(default=None, description="Text snippet with search highlights")
+
+    # Entity-specific data - populated based on `type` field
+    account: dict[str, Any] | None = Field(
+        default=None, description="Account data (when type='account')"
     )
-    article_summary: ArticleSearchSummary | None = Field(
-        default=None, description="Article-specific summary"
+    article: dict[str, Any] | None = Field(
+        default=None, description="Article data (when type='article')"
     )
-    work_summary: WorkSearchSummary | None = Field(
-        default=None, description="Work item-specific summary"
+    work: dict[str, Any] | None = Field(
+        default=None, description="Work item data (when type='work')"
     )
-    user_summary: UserSearchSummary | None = Field(
-        default=None, description="User-specific summary"
+    conversation: dict[str, Any] | None = Field(default=None, description="Conversation data")
+    tag: dict[str, Any] | None = Field(default=None, description="Tag data (when type='tag')")
+    part: dict[str, Any] | None = Field(default=None, description="Part data (when type='part')")
+    rev_user: dict[str, Any] | None = Field(default=None, description="Rev user data")
+    dev_user: dict[str, Any] | None = Field(default=None, description="Dev user data")
+    user: dict[str, Any] | None = Field(default=None, description="User data (when type='user')")
+    modified_date: str | None = Field(default=None, description="Last modified date of the result")
+    comments: list[dict[str, Any]] | None = Field(
+        default=None, description="Comments associated with the result"
     )
-    conversation_summary: ConversationSearchSummary | None = Field(
-        default=None, description="Conversation-specific summary"
-    )
-    part_summary: PartSearchSummary | None = Field(
-        default=None, description="Part-specific summary"
-    )
-    tag_summary: TagSearchSummary | None = Field(default=None, description="Tag-specific summary")
 
 
 class CoreSearchRequest(DevRevBaseModel):
     """Request model for core search."""
 
     query: str = Field(..., description="Search query")
-    namespaces: list[SearchNamespace] | None = Field(
-        default=None, description="Namespaces to search"
+    namespace: SearchNamespace = Field(
+        ..., description="Namespace to search (e.g. account, work, article)"
     )
-    limit: int | None = Field(default=None, description="Maximum number of results")
+    limit: int | None = Field(
+        default=None,
+        ge=0,
+        le=50,
+        description="Maximum number of results to return (API default: 10, max: 50)",
+    )
     cursor: str | None = Field(default=None, description="Pagination cursor")
 
 
@@ -169,13 +109,18 @@ class HybridSearchRequest(DevRevBaseModel):
     """Request model for hybrid search."""
 
     query: str = Field(..., description="Search query")
-    namespaces: list[SearchNamespace] | None = Field(
-        default=None, description="Namespaces to search"
+    namespace: SearchNamespace = Field(
+        ..., description="Namespace to search (e.g. account, work, article)"
     )
     semantic_weight: float | None = Field(
         default=None, description="Weight for semantic search (0-1)"
     )
-    limit: int | None = Field(default=None, description="Maximum number of results")
+    limit: int | None = Field(
+        default=None,
+        ge=0,
+        le=50,
+        description="Maximum number of results to return (API default: 10, max: 50)",
+    )
     cursor: str | None = Field(default=None, description="Pagination cursor")
 
 
