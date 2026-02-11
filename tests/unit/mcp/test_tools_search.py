@@ -179,15 +179,27 @@ class TestSearchHybridTool:
         with pytest.raises(RuntimeError, match="Invalid search namespace"):
             await devrev_search_hybrid(mock_ctx, query="q", namespace="INVALID")
 
-    async def test_search_hybrid_with_ticket_namespace(self, mock_ctx, mock_client):
-        """Test hybrid search with TICKET namespace."""
+    @pytest.mark.parametrize(
+        "ns_str,ns_enum_name",
+        [
+            ("TICKET", "TICKET"),
+            ("INCIDENT", "INCIDENT"),
+            ("PRODUCT", "PRODUCT"),
+            ("ENHANCEMENT", "ENHANCEMENT"),
+            ("CUSTOM_WORK", "CUSTOM_WORK"),
+        ],
+    )
+    async def test_search_hybrid_with_various_namespaces(
+        self, mock_ctx, mock_client, ns_str, ns_enum_name
+    ):
+        """Test hybrid search with various namespace values."""
         mock_response = MagicMock()
         mock_response.results = [_make_mock_search_result()]
         mock_response.next_cursor = None
         mock_response.total_count = None
         mock_client.search.hybrid.return_value = mock_response
 
-        result = await devrev_search_hybrid(mock_ctx, query="test", namespace="TICKET")
+        result = await devrev_search_hybrid(mock_ctx, query="test", namespace=ns_str)
 
         assert "results" in result
         assert result["count"] == 1
@@ -195,43 +207,7 @@ class TestSearchHybridTool:
         from devrev.models.search import SearchNamespace
 
         call_kwargs = mock_client.search.hybrid.call_args
-        assert call_kwargs.kwargs["namespace"] == SearchNamespace.TICKET
-
-    async def test_search_hybrid_with_incident_namespace(self, mock_ctx, mock_client):
-        """Test hybrid search with INCIDENT namespace."""
-        mock_response = MagicMock()
-        mock_response.results = [_make_mock_search_result()]
-        mock_response.next_cursor = None
-        mock_response.total_count = None
-        mock_client.search.hybrid.return_value = mock_response
-
-        result = await devrev_search_hybrid(mock_ctx, query="test", namespace="INCIDENT")
-
-        assert "results" in result
-        assert result["count"] == 1
-
-        from devrev.models.search import SearchNamespace
-
-        call_kwargs = mock_client.search.hybrid.call_args
-        assert call_kwargs.kwargs["namespace"] == SearchNamespace.INCIDENT
-
-    async def test_search_hybrid_with_product_namespace(self, mock_ctx, mock_client):
-        """Test hybrid search with PRODUCT namespace."""
-        mock_response = MagicMock()
-        mock_response.results = [_make_mock_search_result()]
-        mock_response.next_cursor = None
-        mock_response.total_count = None
-        mock_client.search.hybrid.return_value = mock_response
-
-        result = await devrev_search_hybrid(mock_ctx, query="test", namespace="PRODUCT")
-
-        assert "results" in result
-        assert result["count"] == 1
-
-        from devrev.models.search import SearchNamespace
-
-        call_kwargs = mock_client.search.hybrid.call_args
-        assert call_kwargs.kwargs["namespace"] == SearchNamespace.PRODUCT
+        assert call_kwargs.kwargs["namespace"] == SearchNamespace[ns_enum_name]
 
 
 class TestSearchCoreTool:
@@ -307,6 +283,28 @@ class TestSearchCoreTool:
 
         call_kwargs = mock_client.search.core.call_args
         assert call_kwargs.kwargs["namespace"] == SearchNamespace.ARTICLE
+
+    async def test_core_search_does_not_rerank(self, mock_ctx, mock_client):
+        """Core search should NOT apply client-side re-ranking."""
+        # Create results where re-ranking would change order if applied
+        sr1 = _make_mock_search_result(
+            {"type": "account", "account": {"display_name": "Unrelated"}, "snippet": "..."}
+        )
+        sr2 = _make_mock_search_result(
+            {"type": "account", "account": {"display_name": "MongoDB"}, "snippet": "..."}
+        )
+        response = MagicMock()
+        response.results = [sr1, sr2]
+        response.next_cursor = None
+        response.total_count = None
+        mock_client.search.core.return_value = response
+
+        # Use "mongo" as query - if re-ranking were applied, MongoDB would move to position 0
+        result = await devrev_search_core(mock_ctx, query="mongo", namespace="ACCOUNT")
+
+        # Order should be preserved (no re-ranking)
+        assert result["results"][0]["account"]["display_name"] == "Unrelated"
+        assert result["results"][1]["account"]["display_name"] == "MongoDB"
 
 
 class TestReranking:
@@ -403,3 +401,28 @@ class TestExtractDisplayName:
     def test_extract_returns_none_for_unknown(self):
         result = {"type": "unknown"}
         assert _extract_display_name(result) is None
+
+    def test_extract_from_ticket(self):
+        """Dynamic extraction should work for ticket type."""
+        result = {"type": "ticket", "ticket": {"display_name": "Support Request"}}
+        assert _extract_display_name(result) == "Support Request"
+
+    def test_extract_from_incident(self):
+        """Dynamic extraction should work for incident type."""
+        result = {"type": "incident", "incident": {"title": "Service Outage"}}
+        assert _extract_display_name(result) == "Service Outage"
+
+    def test_extract_from_product(self):
+        """Dynamic extraction should work for product type."""
+        result = {"type": "product", "product": {"name": "Widget Pro"}}
+        assert _extract_display_name(result) == "Widget Pro"
+
+    def test_extract_from_custom_work(self):
+        """Dynamic extraction should work for custom_work type."""
+        result = {"type": "custom_work", "custom_work": {"title": "Custom Task"}}
+        assert _extract_display_name(result) == "Custom Task"
+
+    def test_extract_fallback_scans_all_dicts(self):
+        """When type doesn't match entity key, fallback should scan all dict values."""
+        result = {"type": "weird", "actual_data": {"display_name": "Found It"}}
+        assert _extract_display_name(result) == "Found It"

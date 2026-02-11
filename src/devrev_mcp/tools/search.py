@@ -109,7 +109,9 @@ def _rerank_results(results: list[dict[str, Any]], query: str) -> list[dict[str,
 def _extract_display_name(result: dict[str, Any]) -> str | None:
     """Extract a display name from a search result for re-ranking.
 
-    Searches through entity-specific dicts for display_name or title fields.
+    Uses the result's 'type' field to dynamically find the entity-specific dict,
+    then looks for display_name, title, or name fields. This approach works for
+    all 35+ namespace types without hardcoding entity keys.
 
     Args:
         result: A serialized search result dict.
@@ -117,23 +119,21 @@ def _extract_display_name(result: dict[str, Any]) -> str | None:
     Returns:
         The display name string, or None if not found.
     """
-    # Check common entity-specific sub-dicts for display_name or title
-    for key in (
-        "account",
-        "work",
-        "article",
-        "conversation",
-        "part",
-        "dev_user",
-        "rev_user",
-        "tag",
-        "group",
-        "rev_org",
-    ):
-        entity = result.get(key)
+    # Use the type field to dynamically locate the entity dict
+    # e.g., {"type": "account", "account": {...}} -> result["account"]
+    result_type = result.get("type")
+    if result_type:
+        entity = result.get(result_type)
         if isinstance(entity, dict):
-            # Try display_name first (accounts, users), then title (works, articles)
             name = entity.get("display_name") or entity.get("title") or entity.get("name")
+            if name:
+                return name
+
+    # Fallback: scan all dict values for name-like fields
+    # Handles edge cases where type doesn't match the entity key
+    for value in result.values():
+        if isinstance(value, dict):
+            name = value.get("display_name") or value.get("title") or value.get("name")
             if name:
                 return name
     return None
@@ -203,8 +203,8 @@ async def devrev_search_core(
     """Search DevRev using core search with query language (beta).
 
     Core search supports advanced DevRev query syntax for precise filtering.
-    Results are client-side re-ranked to boost items where the query matches
-    the display name.
+    Unlike hybrid search, core search does not apply client-side re-ranking
+    since queries use structured DevRev query language rather than natural language.
 
     Args:
         query: The search query (supports DevRev query language).
@@ -227,7 +227,6 @@ async def devrev_search_core(
             limit=clamp_page_size(limit, default=10, maximum=50),
         )
         results = serialize_models(response.results)
-        results = _rerank_results(results, query)
         result: dict[str, Any] = {
             "count": len(results),
             "results": results,
