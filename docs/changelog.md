@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-02-11
+
+### Added
+- **Client-side re-ranking** for hybrid search — boosts results where query is a substring of display_name/title
+- **Dynamic `_extract_display_name`** — supports all 35 DevRev namespace types for re-ranking
+- **MCP Inspector compatibility** — `__main__.py` uses `parse_known_args()` to handle extra arguments
+
+### Fixed
+- **SDK: SearchNamespace enum** — Expanded from 9 to 35 values matching all API-supported namespaces
+- **SDK: Namespace serialization** — Fixed `namespaces` (plural) → `namespace` (singular) via `serialization_alias`
+- **SDK: Namespace type** — Fixed from `list[SearchNamespace]` to single `SearchNamespace` value
+- **SDK: SearchResult model** — Restructured with entity-specific dicts, added `modified_date` and `comments` fields
+- **SDK: Limit validation** — Added `Field(ge=0, le=50)` to enforce API constraints (was default 25/max 100, now 10/50)
+- **Core search ordering** — `devrev_search_core` no longer applies re-ranking, preserving API ordering
+- **Namespace parsing resilience** — Handles whitespace, embedded quotes, and case variations from MCP Inspector
+
+### Changed
+- Search limit defaults changed from 25 → 10 (matches DevRev API default)
+- Search limit maximum changed from 100 → 50 (matches DevRev API constraint)
+
 ## [2.2.0] - 2026-02-09
 
 ### Added - DevRev MCP Server (Model Context Protocol)
@@ -386,6 +406,7 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.3.0 | 2026-02-11 | 🔍 Search SDK improvements & client-side re-ranking |
 | 2.2.0 | 2026-02-09 | 🤖 MCP Server - Full DevRev platform as AI-accessible tools |
 | 2.1.2 | 2026-01-28 | 🐛 Fix Work.applies_to_part parsing for API responses |
 | 2.1.1 | 2026-01-23 | 🐛 Fix RevUserState enum missing states |
