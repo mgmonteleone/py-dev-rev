@@ -205,15 +205,17 @@ echo "Provider: $PROVIDER"
 
 ```bash
 PROJECT_ID=$(gcloud config get-value project)
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 REPO_OWNER="mgmonteleone"  # Change to your GitHub username
 REPO_NAME="py-dev-rev"
 
 # Allow GitHub Actions to impersonate the service account
+# Note: principalSet requires the GCP project NUMBER, not the project ID
 gcloud iam service-accounts add-iam-policy-binding \
   github-actions-deployer@$PROJECT_ID.iam.gserviceaccount.com \
   --project=$PROJECT_ID \
   --role=roles/iam.workloadIdentityUser \
-  --member="principalSet://iam.googleapis.com/projects/$PROJECT_ID/locations/global/workloadIdentityPools/github/attribute.repository/$REPO_OWNER/$REPO_NAME"
+  --member="principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github/attribute.repository/$REPO_OWNER/$REPO_NAME"
 ```
 
 ### 4. Add GitHub Secrets
