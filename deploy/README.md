@@ -332,6 +332,11 @@ The following environment variables are set in the deployment:
 **Legacy mode only**:
 - `MCP_AUTH_TOKEN` - Shared bearer token for static-token mode (not recommended)
 
+### Secrets from Secret Manager
+
+- `DEVREV_API_TOKEN` - DevRev API token (mounted from Secret Manager)
+- `MCP_AUTH_TOKEN` - Bearer token for MCP endpoint authentication (mounted from Secret Manager)
+
 ### Resource Limits
 
 - **Memory**: 512Mi (sufficient for MCP server operations)
