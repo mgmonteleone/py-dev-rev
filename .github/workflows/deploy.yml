@@ -11,7 +11,7 @@ on:
     inputs:
       tag_name:
         description: 'Tag name for deployment (e.g., v1.2.3)'
-        required: false
+        required: true
         type: string
 
 permissions:
@@ -79,20 +79,20 @@ jobs:
 
       - name: Create deployment summary
         run: |
-          cat << EOF
+          cat << EOF >> $GITHUB_STEP_SUMMARY
           ## 🚀 Deployment Complete
-          
+
           **Version**: ${{ steps.version.outputs.version }}
           **Service**: devrev-mcp-server
           **Region**: ${{ secrets.GCP_REGION }}
           **URL**: ${{ steps.service.outputs.url }}
-          
+
           ### Testing
-          
+
           \`\`\`bash
           # Health check
           curl ${{ steps.service.outputs.url }}/health
-          
+
           # MCP call with auth token
           curl -X POST ${{ steps.service.outputs.url }}/mcp/v1/initialize \
             -H "Authorization: Bearer <MCP_AUTH_TOKEN>" \
