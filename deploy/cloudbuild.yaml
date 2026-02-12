@@ -1,19 +1,32 @@
 # Google Cloud Build Configuration for DevRev MCP Server
 # This pipeline builds and deploys the MCP server to Cloud Run
+# Supports both manual builds and tag-triggered builds with version tagging
+#
+# Usage:
+#   Manual build:
+#     gcloud builds submit --config=deploy/cloudbuild.yaml
+#
+#   Tag-triggered build (from GitHub Actions):
+#     gcloud builds submit --config=deploy/cloudbuild.yaml \
+#       --substitutions=_TAG_NAME=v1.2.3
 
 steps:
-  # Build the Docker image
+  # Build the Docker image with multiple tags
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build'
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/devrev-mcp-server:$COMMIT_SHA'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:$COMMIT_SHA'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/devrev-mcp-server:latest'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:latest'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:${_TAG_NAME}'
       - '-f'
       - 'Dockerfile'
       - '.'
+    env:
+      - 'DOCKER_BUILDKIT=1'
 
   # Push the Docker image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -21,24 +34,24 @@ steps:
     args:
       - 'push'
       - '--all-tags'
-      - 'gcr.io/$PROJECT_ID/devrev-mcp-server'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server'
     waitFor: ['build']
 
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run with secrets from Secret Manager
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
-      - 'devrev-mcp-server'
-      - '--image=gcr.io/$PROJECT_ID/devrev-mcp-server:$COMMIT_SHA'
+      - '${_SERVICE_NAME}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:$COMMIT_SHA'
       - '--region=${_REGION}'
       - '--platform=managed'
-      - '--no-allow-unauthenticated'
+      - '--allow-unauthenticated'
       - '--port=8080'
-      - '--memory=512Mi'
-      - '--cpu=1'
+      - '--memory=${_MEMORY}'
+      - '--cpu=${_CPU}'
       - '--min-instances=0'
       - '--max-instances=10'
       - '--timeout=300s'
@@ -50,6 +63,12 @@ steps:
 # Substitution variables with defaults
 substitutions:
   _REGION: 'us-central1'
+  _SERVICE_NAME: 'devrev-mcp-server'
+  _REPO: 'devrev-mcp'
+  _IMAGE: 'devrev-mcp-server'
+  _CPU: '1'
+  _MEMORY: '512Mi'
+  _TAG_NAME: 'latest'
 
 # Build options
 options:
@@ -59,8 +78,9 @@ options:
 # Timeout for the entire build
 timeout: '1200s'
 
-# Images to be pushed to Container Registry
+# Images to be pushed to Artifact Registry
 images:
-  - 'gcr.io/$PROJECT_ID/devrev-mcp-server:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/devrev-mcp-server:latest'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:$COMMIT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:latest'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:${_TAG_NAME}'
 
