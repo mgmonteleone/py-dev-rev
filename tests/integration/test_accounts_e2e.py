@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import pytest
@@ -126,7 +125,7 @@ class TestAccountsCRUD:
 
         # Assert
         assert hasattr(result, "accounts")
-        assert isinstance(result.accounts, Sequence)
+        assert isinstance(result.accounts, list)
         logger.info(f"✅ Listed accounts: {len(result.accounts)} found")
 
     def test_update_account_display_name(
@@ -190,7 +189,7 @@ class TestAccountsCRUD:
         write_client.accounts.delete(id=account.id)
 
         # Assert - verify account is deleted by trying to get it
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.accounts.get(id=account.id)
         logger.info(f"✅ Deleted account: {account.id}")
 
@@ -236,12 +235,12 @@ class TestAccountsCRUD:
         # Act & Assert - List
         result = write_client.accounts.list(limit=10)
         assert hasattr(result, "accounts")
-        assert isinstance(result.accounts, Sequence)
+        assert isinstance(result.accounts, list)
         logger.info(f"✅ Lifecycle - Listed: {len(result.accounts)} accounts")
 
         # Act & Assert - Delete
         write_client.accounts.delete(id=account.id)
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.accounts.get(id=account.id)
         logger.info(f"✅ Lifecycle - Deleted: {account.id}")
 
@@ -263,7 +262,7 @@ class TestAccountsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:account/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.accounts.get(id=fake_id)
         # Verify we got an actual error, not just any exception
         assert exc_info.value is not None
@@ -279,7 +278,7 @@ class TestAccountsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:account/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.accounts.update(
                 id=fake_id,
                 display_name=test_data.generate_name("account"),
@@ -298,7 +297,7 @@ class TestAccountsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:account/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.accounts.delete(id=fake_id)
         # Verify we got an actual error, not just any exception
         assert exc_info.value is not None
@@ -325,7 +324,7 @@ class TestAccountsListPagination:
 
         # Assert
         assert hasattr(result, "accounts")
-        assert isinstance(result.accounts, Sequence)
+        assert isinstance(result.accounts, list)
         assert len(result.accounts) <= limit
         logger.info(f"✅ Listed accounts with limit={limit}: {len(result.accounts)} found")
 
@@ -342,5 +341,5 @@ class TestAccountsListPagination:
 
         # Assert
         assert hasattr(result, "accounts")
-        assert isinstance(result.accounts, Sequence)
+        assert isinstance(result.accounts, list)
         logger.info(f"✅ Listed accounts with defaults: {len(result.accounts)} found")

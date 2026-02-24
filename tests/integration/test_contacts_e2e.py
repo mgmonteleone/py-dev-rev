@@ -16,7 +16,6 @@ from __future__ import annotations
 import logging
 import os
 import uuid
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import pytest
@@ -144,7 +143,7 @@ class TestContactsCRUD:
         # Assert
         assert result is not None
         assert hasattr(result, "rev_users")
-        assert isinstance(result.rev_users, (list, Sequence))
+        assert isinstance(result.rev_users, list)
         logger.info(f"✅ Listed contacts: {len(result.rev_users)} found")
 
     def test_update_contact_display_name(
@@ -204,7 +203,7 @@ class TestContactsCRUD:
         write_client.rev_users.delete(id=contact.id)
 
         # Assert - verify contact is deleted by trying to get it
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.rev_users.get(id=contact.id)
         logger.info(f"✅ Deleted contact: {contact.id}")
 
@@ -245,12 +244,12 @@ class TestContactsCRUD:
 
         # Act & Assert - List
         result = write_client.rev_users.list(limit=10)
-        assert isinstance(result.rev_users, (list, Sequence))
+        assert isinstance(result.rev_users, list)
         logger.info(f"✅ Lifecycle - Listed: {len(result.rev_users)} contacts")
 
         # Act & Assert - Delete
         write_client.rev_users.delete(id=contact.id)
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.rev_users.get(id=contact.id)
         logger.info(f"✅ Lifecycle - Deleted: {contact.id}")
 
@@ -272,7 +271,7 @@ class TestContactsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:revu/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.rev_users.get(id=fake_id)
         # Verify we got an actual error, not just any exception
         assert exc_info.value is not None
@@ -288,7 +287,7 @@ class TestContactsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:revu/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.rev_users.update(
                 id=fake_id,
                 display_name=test_data.generate_name("ShouldFail"),
@@ -307,7 +306,7 @@ class TestContactsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:revu/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.rev_users.delete(id=fake_id)
         # Verify we got an actual error, not just any exception
         assert exc_info.value is not None
@@ -335,7 +334,7 @@ class TestContactsListPagination:
         # Assert
         assert result is not None
         assert hasattr(result, "rev_users")
-        assert isinstance(result.rev_users, (list, Sequence))
+        assert isinstance(result.rev_users, list)
         assert len(result.rev_users) <= limit
         logger.info(f"✅ Listed contacts with limit={limit}: {len(result.rev_users)} found")
 
@@ -353,5 +352,5 @@ class TestContactsListPagination:
         # Assert
         assert result is not None
         assert hasattr(result, "rev_users")
-        assert isinstance(result.rev_users, (list, Sequence))
+        assert isinstance(result.rev_users, list)
         logger.info(f"✅ Listed contacts with defaults: {len(result.rev_users)} found")
