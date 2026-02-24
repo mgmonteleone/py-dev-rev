@@ -6,7 +6,7 @@ This module contains Pydantic models for Account-related API operations.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -23,7 +23,7 @@ from devrev.models.base import (
 )
 
 
-class AccountTier(str, Enum):
+class AccountTier(StrEnum):
     """Account tier enumeration."""
 
     TIER1 = "tier-1"

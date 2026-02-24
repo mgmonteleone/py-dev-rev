@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
@@ -16,7 +16,7 @@ from devrev.models.base import (
 )
 
 
-class GroupType(str, Enum):
+class GroupType(StrEnum):
     """Group type enumeration."""
 
     STATIC = "static"

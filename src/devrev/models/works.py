@@ -7,7 +7,7 @@ Works include issues, tickets, tasks, and opportunities.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -27,7 +27,7 @@ from devrev.models.base import (
 from devrev.models.parts import PartSummary
 
 
-class WorkType(str, Enum):
+class WorkType(StrEnum):
     """Work item type enumeration."""
 
     ISSUE = "issue"
@@ -36,7 +36,7 @@ class WorkType(str, Enum):
     OPPORTUNITY = "opportunity"
 
 
-class IssuePriority(str, Enum):
+class IssuePriority(StrEnum):
     """Issue priority enumeration."""
 
     P0 = "p0"
@@ -45,7 +45,7 @@ class IssuePriority(str, Enum):
     P3 = "p3"
 
 
-class TicketSeverity(str, Enum):
+class TicketSeverity(StrEnum):
     """Ticket severity enumeration."""
 
     BLOCKER = "blocker"
@@ -54,7 +54,7 @@ class TicketSeverity(str, Enum):
     MEDIUM = "medium"
 
 
-class TicketChannels(str, Enum):
+class TicketChannels(StrEnum):
     """Ticket channel enumeration."""
 
     EMAIL = "email"

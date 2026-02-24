@@ -6,7 +6,7 @@ This module contains Pydantic models for UOM-related API operations.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -14,7 +14,7 @@ from pydantic import Field
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel, PaginatedResponse
 
 
-class UomAggregationType(str, Enum):
+class UomAggregationType(StrEnum):
     """UOM aggregation type enumeration."""
 
     SUM = "sum"
@@ -27,7 +27,7 @@ class UomAggregationType(str, Enum):
     OLDEST = "oldest"
 
 
-class UomMetricScope(str, Enum):
+class UomMetricScope(StrEnum):
     """UOM metric scope enumeration."""
 
     ORG = "org"

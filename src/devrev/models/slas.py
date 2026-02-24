@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel, PaginatedResponse
 
 
-class SlaStatus(str, Enum):
+class SlaStatus(StrEnum):
     """SLA policy status enumeration."""
 
     DRAFT = "draft"
@@ -18,7 +18,7 @@ class SlaStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class SlaTrackerStatus(str, Enum):
+class SlaTrackerStatus(StrEnum):
     """SLA tracker status enumeration (for active SLA tracking)."""
 
     ACTIVE = "active"

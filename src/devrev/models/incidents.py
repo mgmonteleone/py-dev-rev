@@ -6,7 +6,7 @@ This module contains Pydantic models for Incident-related API operations.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -14,7 +14,7 @@ from pydantic import Field
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel, PaginatedResponse
 
 
-class IncidentStage(str, Enum):
+class IncidentStage(StrEnum):
     """Incident stage enumeration (for request filters)."""
 
     ACKNOWLEDGED = "acknowledged"
@@ -23,7 +23,7 @@ class IncidentStage(str, Enum):
     RESOLVED = "resolved"
 
 
-class IncidentSeverity(str, Enum):
+class IncidentSeverity(StrEnum):
     """Incident severity enumeration (for request filters)."""
 
     SEV0 = "sev0"

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
@@ -15,7 +15,7 @@ from devrev.models.base import (
 )
 
 
-class WebhookStatus(str, Enum):
+class WebhookStatus(StrEnum):
     """Webhook status enumeration."""
 
     ACTIVE = "active"

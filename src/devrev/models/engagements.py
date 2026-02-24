@@ -6,14 +6,14 @@ This module contains Pydantic models for Engagement-related API operations.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel, PaginatedResponse
 
 
-class EngagementType(str, Enum):
+class EngagementType(StrEnum):
     """Engagement type enumeration."""
 
     CALL = "call"

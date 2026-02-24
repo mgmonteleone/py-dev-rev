@@ -7,7 +7,7 @@ which track changes and activities on DevRev objects over time.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -15,7 +15,7 @@ from pydantic import Field
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
-class TimelineEventType(str, Enum):
+class TimelineEventType(StrEnum):
     """Timeline event type enumeration."""
 
     CREATED = "created"

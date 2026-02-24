@@ -5,7 +5,7 @@ This module contains Pydantic models for Search-related API operations.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import ConfigDict, Field
@@ -13,7 +13,7 @@ from pydantic import ConfigDict, Field
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
-class SearchNamespace(str, Enum):
+class SearchNamespace(StrEnum):
     """Search namespace enumeration — 35 supported values."""
 
     ACCOUNT = "account"

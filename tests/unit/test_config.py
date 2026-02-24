@@ -239,7 +239,7 @@ class TestAPIVersion:
 
     def test_api_version_is_string_enum(self) -> None:
         """Test APIVersion can be used as string."""
-        assert str(APIVersion.PUBLIC) == "APIVersion.PUBLIC"
+        assert str(APIVersion.PUBLIC) == "public"
         assert APIVersion.PUBLIC == "public"
         assert APIVersion.BETA == "beta"
 

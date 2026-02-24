@@ -7,7 +7,7 @@ Rev Users are external customer users in DevRev.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -23,7 +23,7 @@ from devrev.models.base import (
 )
 
 
-class RevUserState(str, Enum):
+class RevUserState(StrEnum):
     """Rev user state enumeration.
 
     Values match the DevRev API 'user-state' schema.

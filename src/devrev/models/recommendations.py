@@ -5,14 +5,14 @@ This module contains Pydantic models for Recommendations-related API operations.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
-class MessageRole(str, Enum):
+class MessageRole(StrEnum):
     """Message role enumeration."""
 
     SYSTEM = "system"

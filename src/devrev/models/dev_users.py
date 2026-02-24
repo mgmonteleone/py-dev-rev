@@ -7,7 +7,7 @@ Dev Users are internal organization users in DevRev.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -22,7 +22,7 @@ from devrev.models.base import (
 )
 
 
-class DevUserState(str, Enum):
+class DevUserState(StrEnum):
     """Dev user state enumeration."""
 
     ACTIVE = "active"
@@ -80,7 +80,7 @@ class DevUserExternalIdentityFilter(DevRevBaseModel):
     issuer: str | None = Field(default=None, description="Identity issuer")
 
 
-class DevUsersCreateRequestStateEnum(str, Enum):
+class DevUsersCreateRequestStateEnum(StrEnum):
     """Allowed states for Dev user creation."""
 
     SHADOW = "shadow"
