@@ -177,6 +177,11 @@ class TestDataManager:
                     "devrev.models.articles", fromlist=["ArticlesDeleteRequest"]
                 ).ArticlesDeleteRequest(id=rid)
             ),
+            "question_answer": lambda rid: self._client.question_answers.delete(
+                __import__(
+                    "devrev.models.question_answers", fromlist=["QuestionAnswersDeleteRequest"]
+                ).QuestionAnswersDeleteRequest(id=rid)
+            ),
             "webhook": lambda rid: self._client.webhooks.delete(
                 __import__(
                     "devrev.models.webhooks", fromlist=["WebhooksDeleteRequest"]

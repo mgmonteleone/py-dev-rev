@@ -97,6 +97,35 @@ def write_client() -> DevRevClient:
     return DevRevClient(api_token=token)
 
 
+@pytest.fixture(scope="session")
+def beta_write_client() -> DevRevClient:
+    """Create a DevRev client configured for beta API write tests.
+
+    Uses DEVREV_TEST_API_TOKEN if available, falls back to DEVREV_API_TOKEN.
+    Validates environment safety before creating client.
+
+    Returns:
+        Configured DevRevClient instance with beta API.
+
+    Raises:
+        pytest.skip: If no API token is available.
+        RuntimeError: If environment is not safe for write tests.
+    """
+    from devrev.client import DevRevClient
+    from devrev.config import APIVersion
+
+    _validate_write_test_environment()
+
+    token = os.environ.get(ENV_TEST_API_TOKEN) or os.environ.get("DEVREV_API_TOKEN")
+    if not token:
+        pytest.skip(
+            f"Write tests require {ENV_TEST_API_TOKEN} or DEVREV_API_TOKEN environment variable"
+        )
+
+    logger.info("Creating DevRev client for beta API write tests")
+    return DevRevClient(api_token=token, api_version=APIVersion.BETA)
+
+
 @pytest.fixture
 def test_data(
     write_client: DevRevClient,

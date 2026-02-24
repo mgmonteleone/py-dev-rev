@@ -21,6 +21,7 @@ RESOURCE_TYPES: Final[frozenset[str]] = frozenset(
         "group",
         "link",
         "part",
+        "question_answer",
         "rev_user",
         "tag",
         "webhook",
@@ -34,6 +35,7 @@ DELETION_ORDER: Final[tuple[str, ...]] = (
     "link",  # Delete links first (references other resources)
     "work",  # Then work items
     "article",  # Then articles
+    "question_answer",  # Then question answers
     "webhook",  # Then webhooks
     "tag",  # Then tags
     "group",  # Then groups
