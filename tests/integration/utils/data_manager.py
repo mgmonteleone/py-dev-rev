@@ -163,7 +163,7 @@ class TestDataManager:
 
         # Note: Only include resource types that have delete() methods in the SDK.
         # Unsupported types: group (no delete), conversation (no delete),
-        # part (no delete), rev_user (no delete)
+        # part (no delete)
         delete_methods = {
             "account": lambda rid: self._client.accounts.delete(rid),
             "tag": lambda rid: self._client.tags.delete(
@@ -192,6 +192,7 @@ class TestDataManager:
                     "devrev.models.links", fromlist=["LinksDeleteRequest"]
                 ).LinksDeleteRequest(id=rid)
             ),
+            "rev_user": lambda rid: self._client.rev_users.delete(id=rid),
         }
 
         if resource_type in delete_methods:
