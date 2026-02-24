@@ -20,7 +20,7 @@ from devrev_mcp.tools.articles import (
 def _make_mock_article(
     id: str = "article-1",
     title: str = "Test Article",
-    content: str = "Test content",
+    description: str = "Test content",
     status: str = "published",
 ) -> MagicMock:
     """Create a mock article object."""
@@ -29,7 +29,7 @@ def _make_mock_article(
         "id": id,
         "display_id": f"ART-{id}",
         "title": title,
-        "content": content,
+        "description": description,
         "status": status,
         "authored_by": [],
         "created_date": "2024-01-01T00:00:00Z",
@@ -107,17 +107,18 @@ class TestArticlesCreateTool:
     @pytest.mark.asyncio
     async def test_create_minimal(self, mock_ctx, mock_client):
         """Test creating an article with minimal fields."""
-        mock_article = _make_mock_article(title="New Article", content="New content")
+        mock_article = _make_mock_article(title="New Article", description="New content")
         mock_client.articles.create.return_value = mock_article
 
         result = await devrev_articles_create(
             mock_ctx,
             title="New Article",
-            content="New content",
+            description="New content",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
         )
 
         assert result["title"] == "New Article"
-        assert result["content"] == "New content"
+        assert result["description"] == "New content"
         mock_client.articles.create.assert_called_once()
 
     @pytest.mark.asyncio
@@ -125,7 +126,7 @@ class TestArticlesCreateTool:
         """Test creating an article with status."""
         mock_article = _make_mock_article(
             title="Draft Article",
-            content="Draft content",
+            description="Draft content",
             status="draft",
         )
         mock_client.articles.create.return_value = mock_article
@@ -133,7 +134,8 @@ class TestArticlesCreateTool:
         result = await devrev_articles_create(
             mock_ctx,
             title="Draft Article",
-            content="Draft content",
+            description="Draft content",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
             status="draft",
         )
 
@@ -145,7 +147,12 @@ class TestArticlesCreateTool:
         mock_client.articles.create.side_effect = ValidationError("Title required")
 
         with pytest.raises(RuntimeError, match="Title required"):
-            await devrev_articles_create(mock_ctx, title="", content="Content")
+            await devrev_articles_create(
+                mock_ctx,
+                title="",
+                description="Content",
+                owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            )
 
 
 class TestArticlesUpdateTool:
