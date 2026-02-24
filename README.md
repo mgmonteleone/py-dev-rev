@@ -2,19 +2,13 @@
 
 A modern, type-safe Python SDK for the DevRev API.
 
-![Built with Augment](https://img.shields.io/badge/Built%20with-Auggie-6366f1?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyTDIgMTloMjBMMTIgMnptMCAzLjc1TDE4LjI1IDE3SDUuNzVMMTIgNS43NXoiLz48L3N2Zz4=)
-
-![PyPI Version](https://img.shields.io/pypi/v/devrev-python-sdk.svg)
-
-![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
-
-![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)
-
-![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)
-
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-
-![Test Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)
+[![Built with Augment](https://img.shields.io/badge/Built%20with-Auggie-6366f1?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyTDIgMTloMjBMMTIgMnptMCAzLjc1TDE4LjI1IDE3SDUuNzVMMTIgNS43NXoiLz48L3N2Zz4=)](https://www.augmentcode.com/)
+[![PyPI Version](https://img.shields.io/pypi/v/devrev-python-sdk.svg)](https://pypi.org/project/devrev-Python-SDK/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)](https://mypy-lang.org/)
+[![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Test Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)](https://github.com/mgmonteleone/py-dev-rev)
 
 ## Table of Contents
 
@@ -677,7 +671,16 @@ For a **remote** Cloud Run deployment, click **+ Add remote MCP** instead:
 <details><summary><strong>Option 3: Auggie CLI</strong></summary>
 
 ```bash
- '
+# Add local stdio server
+auggie mcp add devrev \
+  --command devrev-mcp-server \
+  -e DEVREV_API_TOKEN=<your-devrev-api-token> \
+  -e MCP_ENABLE_BETA_TOOLS=true \
+  -e MCP_ENABLE_DESTRUCTIVE_TOOLS=false \
+  -e MCP_LOG_LEVEL=INFO
+
+# Or add from JSON
+auggie mcp add-json devrev '{"command":"devrev-mcp-server","env":{"DEVREV_API_TOKEN":"<your-devrev-api-token>","MCP_ENABLE_BETA_TOOLS":"true","MCP_ENABLE_DESTRUCTIVE_TOOLS":"false"}}'
 
 # Verify
 auggie mcp list
@@ -1007,4 +1010,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 [Issue Tracker](https://github.com/mgmonteleone/py-dev-rev/issues)
 - 💬 [Discussions](https://github.com/mgmonteleone/py-dev-rev/discussions)
 
-*Built with ❤️ using *[*Augment Code*](https://augmentcode.com)
+*Built with ❤️ using [Augment Code](https://augmentcode.com)*

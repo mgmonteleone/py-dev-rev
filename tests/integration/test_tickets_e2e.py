@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 # Test data constants - required IDs for ticket creation
 PRODUCT_PART_ID = "don:core:dvrv-us-1:devo/11Ca9baGrM:product/1"  # PROD-1: Augment Code
-DEV_USER_ID = "don:identity:dvrv-us-1:devo/11Ca9baGrM:devu/4"  # DEVU-4: Test user
 
 # Mark all tests in this module
 # Check for either DEVREV_API_TOKEN or DEVREV_TEST_API_TOKEN (matches write_client fixture)
@@ -61,6 +60,7 @@ class TestTicketsCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test creating a ticket with only required fields."""
         # Arrange
@@ -71,7 +71,7 @@ class TestTicketsCRUD:
             title=title,
             applies_to_part=PRODUCT_PART_ID,
             type=WorkType.TICKET,
-            owned_by=[DEV_USER_ID],
+            owned_by=[current_user_id],
         )
         test_data.register("work", ticket.id)
 
@@ -85,6 +85,7 @@ class TestTicketsCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test creating a ticket with title and body."""
         # Arrange
@@ -96,7 +97,7 @@ class TestTicketsCRUD:
             title=title,
             applies_to_part=PRODUCT_PART_ID,
             type=WorkType.TICKET,
-            owned_by=[DEV_USER_ID],
+            owned_by=[current_user_id],
             body=body,
         )
         test_data.register("work", ticket.id)
@@ -112,6 +113,7 @@ class TestTicketsCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test retrieving a ticket by ID."""
         # Arrange - create ticket first
@@ -120,7 +122,7 @@ class TestTicketsCRUD:
             title=title,
             applies_to_part=PRODUCT_PART_ID,
             type=WorkType.TICKET,
-            owned_by=[DEV_USER_ID],
+            owned_by=[current_user_id],
         )
         test_data.register("work", created_ticket.id)
 
@@ -156,6 +158,7 @@ class TestTicketsCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test updating a ticket's title."""
         # Arrange - create ticket first
@@ -164,7 +167,7 @@ class TestTicketsCRUD:
             title=original_title,
             applies_to_part=PRODUCT_PART_ID,
             type=WorkType.TICKET,
-            owned_by=[DEV_USER_ID],
+            owned_by=[current_user_id],
         )
         test_data.register("work", ticket.id)
 
@@ -181,6 +184,7 @@ class TestTicketsCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test updating a ticket's body text."""
         # Arrange - create ticket first
@@ -190,7 +194,7 @@ class TestTicketsCRUD:
             title=title,
             applies_to_part=PRODUCT_PART_ID,
             type=WorkType.TICKET,
-            owned_by=[DEV_USER_ID],
+            owned_by=[current_user_id],
             body=original_body,
         )
         test_data.register("work", ticket.id)
@@ -207,6 +211,7 @@ class TestTicketsCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test deleting a ticket."""
         # Arrange - create ticket first
@@ -215,7 +220,7 @@ class TestTicketsCRUD:
             title=title,
             applies_to_part=PRODUCT_PART_ID,
             type=WorkType.TICKET,
-            owned_by=[DEV_USER_ID],
+            owned_by=[current_user_id],
         )
         # Note: NOT registering since we're testing delete
 
@@ -231,6 +236,7 @@ class TestTicketsCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test full ticket lifecycle: create -> get -> update -> list -> delete."""
         # Arrange
@@ -242,7 +248,7 @@ class TestTicketsCRUD:
             title=title,
             applies_to_part=PRODUCT_PART_ID,
             type=WorkType.TICKET,
-            owned_by=[DEV_USER_ID],
+            owned_by=[current_user_id],
             body=body,
         )
         # Note: NOT registering since we're testing delete

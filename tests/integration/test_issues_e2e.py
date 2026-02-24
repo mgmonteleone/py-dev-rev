@@ -49,13 +49,6 @@ pytestmark = [
 PRODUCT_PART_ID = "don:core:dvrv-us-1:devo/11Ca9baGrM:product/1"
 
 
-@pytest.fixture(scope="session")
-def current_user_id(write_client: DevRevClient) -> str:
-    """Get the current authenticated user's DON ID for issue ownership."""
-    user = write_client.dev_users.self()
-    return user.id
-
-
 class TestIssuesCRUD:
     """CRUD integration tests for Issues (Works with type=issue).
 

@@ -126,6 +126,22 @@ def beta_write_client() -> DevRevClient:
     return DevRevClient(api_token=token, api_version=APIVersion.BETA)
 
 
+@pytest.fixture(scope="session")
+def current_user_id(write_client: DevRevClient) -> str:
+    """Get the current authenticated user's DON ID.
+
+    Used by tests that need to set owned_by for work items, articles, etc.
+
+    Args:
+        write_client: DevRev client for API operations.
+
+    Returns:
+        The DON ID of the current authenticated user.
+    """
+    user = write_client.dev_users.self()
+    return user.id
+
+
 @pytest.fixture
 def test_data(
     write_client: DevRevClient,

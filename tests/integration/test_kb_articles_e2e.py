@@ -45,13 +45,6 @@ pytestmark = [
 ]
 
 
-@pytest.fixture(scope="session")
-def current_user_id(write_client: DevRevClient) -> str:
-    """Get the current authenticated user's DON ID for article ownership."""
-    user = write_client.dev_users.self()
-    return user.id
-
-
 class TestArticlesCRUD:
     """CRUD integration tests for Articles service.
 
