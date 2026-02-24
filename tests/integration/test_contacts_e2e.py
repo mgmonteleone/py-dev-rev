@@ -271,10 +271,8 @@ class TestContactsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:revu/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.rev_users.get(id=fake_id)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Get non-existent contact correctly raised error")
 
     def test_update_nonexistent_contact_raises_error(
@@ -287,13 +285,11 @@ class TestContactsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:revu/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.rev_users.update(
                 id=fake_id,
                 display_name=test_data.generate_name("ShouldFail"),
             )
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Update non-existent contact correctly raised error")
 
     def test_delete_nonexistent_contact_raises_error(
@@ -306,10 +302,8 @@ class TestContactsErrorHandling:
         fake_id = "don:identity:dvrv-us-1:devo/fake:revu/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.rev_users.delete(id=fake_id)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Delete non-existent contact correctly raised error")
 
 

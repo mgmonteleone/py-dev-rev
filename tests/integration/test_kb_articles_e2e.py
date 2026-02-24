@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import pytest
@@ -171,7 +170,7 @@ class TestArticlesCRUD:
         result = write_client.articles.list(request)
 
         # Assert
-        assert isinstance(result, (list, Sequence))
+        assert isinstance(result, list)
         logger.info(f"✅ Listed articles: {len(result)} found")
 
     def test_update_article_title(
@@ -279,7 +278,7 @@ class TestArticlesCRUD:
         write_client.articles.delete(delete_request)
 
         # Assert - verify article is deleted by trying to get it
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             get_request = ArticlesGetRequest(id=article.id)
             write_client.articles.get(get_request)
         logger.info(f"✅ Deleted article: {article.id}")
@@ -340,13 +339,13 @@ class TestArticlesCRUD:
         # Act & Assert - List
         list_request = ArticlesListRequest(limit=10)
         articles = write_client.articles.list(list_request)
-        assert isinstance(articles, (list, Sequence))
+        assert isinstance(articles, list)
         logger.info(f"✅ Lifecycle - Listed: {len(articles)} articles")
 
         # Act & Assert - Delete
         delete_request = ArticlesDeleteRequest(id=article.id)
         write_client.articles.delete(delete_request)
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.articles.get(get_request)
         logger.info(f"✅ Lifecycle - Deleted: {article.id}")
 
@@ -370,11 +369,9 @@ class TestArticlesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/FAKE:article/DOESNOTEXIST"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             get_request = ArticlesGetRequest(id=fake_id)
             write_client.articles.get(get_request)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Get non-existent article correctly raised error")
 
     def test_update_nonexistent_article_raises_error(
@@ -389,14 +386,12 @@ class TestArticlesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/FAKE:article/DOESNOTEXIST"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             update_request = ArticlesUpdateRequest(
                 id=fake_id,
                 title=test_data.generate_name("ShouldFail"),
             )
             write_client.articles.update(update_request)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Update non-existent article correctly raised error")
 
     def test_delete_nonexistent_article_raises_error(
@@ -411,11 +406,9 @@ class TestArticlesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/FAKE:article/DOESNOTEXIST"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             delete_request = ArticlesDeleteRequest(id=fake_id)
             write_client.articles.delete(delete_request)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Delete non-existent article correctly raised error")
 
     def test_create_article_without_title_raises_error(
@@ -428,12 +421,10 @@ class TestArticlesErrorHandling:
         from devrev.models.articles import ArticlesCreateRequest
 
         # Act & Assert - expect validation error from Pydantic or API
-        with pytest.raises((ValueError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((ValueError, DevRevError)):
             # Try to create with empty title
             request = ArticlesCreateRequest(title="", owned_by=[current_user_id])
             write_client.articles.create(request)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Create article without title correctly raised error")
 
 
@@ -459,7 +450,7 @@ class TestArticlesListPagination:
         result = write_client.articles.list(request)
 
         # Assert
-        assert isinstance(result, (list, Sequence))
+        assert isinstance(result, list)
         assert len(result) <= limit
         logger.info(f"✅ Listed articles with limit={limit}: {len(result)} found")
 
@@ -478,5 +469,5 @@ class TestArticlesListPagination:
         result = write_client.articles.list(request)
 
         # Assert
-        assert isinstance(result, (list, Sequence))
+        assert isinstance(result, list)
         logger.info(f"✅ Listed articles with defaults: {len(result)} found")

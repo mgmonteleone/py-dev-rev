@@ -293,7 +293,7 @@ class TestQuestionAnswersCRUD:
         beta_write_client.question_answers.delete(delete_request)
 
         # Assert - verify Q&A is deleted by trying to get it
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             get_request = QuestionAnswersGetRequest(id=qa.id)
             beta_write_client.question_answers.get(get_request)
         logger.info(f"✅ Deleted Q&A: {qa.id}")
@@ -354,7 +354,7 @@ class TestQuestionAnswersCRUD:
         # Act & Assert - Delete
         delete_request = QuestionAnswersDeleteRequest(id=qa.id)
         beta_write_client.question_answers.delete(delete_request)
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             get_request = QuestionAnswersGetRequest(id=qa.id)
             beta_write_client.question_answers.get(get_request)
         logger.info(f"✅ Lifecycle: Deleted Q&A {qa.id}")
@@ -377,11 +377,9 @@ class TestQuestionAnswersErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/FAKE:question_answer/DOESNOTEXIST"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             get_request = QuestionAnswersGetRequest(id=fake_id)
             beta_write_client.question_answers.get(get_request)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Get non-existent Q&A correctly raised error")
 
     def test_update_nonexistent_qa_raises_error(
@@ -394,14 +392,12 @@ class TestQuestionAnswersErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/FAKE:question_answer/DOESNOTEXIST"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             update_request = QuestionAnswersUpdateRequest(
                 id=fake_id,
                 question=qa_test_data.generate_name("ShouldFail"),
             )
             beta_write_client.question_answers.update(update_request)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Update non-existent Q&A correctly raised error")
 
     def test_delete_nonexistent_qa_raises_error(
@@ -414,11 +410,9 @@ class TestQuestionAnswersErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/FAKE:question_answer/DOESNOTEXIST"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             delete_request = QuestionAnswersDeleteRequest(id=fake_id)
             beta_write_client.question_answers.delete(delete_request)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Delete non-existent Q&A correctly raised error")
 
 

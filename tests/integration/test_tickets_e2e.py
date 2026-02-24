@@ -293,10 +293,8 @@ class TestTicketsErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:ticket/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.get(id=fake_id)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Get non-existent ticket correctly raised error")
 
     def test_update_nonexistent_ticket_raises_error(
@@ -309,13 +307,11 @@ class TestTicketsErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:ticket/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.update(
                 id=fake_id,
                 title=test_data.generate_name("ticket"),
             )
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Update non-existent ticket correctly raised error")
 
     def test_delete_nonexistent_ticket_raises_error(
@@ -328,10 +324,8 @@ class TestTicketsErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:ticket/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.delete(id=fake_id)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Delete non-existent ticket correctly raised error")
 
 

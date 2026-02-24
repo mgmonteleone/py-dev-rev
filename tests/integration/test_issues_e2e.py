@@ -47,7 +47,6 @@ pytestmark = [
 
 # Required IDs for issue creation
 PRODUCT_PART_ID = "don:core:dvrv-us-1:devo/11Ca9baGrM:product/1"
-DEV_USER_ID = "don:identity:dvrv-us-1:devo/11Ca9baGrM:devu/4"
 
 
 @pytest.fixture(scope="session")
@@ -308,10 +307,8 @@ class TestIssuesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:issue/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.get(id=fake_id)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Get non-existent issue correctly raised error")
 
     def test_update_nonexistent_issue_raises_error(
@@ -324,13 +321,11 @@ class TestIssuesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:issue/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.update(
                 id=fake_id,
                 title=test_data.generate_name("issue"),
             )
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Update non-existent issue correctly raised error")
 
     def test_delete_nonexistent_issue_raises_error(
@@ -343,10 +338,8 @@ class TestIssuesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:issue/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.delete(id=fake_id)
-        # Verify we got an actual error, not just any exception
-        assert exc_info.value is not None
         logger.info("✅ Delete non-existent issue correctly raised error")
 
 
