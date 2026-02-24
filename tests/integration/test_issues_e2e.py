@@ -236,7 +236,7 @@ class TestIssuesCRUD:
         write_client.works.delete(id=work.id)
 
         # Assert - verify issue is deleted by trying to get it
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.get(id=work.id)
         logger.info(f"✅ Deleted issue: {work.id}")
 
@@ -286,7 +286,7 @@ class TestIssuesCRUD:
 
         # Act & Assert - Delete
         write_client.works.delete(id=work.id)
-        with pytest.raises((NotFoundError, DevRevError, Exception)):
+        with pytest.raises((NotFoundError, DevRevError)):
             write_client.works.get(id=work.id)
         logger.info(f"✅ Lifecycle - Deleted: {work.id}")
 
@@ -308,7 +308,7 @@ class TestIssuesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:issue/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.works.get(id=fake_id)
         # Verify we got an actual error, not just any exception
         assert exc_info.value is not None
@@ -324,7 +324,7 @@ class TestIssuesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:issue/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.works.update(
                 id=fake_id,
                 title=test_data.generate_name("issue"),
@@ -343,7 +343,7 @@ class TestIssuesErrorHandling:
         fake_id = "don:core:dvrv-us-1:devo/fake:issue/nonexistent99"
 
         # Act & Assert - expect NotFoundError or similar API error
-        with pytest.raises((NotFoundError, DevRevError, Exception)) as exc_info:
+        with pytest.raises((NotFoundError, DevRevError)) as exc_info:
             write_client.works.delete(id=fake_id)
         # Verify we got an actual error, not just any exception
         assert exc_info.value is not None
