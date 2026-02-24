@@ -7,14 +7,14 @@ and staged object information used in external integrations.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
-class SyncStatus(str, Enum):
+class SyncStatus(StrEnum):
     """Sync status enumeration."""
 
     PENDING = "pending"
@@ -24,7 +24,7 @@ class SyncStatus(str, Enum):
     SKIPPED = "skipped"
 
 
-class SyncDirection(str, Enum):
+class SyncDirection(StrEnum):
     """Sync direction enumeration."""
 
     INBOUND = "inbound"

@@ -6,14 +6,14 @@ with optional .env file support for local development.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class APIVersion(str, Enum):
+class APIVersion(StrEnum):
     """DevRev API version selection.
 
     PUBLIC: Stable public API (default)

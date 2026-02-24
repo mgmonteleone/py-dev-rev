@@ -6,14 +6,14 @@ Widgets are used to display data visualizations on DevRev dashboards.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
-class WidgetVisualizationType(str, Enum):
+class WidgetVisualizationType(StrEnum):
     """Widget visualization type enumeration."""
 
     BAR = "bar"
@@ -26,7 +26,7 @@ class WidgetVisualizationType(str, Enum):
     METRIC = "metric"
 
 
-class WidgetDataSourceType(str, Enum):
+class WidgetDataSourceType(StrEnum):
     """Widget data source type enumeration."""
 
     API = "api"
@@ -34,7 +34,7 @@ class WidgetDataSourceType(str, Enum):
     STATIC = "static"
 
 
-class WidgetAggregationType(str, Enum):
+class WidgetAggregationType(StrEnum):
     """Widget aggregation type enumeration."""
 
     COUNT = "count"

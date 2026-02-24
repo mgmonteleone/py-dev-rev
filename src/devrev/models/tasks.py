@@ -7,14 +7,14 @@ Tasks are a work item type used to track actionable items in DevRev.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from devrev.models.base import DevRevBaseModel, DevRevResponseModel
 
 
-class TaskPriority(str, Enum):
+class TaskPriority(StrEnum):
     """Task priority level enumeration."""
 
     P0 = "p0"
@@ -23,7 +23,7 @@ class TaskPriority(str, Enum):
     P3 = "p3"
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     """Task status enumeration."""
 
     OPEN = "open"

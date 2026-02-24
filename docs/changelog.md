@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **SDK: Migrated all enums from `(str, Enum)` to `StrEnum`** — 32 enum classes across 21 files now use Python 3.11+ `StrEnum` instead of the legacy `(str, Enum)` pattern. This resolves ruff UP042 linting errors and aligns with modern Python best practices. Note: `str(EnumMember)` now returns the value string directly (e.g., `"active"`) instead of `"ClassName.MEMBER"`. (#138)
+
 ## [2.3.0] - 2026-02-11
 
 ### Added

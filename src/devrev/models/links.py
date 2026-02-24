@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -16,7 +16,7 @@ from devrev.models.base import (
 )
 
 
-class LinkType(str, Enum):
+class LinkType(StrEnum):
     """Link type enumeration.
 
     Note: Additional link types may exist in the API. Unknown values
