@@ -2,16 +2,19 @@
 
 A modern, type-safe Python SDK for the DevRev API.
 
-[![Built with Augment](https://img.shields.io/badge/Built%20with-Auggie-6366f1?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyTDIgMTloMjBMMTIgMnptMCAzLjc1TDE4LjI1IDE3SDUuNzVMMTIgNS43NXoiLz48L3N2Zz4=)](https://www.augmentcode.com/)
-[![PyPI Version](https://img.shields.io/pypi/v/devrev-python-sdk.svg)](https://pypi.org/project/devrev-Python-SDK/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)](https://mypy-lang.org/)
-[![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Test Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)](https://github.com/mgmonteleone/py-dev-rev)
-<!-- Note: Coverage badge should be updated manually or replaced with dynamic badge from codecov/coveralls -->
+![Built with Augment](https://img.shields.io/badge/Built%20with-Auggie-6366f1?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyTDIgMTloMjBMMTIgMnptMCAzLjc1TDE4LjI1IDE3SDUuNzVMMTIgNS43NXoiLz48L3N2Zz4=)
 
----
+![PyPI Version](https://img.shields.io/pypi/v/devrev-python-sdk.svg)
+
+![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
+
+![Type Checked](https://img.shields.io/badge/type--checked-mypy-blue.svg)
+
+![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+![Test Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)
 
 ## Table of Contents
 
@@ -32,8 +35,6 @@ A modern, type-safe Python SDK for the DevRev API.
 - [Contributing](#contributing)
 - [License](#license)
 
----
-
 ## Overview
 
 `py-devrev` is a modern Python library for interacting with the [DevRev API](https://devrev.ai). Built with developer experience in mind, it provides:
@@ -44,8 +45,6 @@ A modern, type-safe Python SDK for the DevRev API.
 - **Developer Friendly**: Intuitive API design with comprehensive documentation
 
 This SDK is generated and maintained from the official DevRev OpenAPI specification (`openapi-public.yaml`), ensuring it stays current with the latest API changes.
-
----
 
 ## Features
 
@@ -81,8 +80,6 @@ This SDK is generated and maintained from the official DevRev OpenAPI specificat
 - ✅ **Health Checks** - Built-in health check endpoints for monitoring
 - ✅ **High Test Coverage** - 80%+ code coverage with unit and integration tests
 
----
-
 ## Installation
 
 ### From PyPI (Recommended)
@@ -110,8 +107,6 @@ py-devrev follows an **N-2** support policy (current stable Python + two previou
 
 - See: [Python version support policy](docs/guides/version-support.md)
 - See: [Compatibility matrix](docs/guides/compatibility.md)
-
----
 
 ## Quick Start
 
@@ -154,8 +149,6 @@ async def main():
 asyncio.run(main())
 ```
 
----
-
 ## Authentication
 
 The SDK supports multiple authentication methods:
@@ -189,8 +182,6 @@ client = DevRevClient(
 )
 ```
 
----
-
 ## API Coverage
 
 The SDK provides complete coverage of all 209 DevRev public API endpoints, organized into logical service groups:
@@ -198,83 +189,81 @@ The SDK provides complete coverage of all 209 DevRev public API endpoints, organ
 ### Core Objects
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **Accounts** | 7 | Customer account management (create, list, get, update, delete, merge, export) |
-| **Rev Orgs** | 5 | Revenue organization management |
-| **Rev Users** | 7 | External user management (customers) |
-| **Dev Users** | 10 | Internal user management (team members) |
-| **Works** | 6 | Work items - tickets, issues, tasks (create, list, get, update, delete, export, count) |
-| **Parts** | 5 | Product parts and components |
+| --- | --- | --- |
+| Accounts | 7 | Customer account management (create, list, get, update, delete, merge, export) |
+| Rev Orgs | 5 | Revenue organization management |
+| Rev Users | 7 | External user management (customers) |
+| Dev Users | 10 | Internal user management (team members) |
+| Works | 6 | Work items - tickets, issues, tasks (create, list, get, update, delete, export, count) |
+| Parts | 5 | Product parts and components |
 
 ### Content & Knowledge
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **Articles** | 5 | Knowledge base articles |
-| **Conversations** | 5 | Customer conversations |
-| **Timeline Entries** | 5 | Activity timeline management |
-| **Tags** | 5 | Tagging and categorization |
+| --- | --- | --- |
+| Articles | 5 | Knowledge base articles |
+| Conversations | 5 | Customer conversations |
+| Timeline Entries | 5 | Activity timeline management |
+| Tags | 5 | Tagging and categorization |
 
 ### Collaboration
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **Groups** | 6 | User group management |
-| **Meetings** | 6 | Meeting scheduling and management |
-| **Chats** | 3 | Chat functionality |
-| **Comments** | - | Via timeline entries |
+| --- | --- | --- |
+| Groups | 6 | User group management |
+| Meetings | 6 | Meeting scheduling and management |
+| Chats | 3 | Chat functionality |
+| Comments | - | Via timeline entries |
 
 ### Development & Engineering
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **Code Changes** | 5 | Code change tracking |
-| **Artifacts** | 6 | File and artifact management |
-| **Webhooks** | 6 | Webhook configuration |
-| **Links** | 5 | Object linking and relationships |
+| --- | --- | --- |
+| Code Changes | 5 | Code change tracking |
+| Artifacts | 6 | File and artifact management |
+| Webhooks | 6 | Webhook configuration |
+| Links | 5 | Object linking and relationships |
 
 ### Configuration & Admin
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **Auth Tokens** | 8 | Authentication token management |
-| **Service Accounts** | 2 | Service account management |
-| **Dev Orgs** | 7 | Organization settings and auth connections |
-| **Schemas** | 7 | Custom schema management |
-| **Custom Objects** | 6 | Custom object CRUD operations |
+| --- | --- | --- |
+| Auth Tokens | 8 | Authentication token management |
+| Service Accounts | 2 | Service account management |
+| Dev Orgs | 7 | Organization settings and auth connections |
+| Schemas | 7 | Custom schema management |
+| Custom Objects | 6 | Custom object CRUD operations |
 
 ### Workflows & SLAs
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **SLAs** | 6 | Service level agreement management |
-| **SLA Trackers** | 3 | SLA tracking and monitoring |
-| **Stages** | 4 | Custom stage definitions |
-| **States** | 4 | Custom state definitions |
-| **Stage Diagrams** | 4 | Workflow visualization |
+| --- | --- | --- |
+| SLAs | 6 | Service level agreement management |
+| SLA Trackers | 3 | SLA tracking and monitoring |
+| Stages | 4 | Custom stage definitions |
+| States | 4 | Custom state definitions |
+| Stage Diagrams | 4 | Workflow visualization |
 
 ### Analytics & Observability
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **Metrics** | 6 | Metric definitions and tracking |
-| **Surveys** | 9 | Customer surveys and responses |
-| **Observability** | 3 | Session observability data |
+| --- | --- | --- |
+| Metrics | 6 | Metric definitions and tracking |
+| Surveys | 9 | Customer surveys and responses |
+| Observability | 3 | Session observability data |
 
 ### Other Services
 
 | Service | Endpoints | Description |
-|---------|-----------|-------------|
-| **Directories** | 6 | Directory management |
-| **Vistas** | 6 | View configurations |
-| **Org Schedules** | 7 | Business hour schedules |
-| **Jobs** | 2 | Background job management |
-| **Web Crawler** | 4 | Web crawler job management |
-| **Reactions** | 2 | Emoji reactions |
-| **Snap Widgets** | 2 | UI widget management |
-| **Commands** | 4 | Slash command management |
-
----
+| --- | --- | --- |
+| Directories | 6 | Directory management |
+| Vistas | 6 | View configurations |
+| Org Schedules | 7 | Business hour schedules |
+| Jobs | 2 | Background job management |
+| Web Crawler | 4 | Web crawler job management |
+| Reactions | 2 | Emoji reactions |
+| Snap Widgets | 2 | UI widget management |
+| Commands | 4 | Slash command management |
 
 ## Beta API
 
@@ -301,14 +290,14 @@ export DEVREV_API_VERSION=beta
 ### Beta-Only Services
 
 | Service | Description | Endpoints |
-|---------|-------------|-----------|
-| **Incidents** | Incident lifecycle management | 6 endpoints (create, get, list, update, delete, group) |
-| **Engagements** | Customer engagement tracking | 6 endpoints (create, get, list, update, delete, count) |
-| **Brands** | Multi-brand management | 5 endpoints (create, get, list, update, delete) |
-| **UOMs** | Unit of Measurement for metering | 6 endpoints (create, get, list, update, delete, count) |
-| **Question Answers** | Q&A management | 5 endpoints |
-| **Recommendations** | AI-powered recommendations | 2 endpoints (chat completions, reply suggestions) |
-| **Search** | Advanced search | 2 endpoints (core search, hybrid search) |
+| --- | --- | --- |
+| Incidents | Incident lifecycle management | 6 endpoints (create, get, list, update, delete, group) |
+| Engagements | Customer engagement tracking | 6 endpoints (create, get, list, update, delete, count) |
+| Brands | Multi-brand management | 5 endpoints (create, get, list, update, delete) |
+| UOMs | Unit of Measurement for metering | 6 endpoints (create, get, list, update, delete, count) |
+| Question Answers | Q&A management | 5 endpoints |
+| Recommendations | AI-powered recommendations | 2 endpoints (chat completions, reply suggestions) |
+| Search | Advanced search | 2 endpoints (core search, hybrid search) |
 
 ### Quick Example
 
@@ -349,8 +338,6 @@ results = client.search.hybrid(
 - **Usage Metering** - Track and aggregate usage metrics
 
 See the [Beta API Migration Guide](docs/guides/beta-api.md) and [Beta Features Examples](docs/examples/beta-features.md) for complete documentation.
-
----
 
 ## Usage Examples
 
@@ -423,24 +410,25 @@ export_result = client.works.export(
 ### Articles and Knowledge Base
 
 ```python
+from devrev.models.articles import ArticlesCreateRequest, ArticlesUpdateRequest
+
 # Create an article
-article = client.articles.create(
+request = ArticlesCreateRequest(
     title="Getting Started Guide",
-    applies_to_parts=["don:core:..."],
-    authored_by="don:identity:...",
-    body="# Welcome\n\nThis guide will help you get started..."
+    description="# Welcome\n\nThis guide will help you get started...",
+    owned_by=["don:identity:dvrv-us-1:devo/1:devu/1"]
 )
+article = client.articles.create(request)
 
-# List published articles
-published = client.articles.list(
-    status=["published"]
-)
+# List articles
+articles = client.articles.list()
 
-# Update article content
-client.articles.update(
+# Update article description
+update_request = ArticlesUpdateRequest(
     id=article.id,
-    body="# Updated Content\n\n..."
+    description="# Updated Description\n\n..."
 )
+client.articles.update(update_request)
 ```
 
 ### Webhooks
@@ -463,24 +451,22 @@ client.webhooks.update(
 )
 ```
 
----
-
 ## Configuration
 
 ### Environment Variables
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DEVREV_API_TOKEN` | Yes* | - | API authentication token |
-| `DEVREV_BASE_URL` | No | `https://api.devrev.ai` | API base URL |
-| `DEVREV_API_VERSION` | No | `public` | API version (public, beta) |
-| `DEVREV_TIMEOUT` | No | `30` | Request timeout in seconds |
-| `DEVREV_MAX_RETRIES` | No | `3` | Maximum retry attempts |
-| `DEVREV_LOG_LEVEL` | No | `WARN` | Logging level (DEBUG, INFO, WARN, ERROR) |
-| `DEVREV_LOG_FORMAT` | No | `text` | Log format (text, json) |
-| `DEVREV_MAX_CONNECTIONS` | No | `100` | Maximum connection pool size |
-| `DEVREV_HTTP2` | No | `false` | Enable HTTP/2 support |
-| `DEVREV_CIRCUIT_BREAKER_ENABLED` | No | `true` | Enable circuit breaker pattern |
+| --- | --- | --- | --- |
+| DEVREV_API_TOKEN | Yes* | - | API authentication token |
+| DEVREV_BASE_URL | No | https://api.devrev.ai | API base URL |
+| DEVREV_API_VERSION | No | public | API version (public, beta) |
+| DEVREV_TIMEOUT | No | 30 | Request timeout in seconds |
+| DEVREV_MAX_RETRIES | No | 3 | Maximum retry attempts |
+| DEVREV_LOG_LEVEL | No | WARN | Logging level (DEBUG, INFO, WARN, ERROR) |
+| DEVREV_LOG_FORMAT | No | text | Log format (text, json) |
+| DEVREV_MAX_CONNECTIONS | No | 100 | Maximum connection pool size |
+| DEVREV_HTTP2 | No | false | Enable HTTP/2 support |
+| DEVREV_CIRCUIT_BREAKER_ENABLED | No | true | Enable circuit breaker pattern |
 
 ### Configuration File
 
@@ -509,8 +495,6 @@ config = DevRevConfig(
 
 client = DevRevClient(config=config)
 ```
-
----
 
 ## Error Handling
 
@@ -565,8 +549,6 @@ DevRevError (base)
 └── BetaAPIRequiredError
 ```
 
----
-
 ## Logging
 
 The SDK uses structured logging with optional color support:
@@ -599,8 +581,6 @@ my_logger = logging.getLogger("myapp.devrev")
 client = DevRevClient(logger=my_logger)
 ```
 
----
-
 ## MCP Server
 
 The DevRev MCP Server exposes the full DevRev platform as [Model Context Protocol](https://modelcontextprotocol.io/) tools, resources, and prompts. It enables AI assistants (Augment, Claude Desktop, Cursor, etc.) to interact with DevRev for support ticket management, customer engagement, and knowledge base operations.
@@ -631,6 +611,7 @@ devrev-mcp-server
 ### MCP Client Configuration
 
 **Claude Desktop** (`claude_desktop_config.json`):
+
 ```json
 {
   "mcpServers": {
@@ -646,12 +627,11 @@ devrev-mcp-server
 
 **Augment Code** — Four setup options:
 
-<details>
-<summary><strong>Option 1: Import JSON (VS Code)</strong></summary>
+<details><summary><strong>Option 1: Import JSON (VS Code)</strong></summary>
 
 1. Open VS Code → Augment settings (gear icon)
 2. In the MCP section, click **Import from JSON**
-3. Paste the contents of [`augment-mcp-config.json`](augment-mcp-config.json):
+3. Paste the contents of `augment-mcp-config.json`:
 
 ```json
 {
@@ -671,43 +651,33 @@ devrev-mcp-server
 
 </details>
 
-<details>
-<summary><strong>Option 2: JetBrains IDE (IntelliJ, PyCharm, WebStorm)</strong></summary>
+<details><summary><strong>Option 2: JetBrains IDE (IntelliJ, PyCharm, WebStorm)</strong></summary>
 
 1. Open your JetBrains IDE → Augment panel (gear icon in upper right)
 2. In the **MCP** section, click the **+** button
 3. Fill in the fields:
-   - **Name**: `devrev`
-   - **Command**: `devrev-mcp-server`
+  - **Name**: `devrev`
+  - **Command**: `devrev-mcp-server`
 4. Add environment variables:
-   - `DEVREV_API_TOKEN` = `<your-devrev-api-token>`
-   - `MCP_ENABLE_BETA_TOOLS` = `true`
-   - `MCP_ENABLE_DESTRUCTIVE_TOOLS` = `false`
-   - `MCP_LOG_LEVEL` = `INFO`
+  - `DEVREV_API_TOKEN` = `<your-devrev-api-token>`
+  - `MCP_ENABLE_BETA_TOOLS` = `true`
+  - `MCP_ENABLE_DESTRUCTIVE_TOOLS` = `false`
+  - `MCP_LOG_LEVEL` = `INFO`
 
 For a **remote** Cloud Run deployment, click **+ Add remote MCP** instead:
-   - **Connection Type**: HTTP
-   - **Name**: `devrev`
-   - **URL**: `https://devrev-mcp-server-<hash>-uc.a.run.app/mcp`
 
-> See [Augment JetBrains MCP docs](https://docs.augmentcode.com/jetbrains/setup-augment/mcp) for screenshots and details.
+- **Connection Type**: HTTP
+- **Name**: `devrev`
+- **URL**: `https://devrev-mcp-server-<hash>-uc.a.run.app/mcp`
+
+> See Augment JetBrains MCP docs for screenshots and details.
 
 </details>
 
-<details>
-<summary><strong>Option 3: Auggie CLI</strong></summary>
+<details><summary><strong>Option 3: Auggie CLI</strong></summary>
 
 ```bash
-# Add local stdio server
-auggie mcp add devrev \
-  --command devrev-mcp-server \
-  -e DEVREV_API_TOKEN=<your-devrev-api-token> \
-  -e MCP_ENABLE_BETA_TOOLS=true \
-  -e MCP_ENABLE_DESTRUCTIVE_TOOLS=false \
-  -e MCP_LOG_LEVEL=INFO
-
-# Or add from JSON
-auggie mcp add-json devrev '{"command":"devrev-mcp-server","env":{"DEVREV_API_TOKEN":"<your-devrev-api-token>","MCP_ENABLE_BETA_TOOLS":"true","MCP_ENABLE_DESTRUCTIVE_TOOLS":"false"}}'
+ '
 
 # Verify
 auggie mcp list
@@ -715,10 +685,9 @@ auggie mcp list
 
 </details>
 
-<details>
-<summary><strong>Option 4: Remote HTTP (Cloud Run)</strong></summary>
+<details><summary><strong>Option 4: Remote HTTP (Cloud Run)</strong></summary>
 
-For teams using the hosted Cloud Run deployment, use [`augment-mcp-config-remote.json`](augment-mcp-config-remote.json):
+For teams using the hosted Cloud Run deployment, use `augment-mcp-config-remote.json`:
 
 ```json
 {
@@ -735,6 +704,7 @@ For teams using the hosted Cloud Run deployment, use [`augment-mcp-config-remote
 ```
 
 Or via Auggie CLI:
+
 ```bash
 auggie mcp add devrev \
   --transport http \
@@ -766,22 +736,22 @@ gcloud builds submit --config deploy/cloudbuild.yaml
 All settings are configurable via environment variables (prefix `MCP_`):
 
 | Variable | Default | Description |
-|----------|---------|-------------|
-| `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `streamable-http`, `sse` |
-| `MCP_HOST` | `127.0.0.1` | HTTP bind host |
-| `MCP_PORT` | `8080` | HTTP bind port |
-| `MCP_LOG_LEVEL` | `INFO` | Log level |
-| `MCP_AUTH_TOKEN` | — | Bearer token for HTTP auth |
-| `MCP_RATE_LIMIT_RPM` | `120` | Rate limit (requests/min, 0=disabled) |
-| `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta API tools |
-| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `false` | Enable create/update/delete tools (set to `true` only if you need write access) |
+| --- | --- | --- |
+| MCP_TRANSPORT | stdio | Transport: stdio, streamable-http, sse |
+| MCP_HOST | 127.0.0.1 | HTTP bind host |
+| MCP_PORT | 8080 | HTTP bind port |
+| MCP_LOG_LEVEL | INFO | Log level |
+| MCP_AUTH_TOKEN | — | Bearer token for HTTP auth |
+| MCP_RATE_LIMIT_RPM | 120 | Rate limit (requests/min, 0=disabled) |
+| MCP_ENABLE_BETA_TOOLS | true | Enable beta API tools |
+| MCP_ENABLE_DESTRUCTIVE_TOOLS | false | Enable create/update/delete tools (set to true only if you need write access) |
 
-> **Note on Destructive Tools**: By default, `MCP_ENABLE_DESTRUCTIVE_TOOLS` is set to `false` for safety, which restricts the MCP server to read-only operations (list, get, count, export). Setting it to `true` enables create, update, and delete operations. Only enable this if you intentionally need write access to your DevRev workspace.
+> Note on Destructive Tools: By default, MCP_ENABLE_DESTRUCTIVE_TOOLS is set to false for safety, which restricts the MCP server to read-only operations (list, get, count, export). Setting it to true enables create, update, and delete operations. Only enable this if you intentionally need write access to your DevRev workspace.
 
 ### Available Tool Categories
 
 | Category | Tools | Operations |
-|----------|-------|------------|
+| --- | --- | --- |
 | Works (Tickets/Issues) | 7 | list, get, create, update, delete, count, export |
 | Accounts | 6 | list, get, create, update, delete, merge |
 | Users | 5 | dev list/get, rev list/get/create |
@@ -797,8 +767,6 @@ All settings are configurable via environment variables (prefix `MCP_`):
 | Recommendations (beta) | 2 | reply, chat |
 | Incidents (beta) | 6 | list, get, create, update, delete, group |
 | Engagements (beta) | 6 | list, get, create, update, delete, count |
-
----
 
 ## Development
 
@@ -891,20 +859,17 @@ mypy src/
 pre-commit run --all-files
 ```
 
----
-
 ## Testing Strategy
 
 ### Test Categories
 
 1. **Unit Tests** - Test individual functions and classes in isolation
-   - All models and their validation
-   - Utility functions
-   - Error handling logic
-
+  - All models and their validation
+  - Utility functions
+  - Error handling logic
 2. **Integration Tests** - Test against the real API
-   - **Read-only endpoints**: Tested against actual DevRev API
-   - **Mutating endpoints**: Tested with comprehensive mocks
+  - **Read-only endpoints**: Tested against actual DevRev API
+  - **Mutating endpoints**: Tested with comprehensive mocks
 
 ### Running Tests
 
@@ -937,14 +902,12 @@ To run integration tests in CI/CD, configure the `DEVREV_API_TOKEN` secret:
 gh secret set DEVREV_API_TOKEN --body "your-token-here"
 ```
 
-**📖 See [GITHUB_INTEGRATION_SETUP.md](GITHUB_INTEGRATION_SETUP.md) for complete setup instructions.**
+**📖 See **[**GITHUB_INTEGRATION_SETUP.md**](GITHUB_INTEGRATION_SETUP.md)** for complete setup instructions.**
 
 ### Coverage Requirements
 
 - **Minimum**: 80% line coverage
 - **Critical paths**: 95% coverage (auth, error handling)
-
----
 
 ## CI/CD Pipeline
 
@@ -964,27 +927,29 @@ The SDK uses Google Cloud Build for automated testing, security scanning, and pu
 
 On tagged releases (`v*`), the package is automatically published to Google Artifact Registry.
 
----
-
 ## Roadmap
 
 ### Phase 1: Foundation ✅
+
 - [x] Project structure and configuration
 - [x] OpenAPI specification integration
 - [x] Development standards documentation
 
 ### Phase 2: Core Implementation ✅
+
 - [x] Base client with authentication
 - [x] HTTP layer with retry logic
 - [x] Pydantic models generation
 - [x] Core services (Accounts, Works, Users)
 
 ### Phase 3: Full API Coverage ✅
+
 - [x] All 209 endpoints implemented
 - [x] Pagination helpers
 - [x] Async client support
 
 ### Phase 4: Polish & Production ✅
+
 - [x] Comprehensive test suite (80%+ coverage)
 - [x] Performance benchmarking
 - [x] Documentation site
@@ -992,12 +957,14 @@ On tagged releases (`v*`), the package is automatically published to Google Arti
 - [x] Security audit passed
 
 ### Phase 5: Performance & Reliability ✅
+
 - [x] Connection pooling and HTTP/2 support
 - [x] Circuit breaker pattern
 - [x] ETag caching
 - [x] Structured JSON logging
 
 ### Phase 6: Beta API Support ✅
+
 - [x] Beta API version selection
 - [x] 7 new beta-only services (74 endpoints)
 - [x] Incident management
@@ -1007,12 +974,11 @@ On tagged releases (`v*`), the package is automatically published to Google Arti
 - [x] Migration guide and examples
 
 ### Phase 7: Maintenance 🔄
+
 - [x] Automated release workflow
 - [x] Dependency updates (Dependabot)
 - [ ] Community contributions
 - [ ] Automated OpenAPI sync
-
----
 
 ## Contributing
 
@@ -1031,13 +997,9 @@ We welcome contributions! Please see our contributing guidelines:
 - Write tests for new functionality
 - Update documentation as needed
 
----
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
 
 ## Support
 
@@ -1045,7 +1007,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 [Issue Tracker](https://github.com/mgmonteleone/py-dev-rev/issues)
 - 💬 [Discussions](https://github.com/mgmonteleone/py-dev-rev/discussions)
 
----
-
-*Built with ❤️ using [Augment Code](https://augmentcode.com)*
-
+*Built with ❤️ using *[*Augment Code*](https://augmentcode.com)

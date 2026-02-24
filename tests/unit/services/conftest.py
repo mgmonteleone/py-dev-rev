@@ -62,7 +62,7 @@ def sample_article_data() -> dict[str, Any]:
         "id": "don:core:article:123",
         "display_id": "ART-123",
         "title": "Test Article",
-        "content": "# Test Content",
+        "description": "# Test Description",
         "status": "published",
     }
 
@@ -296,8 +296,10 @@ def sample_question_answer_data() -> dict[str, Any]:
         "question": "How do I reset my password?",
         "answer": "Click on the 'Forgot Password' link on the login page.",
         "status": "published",
-        "created_at": "2024-01-15T10:00:00Z",
-        "modified_at": "2024-01-15T12:00:00Z",
+        "applies_to_parts": [{"id": "don:core:dvrv-us-1:devo/1:part/1", "name": "Product A"}],
+        "owned_by": [{"id": "don:identity:dvrv-us-1:devo/1:devu/1", "display_name": "Test User"}],
+        "created_date": "2024-01-15T10:00:00Z",
+        "modified_date": "2024-01-15T12:00:00Z",
     }
 
 

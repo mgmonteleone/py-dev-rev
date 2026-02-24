@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from pydantic import Field
 
@@ -33,11 +34,12 @@ class Article(DevRevResponseModel):
     id: str = Field(..., description="Article ID")
     display_id: str | None = Field(default=None, description="Display ID")
     title: str = Field(..., description="Article title")
-    content: str | None = Field(default=None, description="Article content")
+    description: str | None = Field(default=None, description="Article description/body")
     status: ArticleStatus | None = Field(default=None, description="Article status")
     authored_by: list[UserSummary] | None = Field(
         default=None, description="Authors of the article (API returns array, not single object)"
     )
+    owned_by: list[UserSummary] | None = Field(default=None, description="Owners of the article")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")
 
@@ -53,8 +55,12 @@ class ArticlesCreateRequest(DevRevBaseModel):
     """Request to create an article."""
 
     title: str = Field(..., description="Article title")
-    content: str | None = Field(default=None, description="Article content")
+    description: str | None = Field(default=None, description="Article description/body")
     status: ArticleStatus | None = Field(default=None, description="Article status")
+    owned_by: list[str] = Field(..., description="List of dev user IDs who own the article")
+    resource: dict[str, Any] = Field(
+        default_factory=dict, description="Resource configuration for the article"
+    )
 
 
 class ArticlesGetRequest(DevRevBaseModel):
@@ -81,7 +87,7 @@ class ArticlesUpdateRequest(DevRevBaseModel):
 
     id: str = Field(..., description="Article ID")
     title: str | None = Field(default=None, description="New title")
-    content: str | None = Field(default=None, description="New content")
+    description: str | None = Field(default=None, description="New description/body")
     status: ArticleStatus | None = Field(default=None, description="New status")
 
 

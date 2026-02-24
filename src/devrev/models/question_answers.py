@@ -6,6 +6,7 @@ This module contains Pydantic models for Question Answers-related API operations
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import Field
 
@@ -23,19 +24,24 @@ class QuestionAnswer(DevRevResponseModel):
     question: str = Field(..., description="Question text")
     answer: str | None = Field(default=None, description="Answer text")
     status: str | None = Field(default=None, description="Question answer status")
-    created_date: datetime | None = Field(
-        default=None, alias="created_at", description="Creation timestamp"
+    applies_to_parts: list[dict[str, Any]] | None = Field(
+        default=None, description="List of parts this Q&A applies to"
     )
-    modified_date: datetime | None = Field(
-        default=None, alias="modified_at", description="Last modification timestamp"
+    owned_by: list[dict[str, Any]] | None = Field(
+        default=None, description="List of users who own this Q&A"
     )
+    created_date: datetime | None = Field(default=None, description="Creation timestamp")
+    modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
 
 
 class QuestionAnswersCreateRequest(DevRevBaseModel):
     """Request model for creating a question answer."""
 
     question: str = Field(..., description="Question text")
-    answer: str | None = Field(default=None, description="Answer text")
+    answer: str = Field(..., description="Answer text")
+    applies_to_parts: list[str] = Field(..., description="List of part DON IDs this Q&A applies to")
+    owned_by: list[str] = Field(..., description="List of dev user IDs who own the Q&A")
+    status: str = Field(default="draft", description="Q&A status (draft, published)")
 
 
 class QuestionAnswersCreateResponse(DevRevResponseModel):

@@ -53,6 +53,22 @@ pytestmark = [
 ]
 
 
+@pytest.fixture(scope="session")
+def current_user_id(beta_write_client: DevRevClient) -> str:
+    """Get the current authenticated user's DON ID."""
+    user = beta_write_client.dev_users.self()
+    return user.id
+
+
+@pytest.fixture(scope="session")
+def test_part_id(beta_write_client: DevRevClient) -> str:
+    """Get a valid part ID for testing by listing available parts."""
+    result = beta_write_client.parts.list(limit=1)
+    if not result.parts:
+        pytest.skip("No parts available for testing")
+    return result.parts[0].id
+
+
 @pytest.fixture
 def qa_test_data(
     beta_write_client: DevRevClient,
@@ -78,29 +94,39 @@ class TestQuestionAnswersCRUD:
     with proper cleanup and isolation for beta API features.
     """
 
-    def test_create_question_answer_with_question_only(
+    def test_create_question_answer_basic(
         self,
         beta_write_client: DevRevClient,
         qa_test_data: TestDataManager,
+        current_user_id: str,
+        test_part_id: str,
     ) -> None:
-        """Test creating a Q&A with only a question."""
+        """Test creating a Q&A with required fields."""
         # Arrange
         question_text = qa_test_data.generate_name("TestQuestion")
 
         # Act
-        request = QuestionAnswersCreateRequest(question=question_text)
+        request = QuestionAnswersCreateRequest(
+            question=question_text,
+            answer="Default test answer",
+            applies_to_parts=[test_part_id],
+            owned_by=[current_user_id],
+            status="draft",
+        )
         qa = beta_write_client.question_answers.create(request)
         qa_test_data.register("question_answer", qa.id)
 
         # Assert
         assert qa.id is not None
         assert question_text in qa.question
-        logger.info(f"✅ Created Q&A with question only: {qa.id}")
+        logger.info(f"✅ Created Q&A with required fields: {qa.id}")
 
     def test_create_question_answer_with_answer(
         self,
         beta_write_client: DevRevClient,
         qa_test_data: TestDataManager,
+        current_user_id: str,
+        test_part_id: str,
     ) -> None:
         """Test creating a Q&A with both question and answer."""
         # Arrange
@@ -111,6 +137,9 @@ class TestQuestionAnswersCRUD:
         request = QuestionAnswersCreateRequest(
             question=question_text,
             answer=answer_text,
+            applies_to_parts=[test_part_id],
+            owned_by=[current_user_id],
+            status="draft",
         )
         qa = beta_write_client.question_answers.create(request)
         qa_test_data.register("question_answer", qa.id)
@@ -130,11 +159,19 @@ class TestQuestionAnswersCRUD:
         self,
         beta_write_client: DevRevClient,
         qa_test_data: TestDataManager,
+        current_user_id: str,
+        test_part_id: str,
     ) -> None:
         """Test retrieving a Q&A by ID."""
         # Arrange - create Q&A first
         question_text = qa_test_data.generate_name("GetTest")
-        create_request = QuestionAnswersCreateRequest(question=question_text)
+        create_request = QuestionAnswersCreateRequest(
+            question=question_text,
+            answer="Answer for get test",
+            applies_to_parts=[test_part_id],
+            owned_by=[current_user_id],
+            status="draft",
+        )
         created_qa = beta_write_client.question_answers.create(create_request)
         qa_test_data.register("question_answer", created_qa.id)
 
@@ -168,11 +205,19 @@ class TestQuestionAnswersCRUD:
         self,
         beta_write_client: DevRevClient,
         qa_test_data: TestDataManager,
+        current_user_id: str,
+        test_part_id: str,
     ) -> None:
         """Test updating a Q&A's question text."""
         # Arrange - create Q&A first
         original_question = qa_test_data.generate_name("OriginalQuestion")
-        create_request = QuestionAnswersCreateRequest(question=original_question)
+        create_request = QuestionAnswersCreateRequest(
+            question=original_question,
+            answer="Answer for update test",
+            applies_to_parts=[test_part_id],
+            owned_by=[current_user_id],
+            status="draft",
+        )
         qa = beta_write_client.question_answers.create(create_request)
         qa_test_data.register("question_answer", qa.id)
 
@@ -193,11 +238,19 @@ class TestQuestionAnswersCRUD:
         self,
         beta_write_client: DevRevClient,
         qa_test_data: TestDataManager,
+        current_user_id: str,
+        test_part_id: str,
     ) -> None:
         """Test updating a Q&A's answer text."""
-        # Arrange - create Q&A with question only
+        # Arrange - create Q&A with original answer
         question_text = qa_test_data.generate_name("QuestionForAnswer")
-        create_request = QuestionAnswersCreateRequest(question=question_text)
+        create_request = QuestionAnswersCreateRequest(
+            question=question_text,
+            answer="Original answer",
+            applies_to_parts=[test_part_id],
+            owned_by=[current_user_id],
+            status="draft",
+        )
         qa = beta_write_client.question_answers.create(create_request)
         qa_test_data.register("question_answer", qa.id)
 
@@ -219,11 +272,19 @@ class TestQuestionAnswersCRUD:
         self,
         beta_write_client: DevRevClient,
         qa_test_data: TestDataManager,
+        current_user_id: str,
+        test_part_id: str,
     ) -> None:
         """Test deleting a Q&A."""
         # Arrange
         question_text = qa_test_data.generate_name("ToDelete")
-        create_request = QuestionAnswersCreateRequest(question=question_text)
+        create_request = QuestionAnswersCreateRequest(
+            question=question_text,
+            answer="Answer for delete test",
+            applies_to_parts=[test_part_id],
+            owned_by=[current_user_id],
+            status="draft",
+        )
         qa = beta_write_client.question_answers.create(create_request)
         # Note: NOT registering since we're testing delete
 
@@ -241,6 +302,8 @@ class TestQuestionAnswersCRUD:
         self,
         beta_write_client: DevRevClient,
         qa_test_data: TestDataManager,
+        current_user_id: str,
+        test_part_id: str,
     ) -> None:
         """Test full Q&A lifecycle: create -> get -> update -> list -> delete."""
         # Arrange
@@ -251,6 +314,9 @@ class TestQuestionAnswersCRUD:
         create_request = QuestionAnswersCreateRequest(
             question=question_text,
             answer=answer_text,
+            applies_to_parts=[test_part_id],
+            owned_by=[current_user_id],
+            status="draft",
         )
         qa = beta_write_client.question_answers.create(create_request)
         # Note: NOT registering since we delete explicitly

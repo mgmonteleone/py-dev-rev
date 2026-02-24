@@ -46,6 +46,13 @@ pytestmark = [
 ]
 
 
+@pytest.fixture(scope="session")
+def current_user_id(write_client: DevRevClient) -> str:
+    """Get the current authenticated user's DON ID for article ownership."""
+    user = write_client.dev_users.self()
+    return user.id
+
+
 class TestArticlesCRUD:
     """CRUD integration tests for Articles service.
 
@@ -57,6 +64,7 @@ class TestArticlesCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test creating an article with only required fields."""
         from devrev.models.articles import ArticlesCreateRequest
@@ -65,7 +73,7 @@ class TestArticlesCRUD:
         title = test_data.generate_name("Article")
 
         # Act
-        request = ArticlesCreateRequest(title=title)
+        request = ArticlesCreateRequest(title=title, owned_by=[current_user_id])
         article = write_client.articles.create(request)
         test_data.register("article", article.id)
 
@@ -74,33 +82,37 @@ class TestArticlesCRUD:
         assert article.title == title
         logger.info(f"✅ Created article: {article.id}")
 
-    def test_create_article_with_content(
+    def test_create_article_with_description(
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
-        """Test creating an article with title and content."""
+        """Test creating an article with title and description."""
         from devrev.models.articles import ArticlesCreateRequest
 
         # Arrange
         title = test_data.generate_name("Article")
-        content = "# Test Article\n\nThis is test content for integration testing."
+        description = "# Test Article\n\nThis is test description for integration testing."
 
         # Act
-        request = ArticlesCreateRequest(title=title, content=content)
+        request = ArticlesCreateRequest(
+            title=title, description=description, owned_by=[current_user_id]
+        )
         article = write_client.articles.create(request)
         test_data.register("article", article.id)
 
         # Assert
         assert article.id is not None
         assert article.title == title
-        assert article.content == content
-        logger.info(f"✅ Created article with content: {article.id}")
+        assert article.description == description
+        logger.info(f"✅ Created article with description: {article.id}")
 
     def test_create_article_as_draft(
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test creating an article with draft status."""
         from devrev.models.articles import ArticlesCreateRequest, ArticleStatus
@@ -109,7 +121,9 @@ class TestArticlesCRUD:
         title = test_data.generate_name("DraftArticle")
 
         # Act
-        request = ArticlesCreateRequest(title=title, status=ArticleStatus.DRAFT)
+        request = ArticlesCreateRequest(
+            title=title, status=ArticleStatus.DRAFT, owned_by=[current_user_id]
+        )
         article = write_client.articles.create(request)
         test_data.register("article", article.id)
 
@@ -122,13 +136,14 @@ class TestArticlesCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test retrieving an article by ID."""
         from devrev.models.articles import ArticlesCreateRequest, ArticlesGetRequest
 
         # Arrange - create article first
         title = test_data.generate_name("GetArticle")
-        create_request = ArticlesCreateRequest(title=title)
+        create_request = ArticlesCreateRequest(title=title, owned_by=[current_user_id])
         created_article = write_client.articles.create(create_request)
         test_data.register("article", created_article.id)
 
@@ -163,13 +178,14 @@ class TestArticlesCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test updating an article's title."""
         from devrev.models.articles import ArticlesCreateRequest, ArticlesUpdateRequest
 
         # Arrange - create article first
         original_title = test_data.generate_name("OriginalTitle")
-        create_request = ArticlesCreateRequest(title=original_title)
+        create_request = ArticlesCreateRequest(title=original_title, owned_by=[current_user_id])
         article = write_client.articles.create(create_request)
         test_data.register("article", article.id)
 
@@ -183,34 +199,38 @@ class TestArticlesCRUD:
         assert updated_article.title == new_title
         logger.info(f"✅ Updated article title: {article.id}")
 
-    def test_update_article_content(
+    def test_update_article_description(
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
-        """Test updating an article's content."""
+        """Test updating an article's description."""
         from devrev.models.articles import ArticlesCreateRequest, ArticlesUpdateRequest
 
         # Arrange - create article first
-        title = test_data.generate_name("ContentUpdate")
-        original_content = "Original content"
-        create_request = ArticlesCreateRequest(title=title, content=original_content)
+        title = test_data.generate_name("DescriptionUpdate")
+        original_description = "Original description"
+        create_request = ArticlesCreateRequest(
+            title=title, description=original_description, owned_by=[current_user_id]
+        )
         article = write_client.articles.create(create_request)
         test_data.register("article", article.id)
 
         # Act
-        new_content = "# Updated Content\n\nThis is the new content."
-        update_request = ArticlesUpdateRequest(id=article.id, content=new_content)
+        new_description = "# Updated Description\n\nThis is the new description."
+        update_request = ArticlesUpdateRequest(id=article.id, description=new_description)
         updated_article = write_client.articles.update(update_request)
 
         # Assert
-        assert updated_article.content == new_content
-        logger.info(f"✅ Updated article content: {article.id}")
+        assert updated_article.description == new_description
+        logger.info(f"✅ Updated article description: {article.id}")
 
     def test_update_article_status(
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test updating an article's status from draft to published."""
         from devrev.models.articles import (
@@ -221,7 +241,9 @@ class TestArticlesCRUD:
 
         # Arrange - create draft article first
         title = test_data.generate_name("StatusUpdate")
-        create_request = ArticlesCreateRequest(title=title, status=ArticleStatus.DRAFT)
+        create_request = ArticlesCreateRequest(
+            title=title, status=ArticleStatus.DRAFT, owned_by=[current_user_id]
+        )
         article = write_client.articles.create(create_request)
         test_data.register("article", article.id)
 
@@ -237,6 +259,7 @@ class TestArticlesCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test deleting an article."""
         from devrev.models.articles import (
@@ -247,7 +270,7 @@ class TestArticlesCRUD:
 
         # Arrange - create article first
         title = test_data.generate_name("ToDelete")
-        create_request = ArticlesCreateRequest(title=title)
+        create_request = ArticlesCreateRequest(title=title, owned_by=[current_user_id])
         article = write_client.articles.create(create_request)
         # Note: NOT registering since we're testing delete
 
@@ -265,6 +288,7 @@ class TestArticlesCRUD:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test full article lifecycle: create -> get -> update -> list -> delete."""
         from devrev.models.articles import (
@@ -278,13 +302,14 @@ class TestArticlesCRUD:
 
         # Arrange
         title = test_data.generate_name("LifecycleArticle")
-        content = "# Lifecycle Test\n\nTesting full lifecycle."
+        description = "# Lifecycle Test\n\nTesting full lifecycle."
 
         # Act & Assert - Create
         create_request = ArticlesCreateRequest(
             title=title,
-            content=content,
+            description=description,
             status=ArticleStatus.DRAFT,
+            owned_by=[current_user_id],
         )
         article = write_client.articles.create(create_request)
         # Note: NOT registering since we're testing delete
@@ -397,6 +422,7 @@ class TestArticlesErrorHandling:
         self,
         write_client: DevRevClient,
         test_data: TestDataManager,
+        current_user_id: str,
     ) -> None:
         """Test that creating an article without a title raises an error."""
         from devrev.models.articles import ArticlesCreateRequest
@@ -404,7 +430,7 @@ class TestArticlesErrorHandling:
         # Act & Assert - expect validation error from Pydantic or API
         with pytest.raises((ValueError, DevRevError, Exception)) as exc_info:
             # Try to create with empty title
-            request = ArticlesCreateRequest(title="")
+            request = ArticlesCreateRequest(title="", owned_by=[current_user_id])
             write_client.articles.create(request)
         # Verify we got an actual error, not just any exception
         assert exc_info.value is not None

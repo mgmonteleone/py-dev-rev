@@ -33,10 +33,16 @@ from devrev.models.question_answers import QuestionAnswersCreateRequest
 
 client = DevRevClient(api_version=APIVersion.BETA)
 
+# Get current user and a part ID
+user = client.dev_users.self()
+parts = client.parts.list(limit=1)
+
 request = QuestionAnswersCreateRequest(
     question="How do I reset my password?",
     answer="Click 'Forgot Password' on the login page and follow the email instructions.",
-    tags=["don:core:dvrv-us-1:devo/1:tag/123"],
+    applies_to_parts=[parts.parts[0].id],  # Required: parts this Q&A applies to
+    owned_by=[user.id],  # Required: users who own this Q&A
+    status="draft",  # Optional: defaults to "draft", can be "published"
 )
 
 qa = client.question_answers.create(request)
@@ -114,13 +120,20 @@ from devrev.models.question_answers import (
 
 async def main():
     async with AsyncDevRevClient(api_version=APIVersion.BETA) as client:
+        # Get current user and a part ID
+        user = await client.dev_users.self()
+        parts = await client.parts.list(limit=1)
+
         # Create Q&A
         request = QuestionAnswersCreateRequest(
             question="What are your support hours?",
             answer="We provide 24/7 support for enterprise customers.",
+            applies_to_parts=[parts.parts[0].id],
+            owned_by=[user.id],
+            status="draft",
         )
         qa = await client.question_answers.create(request)
-        
+
         # List Q&As
         list_request = QuestionAnswersListRequest(limit=10)
         response = await client.question_answers.list(list_request)
@@ -139,7 +152,9 @@ The main Q&A model with properties:
 - `id` - Unique Q&A identifier
 - `question` - The question text
 - `answer` - The answer text
-- `tags` - Associated tag IDs
+- `applies_to_parts` - List of parts this Q&A applies to
+- `owned_by` - List of users who own this Q&A
+- `status` - Q&A status (draft, published)
 - `created_date` - When the Q&A was created
 - `modified_date` - When the Q&A was last updated
 
@@ -178,8 +193,10 @@ if response.next_cursor:
 
 1. **Write clear questions** - Use natural language that matches how users search
 2. **Provide complete answers** - Include step-by-step instructions and examples
-3. **Tag appropriately** - Use tags to categorize Q&As by topic or product area
-4. **Keep updated** - Regularly review and update answers as features change
-5. **Link related content** - Reference related articles or documentation in answers
-6. **Use consistent formatting** - Maintain a consistent style across all Q&As
+3. **Associate with parts** - Link Q&As to relevant products, capabilities, or features
+4. **Assign ownership** - Ensure Q&As have clear owners for maintenance
+5. **Use draft status** - Create Q&As as drafts and publish when ready
+6. **Keep updated** - Regularly review and update answers as features change
+7. **Link related content** - Reference related articles or documentation in answers
+8. **Use consistent formatting** - Maintain a consistent style across all Q&As
 
