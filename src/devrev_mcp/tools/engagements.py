@@ -54,7 +54,7 @@ async def devrev_engagements_list(
                     f"Invalid engagement type: {e.args[0]}. "
                     f"Valid types: {', '.join(t.name for t in EngagementType)}"
                 ) from e
-        response = await app.client.engagements.list(
+        response = await app.get_client().engagements.list(
             cursor=cursor,
             limit=clamp_page_size(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
@@ -84,7 +84,7 @@ async def devrev_engagements_get(ctx: Context, id: str) -> dict[str, Any]:
     """
     app = ctx.request_context.lifespan_context
     try:
-        engagement = await app.client.engagements.get(id)
+        engagement = await app.get_client().engagements.get(id)
         return serialize_model(engagement)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -137,7 +137,7 @@ if _config.enable_destructive_tools:
                         f"Invalid scheduled_date format: {scheduled_date}. "
                         "Use ISO format (YYYY-MM-DDTHH:MM:SS)."
                     ) from e
-            engagement = await app.client.engagements.create(
+            engagement = await app.get_client().engagements.create(
                 title=title,
                 engagement_type=eng_type,
                 description=description,
@@ -192,7 +192,7 @@ if _config.enable_destructive_tools:
                         f"Invalid scheduled_date format: {scheduled_date}. "
                         "Use ISO format (YYYY-MM-DDTHH:MM:SS)."
                     ) from e
-            engagement = await app.client.engagements.update(
+            engagement = await app.get_client().engagements.update(
                 id,
                 title=title,
                 description=description,
@@ -216,7 +216,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            await app.client.engagements.delete(id)
+            await app.get_client().engagements.delete(id)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -249,7 +249,7 @@ async def devrev_engagements_count(
                     f"Invalid engagement type: {e.args[0]}. "
                     f"Valid types: {', '.join(t.name for t in EngagementType)}"
                 ) from e
-        count = await app.client.engagements.count(
+        count = await app.get_client().engagements.count(
             engagement_type=types,
             members=members,
         )

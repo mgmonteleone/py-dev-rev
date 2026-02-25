@@ -38,7 +38,7 @@ async def devrev_recommendations_reply(
     app = ctx.request_context.lifespan_context
     try:
         request = GetReplyRequest(object_id=object_id, context=context)
-        response = await app.client.recommendations.get_reply(request)
+        response = await app.get_client().recommendations.get_reply(request)
         return serialize_model(response)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -84,7 +84,7 @@ async def devrev_recommendations_chat(
             max_tokens=max_tokens,
             temperature=temperature,
         )
-        response = await app.client.recommendations.chat_completions(request)
+        response = await app.get_client().recommendations.chat_completions(request)
         return serialize_model(response)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e

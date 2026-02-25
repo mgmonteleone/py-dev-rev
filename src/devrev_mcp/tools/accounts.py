@@ -36,7 +36,7 @@ async def devrev_accounts_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        response = await app.client.accounts.list(
+        response = await app.get_client().accounts.list(
             display_name=display_name,
             domains=domains,
             owned_by=owned_by,
@@ -63,7 +63,7 @@ async def devrev_accounts_get(
     """
     app = ctx.request_context.lifespan_context
     try:
-        account = await app.client.accounts.get(id)
+        account = await app.get_client().accounts.get(id)
         return serialize_model(account)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -94,7 +94,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            account = await app.client.accounts.create(
+            account = await app.get_client().accounts.create(
                 display_name=display_name,
                 description=description,
                 domains=domains,
@@ -126,7 +126,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            account = await app.client.accounts.update(
+            account = await app.get_client().accounts.update(
                 id,
                 display_name=display_name,
                 description=description,
@@ -148,7 +148,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            await app.client.accounts.delete(id)
+            await app.get_client().accounts.delete(id)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -169,7 +169,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            account = await app.client.accounts.merge(
+            account = await app.get_client().accounts.merge(
                 primary_account=primary_account,
                 secondary_account=secondary_account,
             )

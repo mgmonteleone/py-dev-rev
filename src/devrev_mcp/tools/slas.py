@@ -45,7 +45,7 @@ async def devrev_slas_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        slas = await app.client.slas.list(request)
+        slas = await app.get_client().slas.list(request)
         items = serialize_models(list(slas))
         return {"count": len(items), "slas": items}
     except DevRevError as e:
@@ -65,7 +65,7 @@ async def devrev_slas_get(
     app = ctx.request_context.lifespan_context
     try:
         request = SlasGetRequest(id=id)
-        sla = await app.client.slas.get(request)
+        sla = await app.get_client().slas.get(request)
         return serialize_model(sla)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -91,7 +91,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = SlasCreateRequest(name=name, description=description, target_time=target_time)
-            sla = await app.client.slas.create(request)
+            sla = await app.get_client().slas.create(request)
             return serialize_model(sla)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -113,7 +113,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = SlasUpdateRequest(id=id, name=name, description=description)
-            sla = await app.client.slas.update(request)
+            sla = await app.get_client().slas.update(request)
             return serialize_model(sla)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -142,7 +142,7 @@ if _config.enable_destructive_tools:
                     resolved_status = status
 
             request = SlasTransitionRequest(id=id, status=resolved_status)
-            sla = await app.client.slas.transition(request)
+            sla = await app.get_client().slas.transition(request)
             return serialize_model(sla)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e

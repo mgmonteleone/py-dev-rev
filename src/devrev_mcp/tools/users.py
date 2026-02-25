@@ -36,7 +36,7 @@ async def devrev_dev_users_list(
     app = ctx.request_context.lifespan_context
     try:
         user_states = [DevUserState(s.lower()) for s in state] if state else None
-        response = await app.client.dev_users.list(
+        response = await app.get_client().dev_users.list(
             email=email,
             state=user_states,
             cursor=cursor,
@@ -62,7 +62,7 @@ async def devrev_dev_users_get(
     """
     app = ctx.request_context.lifespan_context
     try:
-        user = await app.client.dev_users.get(id)
+        user = await app.get_client().dev_users.get(id)
         return serialize_model(user)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -86,7 +86,7 @@ async def devrev_rev_users_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        response = await app.client.rev_users.list(
+        response = await app.get_client().rev_users.list(
             email=email,
             rev_org=rev_org,
             cursor=cursor,
@@ -112,7 +112,7 @@ async def devrev_rev_users_get(
     """
     app = ctx.request_context.lifespan_context
     try:
-        user = await app.client.rev_users.get(id)
+        user = await app.get_client().rev_users.get(id)
         return serialize_model(user)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -138,7 +138,7 @@ async def devrev_rev_users_create(
     """
     app = ctx.request_context.lifespan_context
     try:
-        user = await app.client.rev_users.create(
+        user = await app.get_client().rev_users.create(
             rev_org=rev_org,
             display_name=display_name,
             email=email,

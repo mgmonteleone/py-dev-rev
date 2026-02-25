@@ -53,7 +53,7 @@ async def devrev_incidents_list(
                     f"Invalid incident severity: {e.args[0]}. "
                     f"Valid severities: {', '.join(t.name for t in IncidentSeverity)}"
                 ) from e
-        response = await app.client.incidents.list(
+        response = await app.get_client().incidents.list(
             cursor=cursor,
             limit=clamp_page_size(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
@@ -79,7 +79,7 @@ async def devrev_incidents_get(
     """
     app = ctx.request_context.lifespan_context
     try:
-        incident = await app.client.incidents.get(id)
+        incident = await app.get_client().incidents.get(id)
         return serialize_model(incident)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -117,7 +117,7 @@ if _config.enable_destructive_tools:
                         f"Invalid incident severity: {e.args[0]}. "
                         f"Valid severities: {', '.join(t.name for t in IncidentSeverity)}"
                     ) from e
-            incident = await app.client.incidents.create(
+            incident = await app.get_client().incidents.create(
                 title=title,
                 body=body,
                 severity=severity_enum,
@@ -168,7 +168,7 @@ if _config.enable_destructive_tools:
                         f"Invalid incident severity: {e.args[0]}. "
                         f"Valid severities: {', '.join(t.name for t in IncidentSeverity)}"
                     ) from e
-            incident = await app.client.incidents.update(
+            incident = await app.get_client().incidents.update(
                 id,
                 title=title,
                 body=body,
@@ -191,7 +191,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            await app.client.incidents.delete(id)
+            await app.get_client().incidents.delete(id)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -210,7 +210,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            groups = await app.client.incidents.group(group_by=group_by, limit=limit)
+            groups = await app.get_client().incidents.group(group_by=group_by, limit=limit)
             items = serialize_models(groups)
             return {"count": len(items), "groups": items}
         except DevRevError as e:

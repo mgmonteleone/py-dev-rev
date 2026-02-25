@@ -45,7 +45,7 @@ async def devrev_parts_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        response = await app.client.parts.list(
+        response = await app.get_client().parts.list(
             limit=clamp_page_size(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
@@ -72,7 +72,7 @@ async def devrev_parts_get(ctx: Context, id: str) -> dict[str, Any]:
     """
     app = ctx.request_context.lifespan_context
     try:
-        part = await app.client.parts.get(PartsGetRequest(id=id))
+        part = await app.get_client().parts.get(PartsGetRequest(id=id))
         return serialize_model(part)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -115,7 +115,7 @@ if _config.enable_destructive_tools:
                 type=part_type,
                 description=description,
             )
-            part = await app.client.parts.create(request)
+            part = await app.get_client().parts.create(request)
             return serialize_model(part)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -147,7 +147,7 @@ if _config.enable_destructive_tools:
                 name=name,
                 description=description,
             )
-            part = await app.client.parts.update(request)
+            part = await app.get_client().parts.update(request)
             return serialize_model(part)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -167,7 +167,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            await app.client.parts.delete(PartsDeleteRequest(id=id))
+            await app.get_client().parts.delete(PartsDeleteRequest(id=id))
             return {"success": True, "message": f"Part {id} deleted successfully"}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e

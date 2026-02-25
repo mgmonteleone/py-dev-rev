@@ -46,7 +46,7 @@ async def devrev_links_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        links = await app.client.links.list(request)
+        links = await app.get_client().links.list(request)
         items = serialize_models(list(links))
         return {"count": len(items), "links": items}
     except DevRevError as e:
@@ -66,7 +66,7 @@ async def devrev_links_get(
     app = ctx.request_context.lifespan_context
     try:
         request = LinksGetRequest(id=id)
-        link = await app.client.links.get(request)
+        link = await app.get_client().links.get(request)
         return serialize_model(link)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -103,7 +103,7 @@ if _config.enable_destructive_tools:
                 source=source,
                 target=target,
             )
-            link = await app.client.links.create(request)
+            link = await app.get_client().links.create(request)
             return serialize_model(link)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -121,7 +121,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = LinksDeleteRequest(id=id)
-            await app.client.links.delete(request)
+            await app.get_client().links.delete(request)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e

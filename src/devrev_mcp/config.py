@@ -72,9 +72,21 @@ class MCPServerConfig(BaseSettings):
     )
 
     # Authentication (for HTTP transports)
+    auth_mode: Literal["static-token", "devrev-pat"] = Field(
+        default="devrev-pat",
+        description="Auth mode: 'static-token' (legacy) or 'devrev-pat' (per-user PAT validation)",
+    )
     auth_token: SecretStr | None = Field(
         default=None,
-        description="Bearer token for HTTP transport authentication. If set, all HTTP requests must include this token.",
+        description="Bearer token for HTTP transport authentication (only used with static-token mode).",
+    )
+    auth_allowed_domains: list[str] = Field(
+        default=["augmentcode.com"],
+        description="Email domains allowed to access the MCP server (only used with devrev-pat mode)",
+    )
+    auth_cache_ttl_seconds: int = Field(
+        default=300,
+        description="TTL in seconds for PAT validation cache (only used with devrev-pat mode)",
     )
 
     # Rate limiting

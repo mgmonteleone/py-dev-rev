@@ -54,7 +54,7 @@ async def devrev_groups_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        groups = await app.client.groups.list(request)
+        groups = await app.get_client().groups.list(request)
         items = serialize_models(list(groups))
         return {"count": len(items), "groups": items}
     except DevRevError as e:
@@ -78,7 +78,7 @@ async def devrev_groups_get(ctx: Context, id: str) -> dict[str, Any]:
     app = ctx.request_context.lifespan_context
     try:
         request = GroupsGetRequest(id=id)
-        group = await app.client.groups.get(request)
+        group = await app.get_client().groups.get(request)
         return serialize_model(group)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -120,7 +120,7 @@ if _config.enable_destructive_tools:
                         f"Valid types: {', '.join(t.name for t in GroupType)}"
                     ) from e
             request = GroupsCreateRequest(name=name, description=description, type=group_type)
-            group = await app.client.groups.create(request)
+            group = await app.get_client().groups.create(request)
             return serialize_model(group)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -149,7 +149,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = GroupsUpdateRequest(id=id, name=name, description=description)
-            group = await app.client.groups.update(request)
+            group = await app.get_client().groups.update(request)
             return serialize_model(group)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -172,7 +172,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = GroupMembersAddRequest(group=group, member=member)
-            await app.client.groups.add_member(request)
+            await app.get_client().groups.add_member(request)
             return {"added": True, "group": group, "member": member}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -195,7 +195,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = GroupMembersRemoveRequest(group=group, member=member)
-            await app.client.groups.remove_member(request)
+            await app.get_client().groups.remove_member(request)
             return {"removed": True, "group": group, "member": member}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -228,7 +228,7 @@ async def devrev_groups_list_members(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        members = await app.client.groups.list_members(request)
+        members = await app.get_client().groups.list_members(request)
         items = serialize_models(list(members))
         return {"count": len(items), "members": items}
     except DevRevError as e:
@@ -251,7 +251,7 @@ async def devrev_groups_members_count(ctx: Context, group_id: str) -> dict[str, 
     """
     app = ctx.request_context.lifespan_context
     try:
-        count = await app.client.groups.members_count(group_id=group_id)
+        count = await app.get_client().groups.members_count(group_id=group_id)
         return {"count": count}
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e

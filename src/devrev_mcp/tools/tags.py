@@ -47,7 +47,7 @@ async def devrev_tags_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        tags = await app.client.tags.list(request)
+        tags = await app.get_client().tags.list(request)
         items = serialize_models(list(tags))
         return {"count": len(items), "tags": items}
     except DevRevError as e:
@@ -70,7 +70,7 @@ async def devrev_tags_get(ctx: Context, id: str) -> dict[str, Any]:
     app = ctx.request_context.lifespan_context
     try:
         request = TagsGetRequest(id=id)
-        tag = await app.client.tags.get(request)
+        tag = await app.get_client().tags.get(request)
         return serialize_model(tag)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -98,7 +98,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = TagsCreateRequest(name=name, description=description)
-            tag = await app.client.tags.create(request)
+            tag = await app.get_client().tags.create(request)
             return serialize_model(tag)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -123,7 +123,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = TagsUpdateRequest(id=id, name=name, description=description)
-            tag = await app.client.tags.update(request)
+            tag = await app.get_client().tags.update(request)
             return serialize_model(tag)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -144,7 +144,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = TagsDeleteRequest(id=id)
-            await app.client.tags.delete(request)
+            await app.get_client().tags.delete(request)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
