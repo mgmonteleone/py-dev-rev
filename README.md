@@ -744,21 +744,93 @@ auggie mcp add devrev \
 
 </details>
 
-### Production Deployment (HTTP)
+### Production Deployment
+
+#### Option 1: Google Cloud Run (Recommended)
+
+Deploy to Cloud Run with automatic scaling, built-in security, and managed infrastructure:
 
 ```bash
-# Run with Streamable HTTP transport
-devrev-mcp-server --transport streamable-http --host 0.0.0.0 --port 8080
+# 1. Create secrets in Google Secret Manager
+echo -n "$DEVREV_API_TOKEN" | gcloud secrets create devrev-api-token --data-file=-
+echo -n "$MCP_AUTH_TOKEN" | gcloud secrets create mcp-auth-token --data-file=-
 
-# Or with Docker
+# 2. Grant Cloud Run service account access to secrets
+PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')
+COMPUTE_SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
+
+gcloud secrets add-iam-policy-binding devrev-api-token \
+  --member=serviceAccount:$COMPUTE_SA \
+  --role=roles/secretmanager.secretAccessor
+
+gcloud secrets add-iam-policy-binding mcp-auth-token \
+  --member=serviceAccount:$COMPUTE_SA \
+  --role=roles/secretmanager.secretAccessor
+
+# 3. Deploy using Cloud Build
+gcloud builds submit --config deploy/cloudbuild.yaml
+
+# 4. Test the deployment
+SERVICE_URL=$(gcloud run services describe devrev-mcp-server --region=us-central1 --format='value(status.url)')
+curl $SERVICE_URL/health
+```
+
+See [deploy/README.md](deploy/README.md) for detailed setup instructions including:
+- Artifact Registry configuration
+- Workload Identity Federation for GitHub Actions
+- Automated deployments on version tags
+- Security best practices
+
+#### Option 2: Docker Compose (Local/Self-Hosted)
+
+```bash
+# Run with Docker Compose
 docker compose up -d
 
-# Or deploy to Google Cloud Run
-# Note: Cloud Run deployment requires MCP_AUTH_TOKEN and DEVREV_API_TOKEN
-# secrets to be created in Google Secret Manager first:
-# gcloud secrets create mcp-auth-token --data-file=-
-# gcloud secrets create devrev-api-token --data-file=-
-gcloud builds submit --config deploy/cloudbuild.yaml
+# Or run directly with Streamable HTTP transport
+devrev-mcp-server --transport streamable-http --host 0.0.0.0 --port 8080
+```
+
+#### Option 3: Manual Docker Build and Deploy
+
+```bash
+# Build the image
+docker build -t devrev-mcp-server:latest .
+
+# Run the container
+docker run -p 8080:8080 \
+  -e DEVREV_API_TOKEN="$DEVREV_API_TOKEN" \
+  -e MCP_AUTH_TOKEN="$MCP_AUTH_TOKEN" \
+  devrev-mcp-server:latest
+```
+
+### Testing Cloud Run Deployment
+
+Once deployed to Cloud Run, test the endpoints:
+
+```bash
+# Get the service URL
+SERVICE_URL=$(gcloud run services describe devrev-mcp-server --region=us-central1 --format='value(status.url)')
+
+# 1. Health check (no authentication required)
+curl $SERVICE_URL/health
+
+# 2. MCP initialize endpoint (requires bearer token)
+MCP_AUTH_TOKEN="your-mcp-auth-token"
+curl -X POST $SERVICE_URL/mcp/v1/initialize \
+  -H "Authorization: Bearer $MCP_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "protocolVersion": "2024-11-05",
+    "capabilities": {},
+    "clientInfo": {
+      "name": "test-client",
+      "version": "1.0.0"
+    }
+  }'
+
+# 3. View logs
+gcloud run services logs read devrev-mcp-server --region=us-central1 --limit=50
 ```
 
 ### MCP Server Configuration

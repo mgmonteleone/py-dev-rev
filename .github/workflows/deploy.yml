@@ -1,0 +1,103 @@
+# Cloud Run Deployment Workflow
+# Triggered by version tags (v*) to deploy MCP server to Cloud Run
+# Uses Workload Identity Federation (WIF) for secure authentication
+name: Deploy to Cloud Run
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for deployment (e.g., v1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write  # For OIDC token generation
+
+jobs:
+  deploy:
+    name: Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          VERSION=${TAG#v}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Submit Cloud Build
+        run: |
+          gcloud builds submit \
+            --config=deploy/cloudbuild.yaml \
+            --substitutions=_REGION=${{ secrets.GCP_REGION }},_TAG_NAME=${{ steps.version.outputs.tag }} \
+            --project=${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Get Cloud Run service URL
+        id: service
+        run: |
+          SERVICE_URL=$(gcloud run services describe devrev-mcp-server \
+            --region=${{ secrets.GCP_REGION }} \
+            --format='value(status.url)' \
+            --project=${{ secrets.GCP_PROJECT_ID }})
+          echo "url=$SERVICE_URL" >> $GITHUB_OUTPUT
+          echo "Service URL: $SERVICE_URL"
+
+      - name: Health check
+        run: |
+          SERVICE_URL="${{ steps.service.outputs.url }}"
+          echo "Checking health endpoint: $SERVICE_URL/health"
+          curl -f "$SERVICE_URL/health" || exit 1
+
+      - name: Create deployment summary
+        run: |
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ## 🚀 Deployment Complete
+
+          **Version**: ${{ steps.version.outputs.version }}
+          **Service**: devrev-mcp-server
+          **Region**: ${{ secrets.GCP_REGION }}
+          **URL**: ${{ steps.service.outputs.url }}
+
+          ### Testing
+
+          \`\`\`bash
+          # Health check
+          curl ${{ steps.service.outputs.url }}/health
+
+          # MCP call with auth token
+          curl -X POST ${{ steps.service.outputs.url }}/mcp/v1/initialize \
+            -H "Authorization: Bearer <MCP_AUTH_TOKEN>" \
+            -H "Content-Type: application/json" \
+            -d '{"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0.0"}}'
+          \`\`\`
+          EOF
+
