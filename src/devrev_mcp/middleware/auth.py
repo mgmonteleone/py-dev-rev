@@ -141,7 +141,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         skip_paths: set[str] | None = None,
     ) -> None:
         super().__init__(app)
-        self._allowed_domains = [d.lstrip("@") for d in (allowed_domains or [])]
+        self._allowed_domains = [d.lstrip("@").lower() for d in (allowed_domains or [])]
         self._cache_ttl_seconds = cache_ttl_seconds
         self._api_version = api_version
         self._skip_paths = skip_paths or {"/health"}
@@ -183,6 +183,12 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
             )
 
         token = parts[1].strip()
+        if not token:
+            logger.warning("Empty Bearer token provided")
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Empty Bearer token. Expected: Bearer <token>"},
+            )
         token_hash = hashlib.sha256(token.encode()).hexdigest()
 
         # Check cache first
@@ -199,7 +205,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
 
         # Check domain restriction
         if self._allowed_domains and not any(
-            identity.email.endswith(f"@{domain}") for domain in self._allowed_domains
+            identity.email.lower().endswith(f"@{domain}") for domain in self._allowed_domains
         ):
             logger.warning(
                 "User %s from disallowed domain attempted access",
