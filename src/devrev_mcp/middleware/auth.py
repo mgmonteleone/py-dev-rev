@@ -141,7 +141,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         skip_paths: set[str] | None = None,
     ) -> None:
         super().__init__(app)
-        self._allowed_domains = allowed_domains or []
+        self._allowed_domains = [d.lstrip("@") for d in (allowed_domains or [])]
         self._cache_ttl_seconds = cache_ttl_seconds
         self._api_version = api_version
         self._skip_paths = skip_paths or {"/health"}
@@ -210,8 +210,8 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
                 content={"error": "Email domain not allowed"},
             )
 
-        # Store identity in request state and context var
-        request.state.devrev_pat = token
+        # Store identity in request state (hash only — never expose raw PAT)
+        request.state.devrev_pat_hash = token_hash
         request.state.devrev_user_id = identity.user_id
         request.state.devrev_user_email = identity.email
         request.state.devrev_user_display_name = identity.display_name

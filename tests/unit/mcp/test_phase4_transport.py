@@ -878,7 +878,7 @@ class TestDevRevPATAuthMiddleware:
 
         async def hello(request):
             # Verify request state was set
-            assert hasattr(request.state, "devrev_pat")
+            assert hasattr(request.state, "devrev_pat_hash")
             assert hasattr(request.state, "devrev_user_id")
             assert hasattr(request.state, "devrev_user_email")
             assert hasattr(request.state, "devrev_user_display_name")

@@ -22,7 +22,7 @@ Each user sends their own DevRev Personal Access Token as the Bearer token in th
 1. Validates the PAT against the DevRev API
 2. Extracts user identity from the PAT
 3. Creates a per-request DevRev client with the user's credentials
-4. Optionally restricts access by email domain (e.g., `@augmentcode.com`)
+4. Optionally restricts access by email domain (e.g., `augmentcode.com` — without `@` prefix)
 
 **Benefits**:
 - No shared secrets - each user uses their own DevRev credentials
@@ -87,9 +87,9 @@ All users share a single `MCP_AUTH_TOKEN` secret. This mode is maintained for ba
 
 ## Setup: Create Secrets in Google Secret Manager
 
-### 1. Create DevRev API Token Secret (Optional - for stdio/testing fallback)
+### 1. Create DevRev API Token Secret (Optional)
 
-**Note**: With `MCP_AUTH_MODE=devrev-pat`, this secret is only needed for stdio transport or testing. It's not required for HTTP transport in production.
+**Note**: With `MCP_AUTH_MODE=devrev-pat` (the default), this secret is **not needed**. Each user's DevRev PAT is sent directly via the Authorization header. Only create this secret if you use `MCP_AUTH_MODE=static-token` or need stdio transport fallback for testing.
 
 ```bash
 # Create the secret (interactive)
