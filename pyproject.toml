@@ -129,6 +129,20 @@ disallow_untyped_defs = false
 module = ["starlette.*", "mcp.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["devrev_mcp.tools.*", "devrev_mcp.prompts.*", "devrev_mcp.resources.*"]
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = ["devrev_mcp.middleware.*"]
+disallow_untyped_decorators = false
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = ["devrev_mcp.server"]
+disallow_untyped_decorators = false
+warn_unused_ignores = false
+
 # pytest Configuration
 [tool.pytest.ini_options]
 testpaths = ["tests"]
