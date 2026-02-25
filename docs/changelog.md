@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **SDK: Migrated all enums from `(str, Enum)` to `StrEnum`** — 32 enum classes across 21 files now use Python 3.11+ `StrEnum` instead of the legacy `(str, Enum)` pattern. This resolves ruff UP042 linting errors and aligns with modern Python best practices. Note: `str(EnumMember)` now returns the value string directly (e.g., `"active"`) instead of `"ClassName.MEMBER"`. (#138)
 
+## [2.3.1] - 2026-02-24
+
+### Fixed
+
+- **DevUserState enum missing states** (#126) - Added missing `DELETED`, `LOCKED`, and `UNASSIGNED` states to the `DevUserState` enum to match the DevRev API `user-state` schema. This is the same fix previously applied to `RevUserState` in v2.1.1 (#115). This fixes Pydantic validation errors when the API returns dev users with these states.
+
 ## [2.3.0] - 2026-02-11
 
 ### Added
@@ -412,6 +418,7 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.3.1 | 2026-02-24 | 🐛 Fix DevUserState enum missing states |
 | 2.3.0 | 2026-02-11 | 🔍 Search SDK improvements & client-side re-ranking |
 | 2.2.0 | 2026-02-09 | 🤖 MCP Server - Full DevRev platform as AI-accessible tools |
 | 2.1.2 | 2026-01-28 | 🐛 Fix Work.applies_to_part parsing for API responses |

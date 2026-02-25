@@ -23,11 +23,17 @@ from devrev.models.base import (
 
 
 class DevUserState(StrEnum):
-    """Dev user state enumeration."""
+    """Dev user state enumeration.
+
+    Values match the DevRev API 'user-state' schema.
+    """
 
     ACTIVE = "active"
     DEACTIVATED = "deactivated"
+    DELETED = "deleted"
+    LOCKED = "locked"
     SHADOW = "shadow"
+    UNASSIGNED = "unassigned"
 
 
 class DevUserExternalIdentity(DevRevResponseModel):
