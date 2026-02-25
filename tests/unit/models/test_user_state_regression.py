@@ -20,13 +20,16 @@ import pytest
 from devrev.models.dev_users import DevUser, DevUsersListResponse, DevUserState
 from devrev.models.rev_users import RevUser, RevUsersListResponse, RevUserState
 
+# All valid user state values from DevRev API 'user-state' schema
+ALL_USER_STATE_VALUES = ["active", "deactivated", "deleted", "locked", "shadow", "unassigned"]
+
 
 class TestDevUserStateRegression:
     """Regression tests for DevUserState enum values."""
 
     @pytest.mark.parametrize(
         "state_value",
-        ["active", "deactivated", "deleted", "locked", "shadow", "unassigned"],
+        ALL_USER_STATE_VALUES,
     )
     def test_dev_user_accepts_all_state_values(self, state_value: str) -> None:
         """Test that DevUser model accepts all valid state values.
@@ -46,7 +49,7 @@ class TestDevUserStateRegression:
 
     @pytest.mark.parametrize(
         "state_value",
-        ["active", "deactivated", "deleted", "locked", "shadow", "unassigned"],
+        ALL_USER_STATE_VALUES,
     )
     def test_dev_users_list_response_accepts_all_states(self, state_value: str) -> None:
         """Test that DevUsersListResponse can parse users with all state values.
@@ -105,7 +108,7 @@ class TestRevUserStateRegression:
 
     @pytest.mark.parametrize(
         "state_value",
-        ["active", "deactivated", "deleted", "locked", "shadow", "unassigned"],
+        ALL_USER_STATE_VALUES,
     )
     def test_rev_user_accepts_all_state_values(self, state_value: str) -> None:
         """Test that RevUser model accepts all valid state values.
@@ -125,7 +128,7 @@ class TestRevUserStateRegression:
 
     @pytest.mark.parametrize(
         "state_value",
-        ["active", "deactivated", "deleted", "locked", "shadow", "unassigned"],
+        ALL_USER_STATE_VALUES,
     )
     def test_rev_users_list_response_accepts_all_states(self, state_value: str) -> None:
         """Test that RevUsersListResponse can parse users with all state values.
