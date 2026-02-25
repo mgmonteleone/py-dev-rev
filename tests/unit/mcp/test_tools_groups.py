@@ -71,8 +71,25 @@ def _make_mock_group_member(
 @pytest.fixture
 def mock_context():
     """Create a mock MCP context."""
+    from devrev import APIVersion
+    from devrev_mcp.config import MCPServerConfig
+    from devrev_mcp.server import AppContext
+
+    # Create a mock client
+    mock_client = AsyncMock()
+    mock_client.groups = AsyncMock()
+
+    # Create AppContext with new signature
+    config = MCPServerConfig()
+    app_context = AppContext(
+        config=config,
+        _api_version=APIVersion.PUBLIC,
+        _stdio_client=mock_client,
+    )
+
+    # Create mock MCP context
     ctx = MagicMock()
-    ctx.request_context.lifespan_context.client.groups = AsyncMock()
+    ctx.request_context.lifespan_context = app_context
     return ctx
 
 
@@ -82,7 +99,7 @@ class TestGroupsListTool:
     @pytest.mark.asyncio
     async def test_list_empty(self, mock_context):
         """Test listing groups when none exist."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.list.return_value = []
 
         result = await devrev_groups_list(mock_context)
@@ -93,7 +110,7 @@ class TestGroupsListTool:
     @pytest.mark.asyncio
     async def test_list_with_results(self, mock_context):
         """Test listing groups with results."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         group1 = _make_mock_group(id="grp_1", name="Group 1")
         group2 = _make_mock_group(id="grp_2", name="Group 2")
         mock_client.groups.list.return_value = [group1, group2]
@@ -108,7 +125,7 @@ class TestGroupsListTool:
     @pytest.mark.asyncio
     async def test_list_error(self, mock_context):
         """Test listing groups with API error."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.list.side_effect = DevRevError("API error")
 
         with pytest.raises(RuntimeError, match="API error"):
@@ -121,7 +138,7 @@ class TestGroupsGetTool:
     @pytest.mark.asyncio
     async def test_get_success(self, mock_context):
         """Test getting a group successfully."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         group = _make_mock_group(id="grp_123", name="Test Group")
         mock_client.groups.get.return_value = group
 
@@ -134,7 +151,7 @@ class TestGroupsGetTool:
     @pytest.mark.asyncio
     async def test_get_not_found(self, mock_context):
         """Test getting a non-existent group."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.get.side_effect = NotFoundError("Group not found")
 
         with pytest.raises(RuntimeError, match="Group not found"):
@@ -147,7 +164,7 @@ class TestGroupsCreateTool:
     @pytest.mark.asyncio
     async def test_create_minimal(self, mock_context):
         """Test creating a group with minimal parameters."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         group = _make_mock_group(id="grp_new", name="New Group")
         mock_client.groups.create.return_value = group
 
@@ -160,7 +177,7 @@ class TestGroupsCreateTool:
     @pytest.mark.asyncio
     async def test_create_with_type(self, mock_context):
         """Test creating a group with type specified."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         group = _make_mock_group(id="grp_new", name="New Group", type="DYNAMIC")
         mock_client.groups.create.return_value = group
 
@@ -175,7 +192,7 @@ class TestGroupsCreateTool:
     @pytest.mark.asyncio
     async def test_create_error(self, mock_context):
         """Test creating a group with validation error."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.create.side_effect = ValidationError("Invalid name")
 
         with pytest.raises(RuntimeError, match="Invalid name"):
@@ -188,7 +205,7 @@ class TestGroupsUpdateTool:
     @pytest.mark.asyncio
     async def test_update_success(self, mock_context):
         """Test updating a group successfully."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         group = _make_mock_group(id="grp_123", name="Updated Group")
         mock_client.groups.update.return_value = group
 
@@ -201,7 +218,7 @@ class TestGroupsUpdateTool:
     @pytest.mark.asyncio
     async def test_update_error(self, mock_context):
         """Test updating a group with error."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.update.side_effect = NotFoundError("Group not found")
 
         with pytest.raises(RuntimeError, match="Group not found"):
@@ -214,7 +231,7 @@ class TestGroupsAddMemberTool:
     @pytest.mark.asyncio
     async def test_add_member_success(self, mock_context):
         """Test adding a member to a group successfully."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.add_member.return_value = None
 
         result = await devrev_groups_add_member(mock_context, group="grp_123", member="usr_456")
@@ -225,7 +242,7 @@ class TestGroupsAddMemberTool:
     @pytest.mark.asyncio
     async def test_add_member_error(self, mock_context):
         """Test adding a member with error."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.add_member.side_effect = ValidationError("Invalid member")
 
         with pytest.raises(RuntimeError, match="Invalid member"):
@@ -238,7 +255,7 @@ class TestGroupsRemoveMemberTool:
     @pytest.mark.asyncio
     async def test_remove_member_success(self, mock_context):
         """Test removing a member from a group successfully."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.remove_member.return_value = None
 
         result = await devrev_groups_remove_member(mock_context, group="grp_123", member="usr_456")
@@ -249,7 +266,7 @@ class TestGroupsRemoveMemberTool:
     @pytest.mark.asyncio
     async def test_remove_member_error(self, mock_context):
         """Test removing a member with error."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.remove_member.side_effect = NotFoundError("Member not found")
 
         with pytest.raises(RuntimeError, match="Member not found"):
@@ -262,7 +279,7 @@ class TestGroupsListMembersTool:
     @pytest.mark.asyncio
     async def test_list_members_success(self, mock_context):
         """Test listing group members successfully."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         member1 = _make_mock_group_member(member_id="usr_1", member_name="User 1")
         member2 = _make_mock_group_member(member_id="usr_2", member_name="User 2")
         mock_client.groups.list_members.return_value = [member1, member2]
@@ -278,7 +295,7 @@ class TestGroupsListMembersTool:
     @pytest.mark.asyncio
     async def test_list_members_empty(self, mock_context):
         """Test listing members when group is empty."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.list_members.return_value = []
 
         result = await devrev_groups_list_members(mock_context, group="grp_123")
@@ -289,7 +306,7 @@ class TestGroupsListMembersTool:
     @pytest.mark.asyncio
     async def test_list_members_error(self, mock_context):
         """Test listing members with error."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.list_members.side_effect = NotFoundError("Group not found")
 
         with pytest.raises(RuntimeError, match="Group not found"):
@@ -302,7 +319,7 @@ class TestGroupsMembersCountTool:
     @pytest.mark.asyncio
     async def test_members_count_success(self, mock_context):
         """Test getting member count successfully."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.members_count.return_value = 5
 
         result = await devrev_groups_members_count(mock_context, group_id="grp_123")
@@ -313,7 +330,7 @@ class TestGroupsMembersCountTool:
     @pytest.mark.asyncio
     async def test_members_count_error(self, mock_context):
         """Test getting member count with error."""
-        mock_client = mock_context.request_context.lifespan_context.client
+        mock_client = mock_context.request_context.lifespan_context.get_client()
         mock_client.groups.members_count.side_effect = NotFoundError("Group not found")
 
         with pytest.raises(RuntimeError, match="Group not found"):

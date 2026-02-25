@@ -33,7 +33,7 @@ class TestTagsListTool:
     @pytest.mark.asyncio
     async def test_list_empty(self, mock_ctx: MagicMock) -> None:
         """Test listing tags when none exist."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_client.tags.list.return_value = []
 
         result = await devrev_tags_list(mock_ctx)
@@ -45,7 +45,7 @@ class TestTagsListTool:
     @pytest.mark.asyncio
     async def test_list_with_results(self, mock_ctx: MagicMock) -> None:
         """Test listing tags with results."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         tag1 = _make_mock_tag("TAG-1", "Tag One")
         tag2 = _make_mock_tag("TAG-2", "Tag Two")
         mock_client.tags.list.return_value = [tag1, tag2]
@@ -60,7 +60,7 @@ class TestTagsListTool:
     @pytest.mark.asyncio
     async def test_list_error(self, mock_ctx: MagicMock) -> None:
         """Test listing tags with API error."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_client.tags.list.side_effect = NotFoundError("Not found", status_code=404)
 
         with pytest.raises(RuntimeError, match="Not found"):
@@ -73,7 +73,7 @@ class TestTagsGetTool:
     @pytest.mark.asyncio
     async def test_get_success(self, mock_ctx: MagicMock) -> None:
         """Test getting a tag successfully."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_tag = _make_mock_tag()
         mock_client.tags.get.return_value = mock_tag
 
@@ -86,7 +86,7 @@ class TestTagsGetTool:
     @pytest.mark.asyncio
     async def test_get_not_found(self, mock_ctx: MagicMock) -> None:
         """Test getting a non-existent tag."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_client.tags.get.side_effect = NotFoundError("Not found", status_code=404)
 
         with pytest.raises(RuntimeError, match="Not found"):
@@ -99,7 +99,7 @@ class TestTagsCreateTool:
     @pytest.mark.asyncio
     async def test_create_success(self, mock_ctx: MagicMock) -> None:
         """Test creating a tag successfully."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_tag = _make_mock_tag()
         mock_client.tags.create.return_value = mock_tag
 
@@ -112,7 +112,7 @@ class TestTagsCreateTool:
     @pytest.mark.asyncio
     async def test_create_validation_error(self, mock_ctx: MagicMock) -> None:
         """Test creating a tag with validation error."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_client.tags.create.side_effect = ValidationError("Invalid name", status_code=400)
 
         with pytest.raises(RuntimeError, match="Invalid name"):
@@ -125,7 +125,7 @@ class TestTagsUpdateTool:
     @pytest.mark.asyncio
     async def test_update_success(self, mock_ctx: MagicMock) -> None:
         """Test updating a tag successfully."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_tag = _make_mock_tag()
         mock_client.tags.update.return_value = mock_tag
 
@@ -137,7 +137,7 @@ class TestTagsUpdateTool:
     @pytest.mark.asyncio
     async def test_update_error(self, mock_ctx: MagicMock) -> None:
         """Test updating a tag with error."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_client.tags.update.side_effect = NotFoundError("Not found", status_code=404)
 
         with pytest.raises(RuntimeError, match="Not found"):
@@ -150,7 +150,7 @@ class TestTagsDeleteTool:
     @pytest.mark.asyncio
     async def test_delete_success(self, mock_ctx: MagicMock) -> None:
         """Test deleting a tag successfully."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_client.tags.delete.return_value = None
 
         result = await devrev_tags_delete(mock_ctx, id="TAG-123")
@@ -162,7 +162,7 @@ class TestTagsDeleteTool:
     @pytest.mark.asyncio
     async def test_delete_not_found(self, mock_ctx: MagicMock) -> None:
         """Test deleting a non-existent tag."""
-        mock_client = mock_ctx.request_context.lifespan_context.client
+        mock_client = mock_ctx.request_context.lifespan_context.get_client()
         mock_client.tags.delete.side_effect = NotFoundError("Not found", status_code=404)
 
         with pytest.raises(RuntimeError, match="Not found"):
