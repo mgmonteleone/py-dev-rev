@@ -837,7 +837,8 @@ curl -X POST $SERVICE_URL/mcp/v1/initialize \
   }'
 
 # Expected: JSON response with server info and capabilities
-# If you get 401: Check your PAT is valid and your email domain is allowed
+# If you get 401: Authorization header is missing or malformed
+# If you get 403: Your PAT is invalid or your email domain is not allowed
 
 # 3. View logs
 gcloud run services logs read devrev-mcp-server --region=us-central1 --limit=50

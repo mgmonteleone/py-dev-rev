@@ -300,10 +300,10 @@ WIF_SERVICE_ACCOUNT: github-actions-deployer@<project-id>.iam.gserviceaccount.co
      -d '{"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0.0"}}'
    ```
 
-   **Expected response**: JSON with server info and capabilities. If you get a 401 error, check:
-   - Your DevRev PAT is valid
-   - Your email domain matches `MCP_AUTH_ALLOWED_DOMAINS` (if configured)
-   - The PAT has not expired
+   **Expected response**: JSON with server info and capabilities.
+
+   - **401 error**: Authorization header is missing or malformed — check the `Bearer <token>` format
+   - **403 error**: Invalid PAT or disallowed domain — check your PAT is valid, not expired, and your email domain matches `MCP_AUTH_ALLOWED_DOMAINS` (if configured)
 
 4. **View logs**:
    ```bash
