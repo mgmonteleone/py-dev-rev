@@ -9,6 +9,9 @@ A modern, type-safe Python SDK for the DevRev API.
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Coverage](https://img.shields.io/badge/coverage-80%25+-green.svg)](https://github.com/mgmonteleone/py-dev-rev)
+<!-- Note: Coverage badge should be updated manually or replaced with dynamic badge from codecov/coveralls -->
+
+---
 
 ## Table of Contents
 
@@ -1009,5 +1012,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📖 [Documentation](https://github.com/mgmonteleone/py-dev-rev)
 - 🐛 [Issue Tracker](https://github.com/mgmonteleone/py-dev-rev/issues)
 - 💬 [Discussions](https://github.com/mgmonteleone/py-dev-rev/discussions)
+
+---
 
 *Built with ❤️ using [Augment Code](https://augmentcode.com)*

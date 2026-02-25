@@ -153,7 +153,7 @@ class TestQuestionAnswersCRUD:
 
     @pytest.mark.xfail(
         reason="DevRev API may return 400 for question-answers.get",
-        raises=Exception,
+        raises=(DevRevError, NotFoundError),
     )
     def test_get_question_answer_by_id(
         self,
@@ -329,7 +329,7 @@ class TestQuestionAnswersCRUD:
             retrieved_qa = beta_write_client.question_answers.get(get_request)
             assert retrieved_qa.id == qa.id
             logger.info(f"✅ Lifecycle: Retrieved Q&A {qa.id}")
-        except Exception as e:
+        except DevRevError as e:
             logger.warning(f"⚠️ Lifecycle: Get failed (known issue): {e}")
 
         # Act & Assert - Update
