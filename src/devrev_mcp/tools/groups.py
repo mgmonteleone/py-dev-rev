@@ -155,7 +155,9 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_groups_add_member(ctx: Context[Any, Any, Any], group: str, member: str) -> dict[str, Any]:
+    async def devrev_groups_add_member(
+        ctx: Context[Any, Any, Any], group: str, member: str
+    ) -> dict[str, Any]:
         """Add a member to a group.
 
         Args:
@@ -178,7 +180,9 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_groups_remove_member(ctx: Context[Any, Any, Any], group: str, member: str) -> dict[str, Any]:
+    async def devrev_groups_remove_member(
+        ctx: Context[Any, Any, Any], group: str, member: str
+    ) -> dict[str, Any]:
         """Remove a member from a group.
 
         Args:

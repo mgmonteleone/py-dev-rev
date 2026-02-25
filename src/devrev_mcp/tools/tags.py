@@ -105,7 +105,10 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_tags_update(
-        ctx: Context[Any, Any, Any], id: str, name: str | None = None, description: str | None = None
+        ctx: Context[Any, Any, Any],
+        id: str,
+        name: str | None = None,
+        description: str | None = None,
     ) -> dict[str, Any]:
         """Update a DevRev tag.
 
