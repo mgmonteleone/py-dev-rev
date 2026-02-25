@@ -170,7 +170,7 @@ async def devrev_search_hybrid(
     app = ctx.request_context.lifespan_context
     try:
         ns = _parse_namespace(namespace)
-        response = await app.client.search.hybrid(
+        response = await app.get_client().search.hybrid(
             query,
             namespace=ns,
             semantic_weight=semantic_weight,
@@ -220,7 +220,7 @@ async def devrev_search_core(
     app = ctx.request_context.lifespan_context
     try:
         ns = _parse_namespace(namespace)
-        response = await app.client.search.core(
+        response = await app.get_client().search.core(
             query,
             namespace=ns,
             cursor=cursor,

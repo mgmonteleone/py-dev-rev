@@ -205,9 +205,16 @@ def app_context(mock_client, mcp_config):
     Returns:
         AppContext: Application context containing the mock client and config.
     """
+    from devrev import APIVersion
     from devrev_mcp.server import AppContext
 
-    return AppContext(client=mock_client, config=mcp_config)
+    # Create AppContext with new signature
+    # Use _stdio_client to simulate stdio mode (backward compat for existing tests)
+    return AppContext(
+        config=mcp_config,
+        _api_version=APIVersion.PUBLIC,
+        _stdio_client=mock_client,
+    )
 
 
 @pytest.fixture

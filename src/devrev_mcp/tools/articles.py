@@ -54,7 +54,7 @@ async def devrev_articles_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        articles = await app.client.articles.list(request)
+        articles = await app.get_client().articles.list(request)
         items = serialize_models(list(articles))
         return {"count": len(items), "articles": items}
     except DevRevError as e:
@@ -78,7 +78,7 @@ async def devrev_articles_get(ctx: Context, id: str) -> dict[str, Any]:
     app = ctx.request_context.lifespan_context
     try:
         request = ArticlesGetRequest(id=id)
-        article = await app.client.articles.get(request)
+        article = await app.get_client().articles.get(request)
         return serialize_model(article)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -127,7 +127,7 @@ if _config.enable_destructive_tools:
                 owned_by=owned_by,
                 status=article_status,
             )
-            article = await app.client.articles.create(request)
+            article = await app.get_client().articles.create(request)
             return serialize_model(article)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -172,7 +172,7 @@ if _config.enable_destructive_tools:
                 description=description,
                 status=article_status,
             )
-            article = await app.client.articles.update(request)
+            article = await app.get_client().articles.update(request)
             return serialize_model(article)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -194,7 +194,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = ArticlesDeleteRequest(id=id)
-            await app.client.articles.delete(request)
+            await app.get_client().articles.delete(request)
             return {"success": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -219,7 +219,7 @@ async def devrev_articles_count(
     """
     app = ctx.request_context.lifespan_context
     try:
-        count = await app.client.articles.count(status=status)
+        count = await app.get_client().articles.count(status=status)
         return {"count": count}
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e

@@ -720,6 +720,8 @@ auggie mcp list
 
 For teams using the hosted Cloud Run deployment, use [`augment-mcp-config-remote.json`](augment-mcp-config-remote.json):
 
+**Important**: The Cloud Run deployment uses per-user DevRev PAT authentication. Each user must provide their own DevRev Personal Access Token, not a shared MCP auth token.
+
 ```json
 {
   "mcpServers": {
@@ -727,7 +729,7 @@ For teams using the hosted Cloud Run deployment, use [`augment-mcp-config-remote
       "type": "http",
       "url": "https://devrev-mcp-server-<hash>-uc.a.run.app/mcp",
       "headers": {
-        "Authorization": "Bearer <your-mcp-auth-token>"
+        "Authorization": "Bearer <your-devrev-personal-access-token>"
       }
     }
   }
@@ -739,8 +741,14 @@ Or via Auggie CLI:
 auggie mcp add devrev \
   --transport http \
   --url https://devrev-mcp-server-<hash>-uc.a.run.app/mcp \
-  --header "Authorization: Bearer <your-mcp-auth-token>"
+  --header "Authorization: Bearer <your-devrev-personal-access-token>"
 ```
+
+**How to get your DevRev PAT**:
+1. Log in to your DevRev workspace
+2. Go to Settings → Personal Access Tokens
+3. Create a new token with appropriate permissions
+4. Copy the token and use it in the Authorization header above
 
 </details>
 
@@ -748,22 +756,17 @@ auggie mcp add devrev \
 
 #### Option 1: Google Cloud Run (Recommended)
 
-Deploy to Cloud Run with automatic scaling, built-in security, and managed infrastructure:
+Deploy to Cloud Run with automatic scaling, built-in security, and per-user PAT authentication:
 
 ```bash
-# 1. Create secrets in Google Secret Manager
+# 1. (Optional) Create DevRev API token secret for stdio/testing fallback
 echo -n "$DEVREV_API_TOKEN" | gcloud secrets create devrev-api-token --data-file=-
-echo -n "$MCP_AUTH_TOKEN" | gcloud secrets create mcp-auth-token --data-file=-
 
 # 2. Grant Cloud Run service account access to secrets
 PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')
 COMPUTE_SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 
 gcloud secrets add-iam-policy-binding devrev-api-token \
-  --member=serviceAccount:$COMPUTE_SA \
-  --role=roles/secretmanager.secretAccessor
-
-gcloud secrets add-iam-policy-binding mcp-auth-token \
   --member=serviceAccount:$COMPUTE_SA \
   --role=roles/secretmanager.secretAccessor
 
@@ -775,7 +778,11 @@ SERVICE_URL=$(gcloud run services describe devrev-mcp-server --region=us-central
 curl $SERVICE_URL/health
 ```
 
+**Authentication**: The deployment uses `MCP_AUTH_MODE=devrev-pat` by default. Each user authenticates with their own DevRev Personal Access Token. No shared `MCP_AUTH_TOKEN` is needed.
+
 See [deploy/README.md](deploy/README.md) for detailed setup instructions including:
+- Per-user PAT authentication configuration
+- Domain restriction setup
 - Artifact Registry configuration
 - Workload Identity Federation for GitHub Actions
 - Automated deployments on version tags
@@ -815,10 +822,10 @@ SERVICE_URL=$(gcloud run services describe devrev-mcp-server --region=us-central
 # 1. Health check (no authentication required)
 curl $SERVICE_URL/health
 
-# 2. MCP initialize endpoint (requires bearer token)
-MCP_AUTH_TOKEN="your-mcp-auth-token"
+# 2. MCP initialize endpoint (requires your DevRev PAT)
+DEVREV_PAT="your-devrev-personal-access-token"
 curl -X POST $SERVICE_URL/mcp/v1/initialize \
-  -H "Authorization: Bearer $MCP_AUTH_TOKEN" \
+  -H "Authorization: Bearer $DEVREV_PAT" \
   -H "Content-Type: application/json" \
   -d '{
     "protocolVersion": "2024-11-05",
@@ -828,6 +835,10 @@ curl -X POST $SERVICE_URL/mcp/v1/initialize \
       "version": "1.0.0"
     }
   }'
+
+# Expected: JSON response with server info and capabilities
+# If you get 401: Authorization header is missing or malformed
+# If you get 403: Your PAT is invalid or your email domain is not allowed
 
 # 3. View logs
 gcloud run services logs read devrev-mcp-server --region=us-central1 --limit=50
@@ -843,10 +854,17 @@ All settings are configurable via environment variables (prefix `MCP_`):
 | `MCP_HOST` | `127.0.0.1` | HTTP bind host |
 | `MCP_PORT` | `8080` | HTTP bind port |
 | `MCP_LOG_LEVEL` | `INFO` | Log level |
-| `MCP_AUTH_TOKEN` | — | Bearer token for HTTP auth |
+| `MCP_AUTH_MODE` | `devrev-pat` | Auth mode: `devrev-pat` (per-user PAT) or `static-token` (legacy) |
+| `MCP_AUTH_TOKEN` | — | Bearer token for HTTP auth (legacy `static-token` mode only) |
+| `MCP_AUTH_ALLOWED_DOMAINS` | `["augmentcode.com"]` | Allowed email domains for PAT auth (JSON array, e.g., `["augmentcode.com"]`) |
+| `MCP_AUTH_CACHE_TTL_SECONDS` | `300` | PAT validation cache TTL in seconds (5 minutes) |
 | `MCP_RATE_LIMIT_RPM` | `120` | Rate limit (requests/min, 0=disabled) |
 | `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta API tools |
 | `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `false` | Enable create/update/delete tools (set to `true` only if you need write access) |
+
+> **Note on Authentication Modes**:
+> - **`devrev-pat` (default)**: Each user sends their own DevRev Personal Access Token. The server validates it against DevRev API and creates a per-request client. This provides better security and audit trails.
+> - **`static-token` (legacy)**: All users share a single `MCP_AUTH_TOKEN`. This mode is maintained for backward compatibility but is not recommended.
 
 > **Note on Destructive Tools**: By default, `MCP_ENABLE_DESTRUCTIVE_TOOLS` is set to `false` for safety, which restricts the MCP server to read-only operations (list, get, count, export). Setting it to `true` enables create, update, and delete operations. Only enable this if you intentionally need write access to your DevRev workspace.
 

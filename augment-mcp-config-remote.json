@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://devrev-mcp-server-<hash>-uc.a.run.app/mcp",
       "headers": {
-        "Authorization": "Bearer <your-mcp-auth-token>"
+        "Authorization": "Bearer <your-devrev-personal-access-token>"
       }
     }
   }

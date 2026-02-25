@@ -47,7 +47,7 @@ async def devrev_timeline_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        entries = await app.client.timeline_entries.list(request)
+        entries = await app.get_client().timeline_entries.list(request)
         items = serialize_models(list(entries))
         return {"count": len(items), "timeline_entries": items}
     except DevRevError as e:
@@ -67,7 +67,7 @@ async def devrev_timeline_get(
     app = ctx.request_context.lifespan_context
     try:
         request = TimelineEntriesGetRequest(id=id)
-        entry = await app.client.timeline_entries.get(request)
+        entry = await app.get_client().timeline_entries.get(request)
         return serialize_model(entry)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -103,7 +103,7 @@ if _config.enable_destructive_tools:
                 ) from exc
 
             request = TimelineEntriesCreateRequest(object=object_id, type=entry_type, body=body)
-            entry = await app.client.timeline_entries.create(request)
+            entry = await app.get_client().timeline_entries.create(request)
             return serialize_model(entry)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -123,7 +123,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = TimelineEntriesUpdateRequest(id=id, body=body)
-            entry = await app.client.timeline_entries.update(request)
+            entry = await app.get_client().timeline_entries.update(request)
             return serialize_model(entry)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -141,7 +141,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = TimelineEntriesDeleteRequest(id=id)
-            await app.client.timeline_entries.delete(request)
+            await app.get_client().timeline_entries.delete(request)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e

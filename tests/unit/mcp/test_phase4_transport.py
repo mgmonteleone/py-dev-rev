@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from starlette.applications import Starlette
@@ -148,6 +148,69 @@ class TestMCPServerConfigPhase4:
 
             config = MCPServerConfig()
             assert config.enable_dns_rebinding_protection is False
+
+    def test_default_auth_mode(self) -> None:
+        """Test that default auth_mode is devrev-pat."""
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            from devrev_mcp.config import MCPServerConfig
+
+            config = MCPServerConfig()
+            assert config.auth_mode == "devrev-pat"
+
+    def test_env_override_auth_mode(self) -> None:
+        """Test that MCP_AUTH_MODE can be overridden."""
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+        env_vars["MCP_AUTH_MODE"] = "static-token"
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            from devrev_mcp.config import MCPServerConfig
+
+            config = MCPServerConfig()
+            assert config.auth_mode == "static-token"
+
+    def test_default_auth_allowed_domains(self) -> None:
+        """Test that default auth_allowed_domains is ['augmentcode.com']."""
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            from devrev_mcp.config import MCPServerConfig
+
+            config = MCPServerConfig()
+            assert config.auth_allowed_domains == ["augmentcode.com"]
+
+    def test_env_override_auth_allowed_domains(self) -> None:
+        """Test that MCP_AUTH_ALLOWED_DOMAINS can be overridden."""
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+        env_vars["MCP_AUTH_ALLOWED_DOMAINS"] = '["example.com", "test.com"]'
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            from devrev_mcp.config import MCPServerConfig
+
+            config = MCPServerConfig()
+            assert config.auth_allowed_domains == ["example.com", "test.com"]
+
+    def test_default_auth_cache_ttl_seconds(self) -> None:
+        """Test that default auth_cache_ttl_seconds is 300."""
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            from devrev_mcp.config import MCPServerConfig
+
+            config = MCPServerConfig()
+            assert config.auth_cache_ttl_seconds == 300
+
+    def test_env_override_auth_cache_ttl_seconds(self) -> None:
+        """Test that MCP_AUTH_CACHE_TTL_SECONDS can be overridden."""
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+        env_vars["MCP_AUTH_CACHE_TTL_SECONDS"] = "600"
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            from devrev_mcp.config import MCPServerConfig
+
+            config = MCPServerConfig()
+            assert config.auth_cache_ttl_seconds == 600
 
 
 class TestBearerTokenMiddleware:
@@ -746,3 +809,334 @@ class TestMiddlewareInjection:
         response = client.get("/api/test", headers={"Authorization": "Bearer test-secret"})
         assert response.status_code == 200
         assert response.text == "OK"
+
+
+class TestDevRevPATAuthMiddleware:
+    """Tests for DevRevPATAuthMiddleware per-user PAT authentication."""
+
+    def test_missing_auth_header_returns_401(self) -> None:
+        """Test that request without Authorization header returns 401."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = DevRevPATAuthMiddleware(app)
+        client = TestClient(app)
+
+        response = client.get("/api/test")
+        assert response.status_code == 401
+        assert "Missing Authorization header" in response.text
+
+    def test_malformed_auth_header_returns_401(self) -> None:
+        """Test that request with malformed auth header returns 401."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = DevRevPATAuthMiddleware(app)
+        client = TestClient(app)
+
+        # Test with "Basic" instead of "Bearer"
+        response = client.get("/api/test", headers={"Authorization": "Basic dXNlcjpwYXNz"})
+        assert response.status_code == 401
+        assert "Invalid Authorization header format" in response.text
+
+        # Test with just the token (no "Bearer" prefix)
+        response = client.get("/api/test", headers={"Authorization": "test-token"})
+        assert response.status_code == 401
+
+    def test_invalid_pat_returns_403(self) -> None:
+        """Test that invalid PAT returns 403 after DevRev API validation fails."""
+        from devrev.exceptions import DevRevError
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = DevRevPATAuthMiddleware(app)
+        client = TestClient(app)
+
+        # Mock the DevRev API to raise an error
+        with patch("devrev_mcp.middleware.auth.AsyncDevRevClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.dev_users.self = AsyncMock(side_effect=DevRevError("Invalid token"))
+            mock_client.close = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            response = client.get("/api/test", headers={"Authorization": "Bearer invalid-pat"})
+            assert response.status_code == 403
+            assert "Invalid DevRev PAT" in response.text
+
+    def test_valid_pat_returns_200(self) -> None:
+        """Test that valid PAT passes authentication and sets request state."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            # Verify request state was set
+            assert hasattr(request.state, "devrev_pat_hash")
+            assert hasattr(request.state, "devrev_user_id")
+            assert hasattr(request.state, "devrev_user_email")
+            assert hasattr(request.state, "devrev_user_display_name")
+            assert request.state.devrev_user_email == "user@augmentcode.com"
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = DevRevPATAuthMiddleware(app)
+        client = TestClient(app)
+
+        # Mock the DevRev API to return a valid user
+        with patch("devrev_mcp.middleware.auth.AsyncDevRevClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_user = MagicMock()
+            mock_user.id = "don:identity:dvrv-us-1:devo/1:devu/123"
+            mock_user.email = "user@augmentcode.com"
+            mock_user.display_name = "Test User"
+            mock_client.dev_users.self = AsyncMock(return_value=mock_user)
+            mock_client.close = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            response = client.get("/api/test", headers={"Authorization": "Bearer valid-pat-token"})
+            assert response.status_code == 200
+            assert response.text == "OK"
+
+    def test_domain_restriction_allowed(self) -> None:
+        """Test that user from allowed domain passes authentication."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = DevRevPATAuthMiddleware(app, allowed_domains=["augmentcode.com"])
+        client = TestClient(app)
+
+        # Mock the DevRev API to return a user with allowed domain
+        with patch("devrev_mcp.middleware.auth.AsyncDevRevClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_user = MagicMock()
+            mock_user.id = "don:identity:dvrv-us-1:devo/1:devu/123"
+            mock_user.email = "user@augmentcode.com"
+            mock_user.display_name = "Test User"
+            mock_client.dev_users.self = AsyncMock(return_value=mock_user)
+            mock_client.close = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            response = client.get("/api/test", headers={"Authorization": "Bearer valid-pat"})
+            assert response.status_code == 200
+
+    def test_domain_restriction_blocked(self) -> None:
+        """Test that user from disallowed domain is rejected."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = DevRevPATAuthMiddleware(app, allowed_domains=["augmentcode.com"])
+        client = TestClient(app)
+
+        # Mock the DevRev API to return a user with disallowed domain
+        with patch("devrev_mcp.middleware.auth.AsyncDevRevClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_user = MagicMock()
+            mock_user.id = "don:identity:dvrv-us-1:devo/1:devu/456"
+            mock_user.email = "user@other.com"
+            mock_user.display_name = "Other User"
+            mock_client.dev_users.self = AsyncMock(return_value=mock_user)
+            mock_client.close = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            response = client.get("/api/test", headers={"Authorization": "Bearer valid-pat"})
+            assert response.status_code == 403
+            assert "Email domain not allowed" in response.text
+
+    def test_health_endpoint_skips_auth(self) -> None:
+        """Test that /health endpoint skips authentication."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def health(request):
+            return PlainTextResponse("healthy")
+
+        app = Starlette(routes=[Route("/health", health)])
+        app = DevRevPATAuthMiddleware(app)
+        client = TestClient(app)
+
+        # Health check should work without auth
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.text == "healthy"
+
+    def test_options_request_skips_auth(self) -> None:
+        """Test that OPTIONS request (CORS preflight) skips auth."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello, methods=["GET", "OPTIONS"])])
+        app = DevRevPATAuthMiddleware(app)
+        client = TestClient(app)
+
+        # OPTIONS should work without auth (CORS preflight)
+        response = client.options("/api/test")
+        assert response.status_code == 200
+
+    def test_caching_reduces_api_calls(self) -> None:
+        """Test that second request with same PAT uses cache and doesn't call DevRev API again."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        app = DevRevPATAuthMiddleware(app, cache_ttl_seconds=300)
+        client = TestClient(app)
+
+        # Mock the DevRev API
+        with patch("devrev_mcp.middleware.auth.AsyncDevRevClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_user = MagicMock()
+            mock_user.id = "don:identity:dvrv-us-1:devo/1:devu/123"
+            mock_user.email = "user@augmentcode.com"
+            mock_user.display_name = "Test User"
+            mock_client.dev_users.self = AsyncMock(return_value=mock_user)
+            mock_client.close = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            # First request - should call API
+            response1 = client.get("/api/test", headers={"Authorization": "Bearer same-pat-token"})
+            assert response1.status_code == 200
+            assert mock_client.dev_users.self.call_count == 1
+
+            # Second request with same PAT - should use cache, not call API again
+            response2 = client.get("/api/test", headers={"Authorization": "Bearer same-pat-token"})
+            assert response2.status_code == 200
+            # Still only 1 call because second request used cache
+            assert mock_client.dev_users.self.call_count == 1
+
+    def test_no_domain_restriction(self) -> None:
+        """Test that when allowed_domains is empty/None, any domain passes."""
+        from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+        async def hello(request):
+            return PlainTextResponse("OK")
+
+        app = Starlette(routes=[Route("/api/test", hello)])
+        # No domain restriction (empty list)
+        app = DevRevPATAuthMiddleware(app, allowed_domains=[])
+        client = TestClient(app)
+
+        # Mock the DevRev API to return a user with any domain
+        with patch("devrev_mcp.middleware.auth.AsyncDevRevClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_user = MagicMock()
+            mock_user.id = "don:identity:dvrv-us-1:devo/1:devu/789"
+            mock_user.email = "user@anydomain.com"
+            mock_user.display_name = "Any User"
+            mock_client.dev_users.self = AsyncMock(return_value=mock_user)
+            mock_client.close = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            response = client.get("/api/test", headers={"Authorization": "Bearer valid-pat"})
+            assert response.status_code == 200
+            assert response.text == "OK"
+
+
+class TestAppContextGetClient:
+    """Tests for AppContext.get_client() method."""
+
+    def test_get_client_stdio_mode(self) -> None:
+        """Test that get_client() returns stdio client when _stdio_client is set."""
+        from devrev import APIVersion, AsyncDevRevClient
+        from devrev_mcp.config import MCPServerConfig
+        from devrev_mcp.server import AppContext
+
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+        env_vars["DEVREV_API_TOKEN"] = "test-token"
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            config = MCPServerConfig()
+            mock_client = AsyncMock(spec=AsyncDevRevClient)
+
+            app = AppContext(
+                config=config,
+                _api_version=APIVersion.PUBLIC,
+                _stdio_client=mock_client,
+            )
+
+            # Should return the stdio client
+            client = app.get_client()
+            assert client is mock_client
+
+    def test_get_client_pat_mode(self) -> None:
+        """Test that get_client() creates client from PAT when context var is set."""
+        from devrev import APIVersion
+        from devrev_mcp.config import MCPServerConfig
+        from devrev_mcp.middleware.auth import _current_devrev_client, _current_devrev_pat
+        from devrev_mcp.server import AppContext
+
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+        env_vars["DEVREV_API_TOKEN"] = "test-token"
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            config = MCPServerConfig()
+
+            app = AppContext(
+                config=config,
+                _api_version=APIVersion.PUBLIC,
+                _stdio_client=None,  # No stdio client
+            )
+
+            # Set the context var (simulating middleware)
+            _current_devrev_pat.set("user-pat-token")
+
+            try:
+                # Mock AsyncDevRevClient constructor
+                with patch("devrev_mcp.server.AsyncDevRevClient") as mock_client_class:
+                    mock_client = AsyncMock()
+                    mock_client_class.return_value = mock_client
+
+                    client = app.get_client()
+
+                    # Should create a new client with the PAT
+                    mock_client_class.assert_called_once_with(
+                        api_token="user-pat-token",
+                        api_version=APIVersion.PUBLIC,
+                    )
+                    assert client is mock_client
+            finally:
+                # Clean up context vars
+                _current_devrev_pat.set(None)
+                _current_devrev_client.set(None)
+
+    def test_get_client_no_client_available(self) -> None:
+        """Test that get_client() raises RuntimeError when no client is available."""
+        from devrev import APIVersion
+        from devrev_mcp.config import MCPServerConfig
+        from devrev_mcp.middleware.auth import _current_devrev_client, _current_devrev_pat
+        from devrev_mcp.server import AppContext
+
+        env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
+        env_vars["DEVREV_API_TOKEN"] = "test-token"
+
+        with patch.dict(os.environ, env_vars, clear=True):
+            config = MCPServerConfig()
+
+            app = AppContext(
+                config=config,
+                _api_version=APIVersion.PUBLIC,
+                _stdio_client=None,  # No stdio client
+            )
+
+            # Make sure context vars are not set
+            _current_devrev_pat.set(None)
+            _current_devrev_client.set(None)
+
+            # Should raise RuntimeError
+            with pytest.raises(RuntimeError, match="No DevRev client available"):
+                app.get_client()

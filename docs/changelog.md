@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **MCP Server: Per-user DevRev PAT authentication** (#145) — The MCP server now supports per-user authentication using DevRev Personal Access Tokens. Each user sends their own DevRev PAT as the Bearer token, which the server validates against the DevRev API and uses to create a per-request client. This provides better security, audit trails, and eliminates shared secrets.
+  - New auth mode: `MCP_AUTH_MODE=devrev-pat` (default)
+  - Domain restrictions: `MCP_AUTH_ALLOWED_DOMAINS` to limit access by email domain
+  - Token caching: `MCP_AUTH_CACHE_TTL_SECONDS` for validation cache (default 5 minutes)
+  - Legacy mode: `MCP_AUTH_MODE=static-token` still supported for backward compatibility
+  - Updated Cloud Run deployment to use per-user PAT mode by default
+  - Updated documentation and client configuration examples
+
 ### Fixed
 - **SDK: Articles API field naming** — Fixed field name from `content` to `description` to match DevRev API specification. Updated `Article`, `ArticlesCreateRequest`, and `ArticlesUpdateRequest` models. **BREAKING CHANGE**: Code using `article.content` or `ArticlesCreateRequest(content=...)` must be updated to use `description` instead.
 

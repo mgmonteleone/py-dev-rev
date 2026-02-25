@@ -47,7 +47,7 @@ async def devrev_works_list(
                     f"Invalid work type: {e.args[0]}. "
                     f"Valid types: {', '.join(wt.name for wt in WorkType)}"
                 ) from e
-        response = await app.client.works.list(
+        response = await app.get_client().works.list(
             type=work_types,
             applies_to_part=applies_to_part,
             owned_by=owned_by,
@@ -74,7 +74,7 @@ async def devrev_works_get(
     """
     app = ctx.request_context.lifespan_context
     try:
-        work = await app.client.works.get(id)
+        work = await app.get_client().works.get(id)
         return serialize_model(work)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -136,7 +136,7 @@ if _config.enable_destructive_tools:
                         f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
                     ) from e
 
-            work = await app.client.works.create(
+            work = await app.get_client().works.create(
                 title=title,
                 applies_to_part=applies_to_part,
                 type=work_type,
@@ -194,7 +194,7 @@ if _config.enable_destructive_tools:
                         f"Valid severities: {', '.join(s.name for s in TicketSeverity)}"
                     ) from e
 
-            work = await app.client.works.update(
+            work = await app.get_client().works.update(
                 id,
                 title=title,
                 body=body,
@@ -218,7 +218,7 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            await app.client.works.delete(id)
+            await app.get_client().works.delete(id)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -248,7 +248,7 @@ async def devrev_works_count(
                     f"Invalid work type: {e.args[0]}. "
                     f"Valid types: {', '.join(wt.name for wt in WorkType)}"
                 ) from e
-        count = await app.client.works.count(type=work_types, owned_by=owned_by)
+        count = await app.get_client().works.count(type=work_types, owned_by=owned_by)
         return {"count": count}
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -280,7 +280,7 @@ async def devrev_works_export(
                     f"Invalid work type: {e.args[0]}. "
                     f"Valid types: {', '.join(wt.name for wt in WorkType)}"
                 ) from e
-        works = await app.client.works.export(type=work_types, first=first)
+        works = await app.get_client().works.export(type=work_types, first=first)
         items = serialize_models(list(works))
         return {"count": len(items), "works": items}
     except DevRevError as e:

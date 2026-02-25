@@ -13,6 +13,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from devrev import APIVersion, AsyncDevRevClient
 from devrev_mcp import __version__
 from devrev_mcp.config import MCPServerConfig
+from devrev_mcp.middleware.auth import _current_devrev_client, _current_devrev_pat
 from devrev_mcp.middleware.health import init_start_time
 
 logger = logging.getLogger(__name__)
@@ -23,12 +24,50 @@ class AppContext:
     """Application context shared across all MCP tool invocations.
 
     Attributes:
-        client: The async DevRev API client.
         config: The MCP server configuration.
+        _api_version: The DevRev API version to use.
+        _stdio_client: Shared client for stdio transport (None for HTTP with devrev-pat).
     """
 
-    client: AsyncDevRevClient
     config: MCPServerConfig
+    _api_version: APIVersion
+    _stdio_client: AsyncDevRevClient | None = None
+
+    def get_client(self) -> AsyncDevRevClient:
+        """Get a DevRev client for the current request.
+
+        For HTTP transports with devrev-pat auth: creates/returns a client
+        using the user's PAT from the context variable (set by middleware).
+
+        For stdio transport: returns the shared client (backward compat).
+        For static-token auth: returns the shared client.
+
+        Returns:
+            AsyncDevRevClient configured for the current request.
+
+        Raises:
+            RuntimeError: If no client is available (missing PAT in devrev-pat mode).
+        """
+        # Stdio or static-token mode: use shared client
+        if self._stdio_client is not None:
+            return self._stdio_client
+
+        # Check for cached per-request client first
+        client = _current_devrev_client.get()
+        if client is not None:
+            return client
+
+        # HTTP with devrev-pat mode: create per-request client from PAT
+        pat = _current_devrev_pat.get()
+        if pat:
+            client = AsyncDevRevClient(api_token=pat, api_version=self._api_version)
+            _current_devrev_client.set(client)
+            return client
+
+        raise RuntimeError(
+            "No DevRev client available. For HTTP transports with devrev-pat mode, "
+            "ensure a valid DevRev PAT is provided in the Authorization header."
+        )
 
 
 @asynccontextmanager
@@ -51,20 +90,28 @@ async def app_lifespan(_server: FastMCP) -> AsyncIterator[AppContext]:
     init_start_time()
 
     logger.info(
-        "Starting %s v%s (transport=%s, beta_tools=%s)",
+        "Starting %s v%s (transport=%s, auth_mode=%s, beta_tools=%s)",
         config.server_name,
         __version__,
         config.transport,
+        config.auth_mode,
         config.enable_beta_tools,
     )
 
     # Use beta API version only if beta tools are enabled
     api_version = APIVersion.BETA if config.enable_beta_tools else APIVersion.PUBLIC
-    client = AsyncDevRevClient(api_version=api_version)
-    try:
-        yield AppContext(client=client, config=config)
-    finally:
-        await client.close()
+
+    # For stdio or static-token mode, create a shared client
+    if config.transport == "stdio" or config.auth_mode == "static-token":
+        client = AsyncDevRevClient(api_version=api_version)
+        try:
+            yield AppContext(config=config, _api_version=api_version, _stdio_client=client)
+        finally:
+            await client.close()
+            logger.info("DevRev MCP Server shut down.")
+    else:
+        # For devrev-pat mode, no shared client needed
+        yield AppContext(config=config, _api_version=api_version)
         logger.info("DevRev MCP Server shut down.")
 
 
@@ -114,8 +161,8 @@ if _config.transport != "stdio":
     def _inject_middleware(starlette_app):  # noqa: ANN001, ANN202
         """Add health route, auth, and rate limiting to a Starlette app."""
         logger.debug(
-            "Injecting middleware: health_route=True, auth=%s, rate_limit=%s (rpm=%d)",
-            _config.auth_token is not None,
+            "Injecting middleware: health_route=True, auth_mode=%s, rate_limit=%s (rpm=%d)",
+            _config.auth_mode,
             _config.rate_limit_rpm > 0,
             _config.rate_limit_rpm,
         )
@@ -130,7 +177,16 @@ if _config.transport != "stdio":
             )
 
         # Add auth middleware (inner — runs after rate limiting)
-        if _config.auth_token is not None:
+        if _config.auth_mode == "devrev-pat":
+            from devrev_mcp.middleware.auth import DevRevPATAuthMiddleware
+
+            starlette_app.add_middleware(
+                DevRevPATAuthMiddleware,
+                allowed_domains=_config.auth_allowed_domains,
+                cache_ttl_seconds=_config.auth_cache_ttl_seconds,
+                api_version="beta" if _config.enable_beta_tools else None,
+            )
+        elif _config.auth_token is not None:
             starlette_app.add_middleware(
                 BearerTokenMiddleware,
                 token=_config.auth_token.get_secret_value(),

@@ -43,7 +43,7 @@ async def devrev_conversations_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        conversations = await app.client.conversations.list(request)
+        conversations = await app.get_client().conversations.list(request)
         items = serialize_models(list(conversations))
         return {"count": len(items), "conversations": items}
     except DevRevError as e:
@@ -63,7 +63,7 @@ async def devrev_conversations_get(
     app = ctx.request_context.lifespan_context
     try:
         request = ConversationsGetRequest(id=id)
-        conversation = await app.client.conversations.get(request)
+        conversation = await app.get_client().conversations.get(request)
         return serialize_model(conversation)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
@@ -89,7 +89,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = ConversationsCreateRequest(type=type, title=title, description=description)
-            conversation = await app.client.conversations.create(request)
+            conversation = await app.get_client().conversations.create(request)
             return serialize_model(conversation)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -111,7 +111,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = ConversationsUpdateRequest(id=id, title=title, description=description)
-            conversation = await app.client.conversations.update(request)
+            conversation = await app.get_client().conversations.update(request)
             return serialize_model(conversation)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -129,7 +129,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             request = ConversationsDeleteRequest(id=id)
-            await app.client.conversations.delete(request)
+            await app.get_client().conversations.delete(request)
             return {"deleted": True, "id": id}
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -152,7 +152,7 @@ async def devrev_conversations_export(
     """
     app = ctx.request_context.lifespan_context
     try:
-        response = await app.client.conversations.export(
+        response = await app.get_client().conversations.export(
             cursor=cursor,
             limit=clamp_page_size(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
