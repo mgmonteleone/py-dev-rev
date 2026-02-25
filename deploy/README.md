@@ -1,14 +1,56 @@
 # DevRev MCP Server - Cloud Run Deployment
 
-This directory contains configuration files for deploying the DevRev MCP Server to Google Cloud Run with secure token-based authentication.
+This directory contains configuration files for deploying the DevRev MCP Server to Google Cloud Run with per-user DevRev PAT authentication.
 
 ## Architecture
 
 - **Container Registry**: Artifact Registry (preferred over Container Registry)
 - **Deployment**: Cloud Run with `--allow-unauthenticated` for public access
-- **Authentication**: Bearer token via `MCP_AUTH_TOKEN` secret
+- **Authentication**: Per-user DevRev Personal Access Token (PAT) via Bearer token
 - **Secrets**: Google Secret Manager with Cloud Run runtime service account access
 - **CI/CD**: GitHub Actions with Workload Identity Federation (WIF)
+
+## Authentication Model
+
+The MCP server supports two authentication modes:
+
+### Per-User PAT Authentication (Default - Recommended)
+
+**Mode**: `MCP_AUTH_MODE=devrev-pat`
+
+Each user sends their own DevRev Personal Access Token as the Bearer token in the Authorization header. The server:
+1. Validates the PAT against the DevRev API
+2. Extracts user identity from the PAT
+3. Creates a per-request DevRev client with the user's credentials
+4. Optionally restricts access by email domain (e.g., `@augmentcode.com`)
+
+**Benefits**:
+- No shared secrets - each user uses their own DevRev credentials
+- Audit trail shows actual user identity in DevRev
+- Fine-grained access control via domain restrictions
+- Automatic token validation and caching (5-minute TTL by default)
+
+**User Configuration**:
+Users configure their MCP client with their own DevRev PAT:
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "type": "http",
+      "url": "https://devrev-mcp-server-xxx.run.app/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-devrev-personal-access-token>"
+      }
+    }
+  }
+}
+```
+
+### Static Token Authentication (Legacy)
+
+**Mode**: `MCP_AUTH_MODE=static-token`
+
+All users share a single `MCP_AUTH_TOKEN` secret. This mode is maintained for backward compatibility but is not recommended for production use.
 
 ## Prerequisites
 
@@ -45,7 +87,9 @@ This directory contains configuration files for deploying the DevRev MCP Server 
 
 ## Setup: Create Secrets in Google Secret Manager
 
-### 1. Create DevRev API Token Secret
+### 1. Create DevRev API Token Secret (Optional - for stdio/testing fallback)
+
+**Note**: With `MCP_AUTH_MODE=devrev-pat`, this secret is only needed for stdio transport or testing. It's not required for HTTP transport in production.
 
 ```bash
 # Create the secret (interactive)
@@ -59,35 +103,36 @@ echo -n "$DEVREV_API_TOKEN" | gcloud secrets create devrev-api-token \
   --data-file=-
 ```
 
-### 2. Create MCP Auth Token Secret
-
-```bash
-# Create the secret (interactive)
-gcloud secrets create mcp-auth-token \
-  --replication-policy=automatic \
-  --data-file=-
-
-# Or from environment variable
-echo -n "$MCP_AUTH_TOKEN" | gcloud secrets create mcp-auth-token \
-  --replication-policy=automatic \
-  --data-file=-
-```
-
-### 3. Grant Cloud Run Service Account Access to Secrets
+### 2. Grant Cloud Run Service Account Access to Secrets
 
 ```bash
 PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')
 COMPUTE_SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 
-# Grant access to devrev-api-token
+# Grant access to devrev-api-token (if created)
 gcloud secrets add-iam-policy-binding devrev-api-token \
   --member=serviceAccount:$COMPUTE_SA \
   --role=roles/secretmanager.secretAccessor
+```
 
-# Grant access to mcp-auth-token
+### Legacy: Static Token Mode Setup
+
+If you need to use the legacy `MCP_AUTH_MODE=static-token` mode:
+
+```bash
+# Create MCP auth token secret
+echo -n "$MCP_AUTH_TOKEN" | gcloud secrets create mcp-auth-token \
+  --replication-policy=automatic \
+  --data-file=-
+
+# Grant access
 gcloud secrets add-iam-policy-binding mcp-auth-token \
   --member=serviceAccount:$COMPUTE_SA \
   --role=roles/secretmanager.secretAccessor
+
+# Update deployment to use static-token mode
+# Add to cloudbuild.yaml: MCP_AUTH_MODE=static-token
+# Add to secrets: MCP_AUTH_TOKEN=mcp-auth-token:latest
 ```
 
 ## Deployment Methods
@@ -244,16 +289,21 @@ WIF_SERVICE_ACCOUNT: github-actions-deployer@<project-id>.iam.gserviceaccount.co
    curl $SERVICE_URL/health
    ```
 
-3. **Test MCP endpoint with authentication**:
+3. **Test MCP endpoint with DevRev PAT authentication**:
    ```bash
    SERVICE_URL=$(gcloud run services describe devrev-mcp-server --region=us-central1 --format='value(status.url)')
-   MCP_AUTH_TOKEN="your-mcp-auth-token"
+   DEVREV_PAT="your-devrev-personal-access-token"
 
    curl -X POST $SERVICE_URL/mcp/v1/initialize \
-     -H "Authorization: Bearer $MCP_AUTH_TOKEN" \
+     -H "Authorization: Bearer $DEVREV_PAT" \
      -H "Content-Type: application/json" \
      -d '{"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0.0"}}'
    ```
+
+   **Expected response**: JSON with server info and capabilities. If you get a 401 error, check:
+   - Your DevRev PAT is valid
+   - Your email domain matches `MCP_AUTH_ALLOWED_DOMAINS` (if configured)
+   - The PAT has not expired
 
 4. **View logs**:
    ```bash
@@ -271,11 +321,16 @@ The following environment variables are set in the deployment:
 - `MCP_PORT=8080` - Cloud Run default port
 - `MCP_LOG_FORMAT=json` - Structured logging for Cloud Logging
 - `MCP_LOG_LEVEL=INFO` - Production log level
+- `MCP_AUTH_MODE=devrev-pat` - Per-user PAT authentication (default)
+- `MCP_AUTH_ALLOWED_DOMAINS=["augmentcode.com"]` - Restrict access by email domain
+- `MCP_AUTH_CACHE_TTL_SECONDS=300` - PAT validation cache TTL (5 minutes)
 
 ### Secrets from Secret Manager
 
-- `DEVREV_API_TOKEN` - DevRev API token (mounted from Secret Manager)
-- `MCP_AUTH_TOKEN` - Bearer token for MCP endpoint authentication (mounted from Secret Manager)
+- `DEVREV_API_TOKEN` - DevRev API token (optional - only for stdio/testing fallback)
+
+**Legacy mode only**:
+- `MCP_AUTH_TOKEN` - Shared bearer token for static-token mode (not recommended)
 
 ### Resource Limits
 
@@ -349,26 +404,41 @@ curl http://localhost:8080/health
 
 ## Security Considerations
 
-### Public Access with Bearer Token Authentication
+### Public Access with Per-User PAT Authentication
 
-The deployment uses `--allow-unauthenticated` for public HTTP access, but requires `MCP_AUTH_TOKEN` bearer token for MCP endpoint calls:
+The deployment uses `--allow-unauthenticated` for public HTTP access, but requires each user's DevRev Personal Access Token for MCP endpoint calls:
 
 ```bash
 # Health endpoint (no auth required)
 curl https://devrev-mcp-server-xxx.run.app/health
 
-# MCP endpoint (requires bearer token)
+# MCP endpoint (requires user's DevRev PAT)
 curl -X POST https://devrev-mcp-server-xxx.run.app/mcp/v1/initialize \
-  -H "Authorization: Bearer $MCP_AUTH_TOKEN" \
+  -H "Authorization: Bearer $DEVREV_PAT" \
   -H "Content-Type: application/json" \
   -d '{...}'
 ```
 
+### Authentication Security
+
+1. **Per-User PATs**: Each user authenticates with their own DevRev credentials
+   - No shared secrets between users
+   - Audit trail shows actual user identity in DevRev
+   - Tokens are validated against DevRev API on each request (with 5-minute cache)
+
+2. **Domain Restrictions**: Optional email domain filtering
+   - Configure `MCP_AUTH_ALLOWED_DOMAINS` to restrict access (e.g., `["augmentcode.com"]`)
+   - Users with PATs from other domains will be rejected
+
+3. **Token Caching**: PAT validation results are cached for 5 minutes
+   - Reduces load on DevRev API
+   - Configurable via `MCP_AUTH_CACHE_TTL_SECONDS`
+   - Cache is per-token, so revoked tokens expire from cache within TTL
+
 ### Secret Management Best Practices
 
 1. **Secrets in Secret Manager**: Never commit secrets to Git
-   - `devrev-api-token` - DevRev API credentials
-   - `mcp-auth-token` - MCP bearer token
+   - `devrev-api-token` - DevRev API credentials (optional - only for stdio/testing)
 
 2. **Service Account Permissions**: Cloud Run runtime SA has minimal permissions
    - Only access to required secrets via IAM bindings

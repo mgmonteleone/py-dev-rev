@@ -56,8 +56,9 @@ steps:
       - '--max-instances=10'
       - '--timeout=300s'
       - '--concurrency=80'
-      - '--set-env-vars=MCP_TRANSPORT=streamable-http,MCP_HOST=0.0.0.0,MCP_PORT=8080,MCP_LOG_FORMAT=json,MCP_LOG_LEVEL=INFO'
-      - '--set-secrets=DEVREV_API_TOKEN=devrev-api-token:latest,MCP_AUTH_TOKEN=mcp-auth-token:latest'
+      - '--set-env-vars=MCP_TRANSPORT=streamable-http,MCP_HOST=0.0.0.0,MCP_PORT=8080,MCP_LOG_FORMAT=json,MCP_LOG_LEVEL=INFO,MCP_AUTH_MODE=devrev-pat,MCP_AUTH_ALLOWED_DOMAINS=["augmentcode.com"]'
+      # Note: DEVREV_API_TOKEN is only needed for stdio/testing fallback, not required for HTTP with devrev-pat mode
+      - '--set-secrets=DEVREV_API_TOKEN=devrev-api-token:latest'
     waitFor: ['push']
 
 # Substitution variables with defaults
