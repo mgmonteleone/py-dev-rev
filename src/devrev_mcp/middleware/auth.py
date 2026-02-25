@@ -24,6 +24,11 @@ logger = logging.getLogger(__name__)
 # Context variable for storing the current user's DevRev PAT
 _current_devrev_pat: ContextVar[str | None] = ContextVar("_current_devrev_pat", default=None)
 
+# Context variable for storing the current user's DevRev client (per-request)
+_current_devrev_client: ContextVar[AsyncDevRevClient | None] = ContextVar(
+    "_current_devrev_client", default=None
+)
+
 
 class BearerTokenMiddleware(BaseHTTPMiddleware):
     """Middleware that validates Bearer token authentication for HTTP transports.
@@ -212,9 +217,9 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         request.state.devrev_user_display_name = identity.display_name
 
         # Set context var for access from tools
-        _current_devrev_pat.set(token)
+        pat_token = _current_devrev_pat.set(token)
 
-        logger.info(
+        logger.debug(
             "Authenticated user: %s (%s)",
             identity.email,
             identity.display_name,
@@ -223,8 +228,12 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         try:
             return await call_next(request)
         finally:
-            # Clear context var after request
-            _current_devrev_pat.set(None)
+            # Close per-request client if one was created
+            client = _current_devrev_client.get(None)
+            if client is not None:
+                await client.close()
+            _current_devrev_client.set(None)
+            _current_devrev_pat.reset(pat_token)
 
     async def _get_cached_identity(self, token_hash: str) -> _CachedIdentity | None:
         """Get cached identity if valid.

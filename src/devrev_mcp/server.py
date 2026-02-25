@@ -13,7 +13,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from devrev import APIVersion, AsyncDevRevClient
 from devrev_mcp import __version__
 from devrev_mcp.config import MCPServerConfig
-from devrev_mcp.middleware.auth import _current_devrev_pat
+from devrev_mcp.middleware.auth import _current_devrev_client, _current_devrev_pat
 from devrev_mcp.middleware.health import init_start_time
 
 logger = logging.getLogger(__name__)
@@ -52,10 +52,17 @@ class AppContext:
         if self._stdio_client is not None:
             return self._stdio_client
 
+        # Check for cached per-request client first
+        client = _current_devrev_client.get()
+        if client is not None:
+            return client
+
         # HTTP with devrev-pat mode: create per-request client from PAT
         pat = _current_devrev_pat.get()
         if pat:
-            return AsyncDevRevClient(api_token=pat, api_version=self._api_version)
+            client = AsyncDevRevClient(api_token=pat, api_version=self._api_version)
+            _current_devrev_client.set(client)
+            return client
 
         raise RuntimeError(
             "No DevRev client available. For HTTP transports with devrev-pat mode, "

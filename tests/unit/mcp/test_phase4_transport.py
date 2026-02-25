@@ -1077,7 +1077,7 @@ class TestAppContextGetClient:
         """Test that get_client() creates client from PAT when context var is set."""
         from devrev import APIVersion
         from devrev_mcp.config import MCPServerConfig
-        from devrev_mcp.middleware.auth import _current_devrev_pat
+        from devrev_mcp.middleware.auth import _current_devrev_client, _current_devrev_pat
         from devrev_mcp.server import AppContext
 
         env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
@@ -1110,14 +1110,15 @@ class TestAppContextGetClient:
                     )
                     assert client is mock_client
             finally:
-                # Clean up context var
+                # Clean up context vars
                 _current_devrev_pat.set(None)
+                _current_devrev_client.set(None)
 
     def test_get_client_no_client_available(self) -> None:
         """Test that get_client() raises RuntimeError when no client is available."""
         from devrev import APIVersion
         from devrev_mcp.config import MCPServerConfig
-        from devrev_mcp.middleware.auth import _current_devrev_pat
+        from devrev_mcp.middleware.auth import _current_devrev_client, _current_devrev_pat
         from devrev_mcp.server import AppContext
 
         env_vars = {k: v for k, v in os.environ.items() if not k.startswith("MCP_")}
@@ -1132,8 +1133,9 @@ class TestAppContextGetClient:
                 _stdio_client=None,  # No stdio client
             )
 
-            # Make sure context var is not set
+            # Make sure context vars are not set
             _current_devrev_pat.set(None)
+            _current_devrev_client.set(None)
 
             # Should raise RuntimeError
             with pytest.raises(RuntimeError, match="No DevRev client available"):

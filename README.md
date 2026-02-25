@@ -855,7 +855,7 @@ All settings are configurable via environment variables (prefix `MCP_`):
 | `MCP_LOG_LEVEL` | `INFO` | Log level |
 | `MCP_AUTH_MODE` | `devrev-pat` | Auth mode: `devrev-pat` (per-user PAT) or `static-token` (legacy) |
 | `MCP_AUTH_TOKEN` | — | Bearer token for HTTP auth (legacy `static-token` mode only) |
-| `MCP_AUTH_ALLOWED_DOMAINS` | `[]` | JSON array of allowed email domains for PAT auth (e.g., `["augmentcode.com"]`) |
+| `MCP_AUTH_ALLOWED_DOMAINS` | `["augmentcode.com"]` | Allowed email domains for PAT auth (JSON array, e.g., `["augmentcode.com"]`) |
 | `MCP_AUTH_CACHE_TTL_SECONDS` | `300` | PAT validation cache TTL in seconds (5 minutes) |
 | `MCP_RATE_LIMIT_RPM` | `120` | Rate limit (requests/min, 0=disabled) |
 | `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta API tools |
