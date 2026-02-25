@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **SDK: Articles API field naming** — Fixed field name from `content` to `description` to match DevRev API specification. Updated `Article`, `ArticlesCreateRequest`, and `ArticlesUpdateRequest` models. **BREAKING CHANGE**: Code using `article.content` or `ArticlesCreateRequest(content=...)` must be updated to use `description` instead.
+
 ### Changed
 - **SDK: Migrated all enums from `(str, Enum)` to `StrEnum`** — 32 enum classes across 21 files now use Python 3.11+ `StrEnum` instead of the legacy `(str, Enum)` pattern. This resolves ruff UP042 linting errors and aligns with modern Python best practices. Note: `str(EnumMember)` now returns the value string directly (e.g., `"active"`) instead of `"ClassName.MEMBER"`. (#138)
 

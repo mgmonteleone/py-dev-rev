@@ -39,8 +39,8 @@ from devrev.models.articles import ArticlesGetRequest
 request = ArticlesGetRequest(id="don:core:dvrv-us-1:devo/1:article/123")
 article = client.articles.get(request)
 print(f"Article: {article.title}")
-if article.content:
-    print(f"Content: {article.content[:100]}...")
+if article.description:
+    print(f"Description: {article.description[:100]}...")
 ```
 
 ### Create Article
@@ -50,7 +50,8 @@ from devrev.models.articles import ArticlesCreateRequest
 
 request = ArticlesCreateRequest(
     title="Getting Started Guide",
-    content="# Welcome\n\nThis guide helps you get started...",
+    description="# Welcome\n\nThis guide helps you get started...",
+    owned_by=["don:identity:dvrv-us-1:devo/1:devu/1"],  # Required: list of dev user IDs
 )
 article = client.articles.create(request)
 print(f"Created: {article.id}")

@@ -428,7 +428,7 @@ article = client.articles.create(
     title="Getting Started Guide",
     applies_to_parts=["don:core:..."],
     authored_by="don:identity:...",
-    body="# Welcome\n\nThis guide will help you get started..."
+    description="# Welcome\n\nThis guide will help you get started..."
 )
 
 # List published articles
@@ -436,10 +436,10 @@ published = client.articles.list(
     status=["published"]
 )
 
-# Update article content
+# Update article description
 client.articles.update(
     id=article.id,
-    body="# Updated Content\n\n..."
+    description="# Updated Description\n\n..."
 )
 ```
 

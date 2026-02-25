@@ -91,7 +91,8 @@ if _config.enable_destructive_tools:
     async def devrev_articles_create(
         ctx: Context,
         title: str,
-        content: str,
+        description: str,
+        owned_by: list[str],
         status: str | None = None,
     ) -> dict[str, Any]:
         """Create a new article in DevRev.
@@ -99,7 +100,8 @@ if _config.enable_destructive_tools:
         Args:
             ctx: MCP context containing the DevRev client.
             title: The article title.
-            content: The article content.
+            description: The article description/body.
+            owned_by: List of dev user IDs who own the article.
             status: Optional article status (draft, published, archived).
 
         Returns:
@@ -121,7 +123,8 @@ if _config.enable_destructive_tools:
                     ) from e
             request = ArticlesCreateRequest(
                 title=title,
-                content=content,
+                description=description,
+                owned_by=owned_by,
                 status=article_status,
             )
             article = await app.client.articles.create(request)
@@ -134,7 +137,7 @@ if _config.enable_destructive_tools:
         ctx: Context,
         id: str,
         title: str | None = None,
-        content: str | None = None,
+        description: str | None = None,
         status: str | None = None,
     ) -> dict[str, Any]:
         """Update an existing article in DevRev.
@@ -143,7 +146,7 @@ if _config.enable_destructive_tools:
             ctx: MCP context containing the DevRev client.
             id: The article ID to update.
             title: Optional new title.
-            content: Optional new content.
+            description: Optional new description/body.
             status: Optional new status (draft, published, archived).
 
         Returns:
@@ -166,7 +169,7 @@ if _config.enable_destructive_tools:
             request = ArticlesUpdateRequest(
                 id=id,
                 title=title,
-                content=content,
+                description=description,
                 status=article_status,
             )
             article = await app.client.articles.update(request)

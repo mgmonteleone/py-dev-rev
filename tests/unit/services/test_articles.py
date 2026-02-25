@@ -31,8 +31,9 @@ class TestArticlesService:
         service = ArticlesService(mock_http_client)
         request = ArticlesCreateRequest(
             title="Test Article",
-            content="# Test Content",
+            description="# Test Description",
             status=ArticleStatus.PUBLISHED,
+            owned_by=["don:identity:dvrv-us-1:devo/1:devu/1"],
         )
         result = service.create(request)
 

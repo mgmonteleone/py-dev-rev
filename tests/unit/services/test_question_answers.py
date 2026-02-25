@@ -37,6 +37,9 @@ class TestQuestionAnswersService:
         request = QuestionAnswersCreateRequest(
             question="How do I reset my password?",
             answer="Click on the 'Forgot Password' link on the login page.",
+            applies_to_parts=["don:core:dvrv-us-1:devo/1:part/1"],
+            owned_by=["don:identity:dvrv-us-1:devo/1:devu/1"],
+            status="draft",
         )
         result = service.create(request)
 

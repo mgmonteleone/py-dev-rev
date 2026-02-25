@@ -101,7 +101,8 @@ class TestAsyncArticlesService:
         service = AsyncArticlesService(mock_async_http_client)
         request = ArticlesCreateRequest(
             title="Test Article",
-            content="Content",
+            description="Content",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
             status=ArticleStatus.PUBLISHED,
         )
         result = await service.create(request)
@@ -269,6 +270,8 @@ class TestAsyncQuestionAnswersService:
         request = QuestionAnswersCreateRequest(
             question="How do I reset my password?",
             answer="Click on the 'Forgot Password' link on the login page.",
+            applies_to_parts=["don:core:dvrv-us-1:devo/test:product/1"],
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
         )
         result = await service.create(request)
 

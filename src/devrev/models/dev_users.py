@@ -47,7 +47,9 @@ class DevUser(DevRevResponseModel):
     id: str = Field(..., description="Dev user ID")
     display_id: str | None = Field(default=None, description="Human-readable display ID")
     display_name: str | None = Field(default=None, description="User's display name")
-    display_picture: str | None = Field(default=None, description="Profile picture artifact ID")
+    display_picture: dict[str, Any] | str | None = Field(
+        default=None, description="Profile picture artifact reference or ID"
+    )
     email: str | None = Field(default=None, description="Email address")
     full_name: str | None = Field(default=None, description="Full name")
     phone_numbers: list[str] | None = Field(default=None, description="Phone numbers")
