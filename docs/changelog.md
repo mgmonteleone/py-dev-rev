@@ -5,7 +5,7 @@ All notable changes to the DevRev Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.4.0] - 2026-02-25
 
 ### Added
 - **MCP Server: Per-user DevRev PAT authentication** (#145) — The MCP server now supports per-user authentication using DevRev Personal Access Tokens. Each user sends their own DevRev PAT as the Bearer token, which the server validates against the DevRev API and uses to create a per-request client. This provides better security, audit trails, and eliminates shared secrets.
