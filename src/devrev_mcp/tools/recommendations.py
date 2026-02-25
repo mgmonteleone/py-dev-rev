@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_recommendations_reply(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     object_id: str,
     context: str | None = None,
 ) -> dict[str, Any]:
@@ -46,7 +46,7 @@ async def devrev_recommendations_reply(
 
 @mcp.tool()
 async def devrev_recommendations_chat(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     messages: list[dict[str, str]],
     max_tokens: int | None = None,
     temperature: float | None = None,

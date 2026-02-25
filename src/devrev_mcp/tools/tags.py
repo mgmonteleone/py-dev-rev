@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_tags_list(
-    ctx: Context, cursor: str | None = None, limit: int | None = None
+    ctx: Context[Any, Any, Any], cursor: str | None = None, limit: int | None = None
 ) -> dict[str, Any]:
     """List DevRev tags.
 
@@ -55,7 +55,7 @@ async def devrev_tags_list(
 
 
 @mcp.tool()
-async def devrev_tags_get(ctx: Context, id: str) -> dict[str, Any]:
+async def devrev_tags_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
     """Get a DevRev tag by ID.
 
     Args:
@@ -81,7 +81,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_tags_create(
-        ctx: Context, name: str, description: str | None = None
+        ctx: Context[Any, Any, Any], name: str, description: str | None = None
     ) -> dict[str, Any]:
         """Create a new DevRev tag.
 
@@ -105,7 +105,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_tags_update(
-        ctx: Context, id: str, name: str | None = None, description: str | None = None
+        ctx: Context[Any, Any, Any], id: str, name: str | None = None, description: str | None = None
     ) -> dict[str, Any]:
         """Update a DevRev tag.
 
@@ -129,7 +129,7 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_tags_delete(ctx: Context, id: str) -> dict[str, Any]:
+    async def devrev_tags_delete(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
         """Delete a DevRev tag.
 
         Args:

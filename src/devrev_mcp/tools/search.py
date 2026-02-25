@@ -127,7 +127,7 @@ def _extract_display_name(result: dict[str, Any]) -> str | None:
         if isinstance(entity, dict):
             name = entity.get("display_name") or entity.get("title") or entity.get("name")
             if name:
-                return name
+                return str(name)
 
     # Fallback: scan all dict values for name-like fields
     # Handles edge cases where type doesn't match the entity key
@@ -135,13 +135,13 @@ def _extract_display_name(result: dict[str, Any]) -> str | None:
         if isinstance(value, dict):
             name = value.get("display_name") or value.get("title") or value.get("name")
             if name:
-                return name
+                return str(name)
     return None
 
 
 @mcp.tool()
 async def devrev_search_hybrid(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     query: str,
     namespace: str,
     semantic_weight: float | None = None,
@@ -194,7 +194,7 @@ async def devrev_search_hybrid(
 
 @mcp.tool()
 async def devrev_search_core(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     query: str,
     namespace: str,
     cursor: str | None = None,

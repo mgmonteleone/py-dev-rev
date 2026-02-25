@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_articles_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     cursor: str | None = None,
     limit: int | None = None,
 ) -> dict[str, Any]:
@@ -62,7 +62,7 @@ async def devrev_articles_list(
 
 
 @mcp.tool()
-async def devrev_articles_get(ctx: Context, id: str) -> dict[str, Any]:
+async def devrev_articles_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
     """Get a specific article by ID.
 
     Args:
@@ -89,7 +89,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_articles_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         title: str,
         description: str,
         owned_by: list[str],
@@ -134,7 +134,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_articles_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         title: str | None = None,
         description: str | None = None,
@@ -178,7 +178,7 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_articles_delete(ctx: Context, id: str) -> dict[str, Any]:
+    async def devrev_articles_delete(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
         """Delete an article from DevRev.
 
         Args:
@@ -202,7 +202,7 @@ if _config.enable_destructive_tools:
 
 @mcp.tool()
 async def devrev_articles_count(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     status: list[str] | None = None,
 ) -> dict[str, Any]:
     """Count articles in DevRev (beta).

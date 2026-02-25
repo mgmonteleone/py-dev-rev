@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_slas_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     cursor: str | None = None,
     limit: int | None = None,
 ) -> dict[str, Any]:
@@ -54,7 +54,7 @@ async def devrev_slas_list(
 
 @mcp.tool()
 async def devrev_slas_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev SLA by ID.
@@ -76,7 +76,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_slas_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         name: str,
         description: str | None = None,
         target_time: int | None = None,
@@ -98,7 +98,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_slas_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         name: str | None = None,
         description: str | None = None,
@@ -120,7 +120,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_slas_transition(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         status: str,
     ) -> dict[str, Any]:
@@ -133,6 +133,7 @@ if _config.enable_destructive_tools:
         app = ctx.request_context.lifespan_context
         try:
             # Try SlaStatus first, then SlaTrackerStatus, then use raw string
+            resolved_status: SlaStatus | SlaTrackerStatus | str
             try:
                 resolved_status = SlaStatus[status.upper()]
             except KeyError:

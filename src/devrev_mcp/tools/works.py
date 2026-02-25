@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_works_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     type: list[str] | None = None,
     applies_to_part: list[str] | None = None,
     owned_by: list[str] | None = None,
@@ -64,7 +64,7 @@ async def devrev_works_list(
 
 @mcp.tool()
 async def devrev_works_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev work item by ID.
@@ -85,7 +85,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_works_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         title: str,
         applies_to_part: str,
         type: str,
@@ -151,7 +151,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_works_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         title: str | None = None,
         body: str | None = None,
@@ -208,7 +208,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_works_delete(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
     ) -> dict[str, Any]:
         """Delete a DevRev work item.
@@ -226,7 +226,7 @@ if _config.enable_destructive_tools:
 
 @mcp.tool()
 async def devrev_works_count(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     type: list[str] | None = None,
     owned_by: list[str] | None = None,
 ) -> dict[str, Any]:
@@ -256,7 +256,7 @@ async def devrev_works_count(
 
 @mcp.tool()
 async def devrev_works_export(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     type: list[str] | None = None,
     first: int | None = None,
 ) -> dict[str, Any]:

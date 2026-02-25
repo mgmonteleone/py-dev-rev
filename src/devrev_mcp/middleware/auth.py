@@ -7,7 +7,7 @@ import hashlib
 import logging
 import secrets
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any
@@ -54,7 +54,9 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
         self._token = token
         self._skip_paths = skip_paths or {"/health"}
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         """Validate Bearer token on incoming requests.
 
         Args:
@@ -66,7 +68,8 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
         """
         # Skip auth for health checks and CORS preflight
         if request.url.path in self._skip_paths or request.method == "OPTIONS":
-            return await call_next(request)
+            response: Response = await call_next(request)
+            return response
 
         auth_header = request.headers.get("authorization", "")
         if not auth_header:
@@ -96,7 +99,8 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
                 content={"error": "Invalid Bearer token"},
             )
 
-        return await call_next(request)
+        response = await call_next(request)
+        return response
 
 
 @dataclass
@@ -148,7 +152,9 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         self._cache: dict[str, _CachedIdentity] = {}
         self._cache_lock = asyncio.Lock()
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         """Validate DevRev PAT on incoming requests.
 
         Args:
@@ -160,7 +166,8 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         """
         # Skip auth for health checks and CORS preflight
         if request.url.path in self._skip_paths or request.method == "OPTIONS":
-            return await call_next(request)
+            response: Response = await call_next(request)
+            return response
 
         auth_header = request.headers.get("authorization", "")
         if not auth_header:
@@ -232,7 +239,8 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         )
 
         try:
-            return await call_next(request)
+            response = await call_next(request)
+            return response
         finally:
             # Close per-request client if one was created
             client = _current_devrev_client.get(None)

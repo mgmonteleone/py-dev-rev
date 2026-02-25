@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_accounts_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     display_name: list[str] | None = None,
     domains: list[str] | None = None,
     owned_by: list[str] | None = None,
@@ -53,7 +53,7 @@ async def devrev_accounts_list(
 
 @mcp.tool()
 async def devrev_accounts_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev account by ID.
@@ -74,7 +74,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_accounts_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         display_name: str,
         description: str | None = None,
         domains: list[str] | None = None,
@@ -108,7 +108,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_accounts_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         display_name: str | None = None,
         description: str | None = None,
@@ -138,7 +138,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_accounts_delete(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
     ) -> dict[str, Any]:
         """Delete a DevRev account.
@@ -155,7 +155,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_accounts_merge(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         primary_account: str,
         secondary_account: str,
     ) -> dict[str, Any]:

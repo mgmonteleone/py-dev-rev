@@ -6,6 +6,7 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
@@ -158,7 +159,7 @@ if _config.transport != "stdio":
     from devrev_mcp.middleware.health import health_route
     from devrev_mcp.middleware.rate_limit import RateLimitMiddleware
 
-    def _inject_middleware(starlette_app):  # noqa: ANN001, ANN202
+    def _inject_middleware(starlette_app: Any) -> Any:
         """Add health route, auth, and rate limiting to a Starlette app."""
         logger.debug(
             "Injecting middleware: health_route=True, auth_mode=%s, rate_limit=%s (rpm=%d)",
@@ -198,21 +199,21 @@ if _config.transport != "stdio":
     _original_streamable_http_app = mcp.streamable_http_app
 
     @functools.wraps(_original_streamable_http_app)
-    def _patched_streamable_http_app(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+    def _patched_streamable_http_app(*args: Any, **kwargs: Any) -> Any:
         app = _original_streamable_http_app(*args, **kwargs)
         return _inject_middleware(app)
 
-    mcp.streamable_http_app = _patched_streamable_http_app  # type: ignore[assignment]
+    mcp.streamable_http_app = _patched_streamable_http_app  # type: ignore[method-assign]
 
     # Wrap sse_app
     _original_sse_app = mcp.sse_app
 
     @functools.wraps(_original_sse_app)
-    def _patched_sse_app(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+    def _patched_sse_app(*args: Any, **kwargs: Any) -> Any:
         app = _original_sse_app(*args, **kwargs)
         return _inject_middleware(app)
 
-    mcp.sse_app = _patched_sse_app  # type: ignore[assignment]
+    mcp.sse_app = _patched_sse_app  # type: ignore[method-assign]
 
 
 # ----- Register tool modules -----

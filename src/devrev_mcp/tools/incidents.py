@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_incidents_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     stage: list[str] | None = None,
     severity: list[str] | None = None,
     cursor: str | None = None,
@@ -69,7 +69,7 @@ async def devrev_incidents_list(
 
 @mcp.tool()
 async def devrev_incidents_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev incident by ID.
@@ -90,7 +90,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_incidents_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         title: str,
         body: str | None = None,
         severity: str | None = None,
@@ -130,7 +130,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_incidents_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         title: str | None = None,
         body: str | None = None,
@@ -181,7 +181,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_incidents_delete(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
     ) -> dict[str, Any]:
         """Delete a DevRev incident.
@@ -198,7 +198,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_incidents_group(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         group_by: str,
         limit: int | None = None,
     ) -> dict[str, Any]:

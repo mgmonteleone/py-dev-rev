@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_conversations_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     cursor: str | None = None,
     limit: int | None = None,
 ) -> dict[str, Any]:
@@ -52,7 +52,7 @@ async def devrev_conversations_list(
 
 @mcp.tool()
 async def devrev_conversations_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev conversation by ID.
@@ -74,7 +74,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_conversations_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         type: str = "support",
         title: str | None = None,
         description: str | None = None,
@@ -96,7 +96,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_conversations_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         title: str | None = None,
         description: str | None = None,
@@ -118,7 +118,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_conversations_delete(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
     ) -> dict[str, Any]:
         """Delete a DevRev conversation.
@@ -137,7 +137,7 @@ if _config.enable_destructive_tools:
 
 @mcp.tool()
 async def devrev_conversations_export(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     cursor: str | None = None,
     limit: int | None = None,
 ) -> dict[str, Any]:

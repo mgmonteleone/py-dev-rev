@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_timeline_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     object_id: str,
     cursor: str | None = None,
     limit: int | None = None,
@@ -56,7 +56,7 @@ async def devrev_timeline_list(
 
 @mcp.tool()
 async def devrev_timeline_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev timeline entry by ID.
@@ -78,7 +78,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_timeline_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         object_id: str,
         type: str = "timeline_comment",
         body: str | None = None,
@@ -110,7 +110,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_timeline_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         body: str | None = None,
     ) -> dict[str, Any]:
@@ -130,7 +130,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_timeline_delete(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
     ) -> dict[str, Any]:
         """Delete a DevRev timeline entry.

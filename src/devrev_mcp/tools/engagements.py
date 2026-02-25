@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_engagements_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     engagement_type: list[str] | None = None,
     members: list[str] | None = None,
     parent: str | None = None,
@@ -72,7 +72,7 @@ async def devrev_engagements_list(
 
 
 @mcp.tool()
-async def devrev_engagements_get(ctx: Context, id: str) -> dict[str, Any]:
+async def devrev_engagements_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
     """Get a specific engagement by ID.
 
     Args:
@@ -95,7 +95,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_engagements_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         title: str,
         engagement_type: str,
         description: str | None = None,
@@ -152,7 +152,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_engagements_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         title: str | None = None,
         description: str | None = None,
@@ -204,7 +204,7 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_engagements_delete(ctx: Context, id: str) -> dict[str, Any]:
+    async def devrev_engagements_delete(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
         """Delete an engagement.
 
         Args:
@@ -224,7 +224,7 @@ if _config.enable_destructive_tools:
 
 @mcp.tool()
 async def devrev_engagements_count(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     engagement_type: list[str] | None = None,
     members: list[str] | None = None,
 ) -> dict[str, Any]:

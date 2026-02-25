@@ -6,7 +6,7 @@ import logging
 import threading
 import time
 from collections import OrderedDict
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -122,7 +122,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_host = request.client.host if request.client else "unknown"
         return f"ip:{client_host}"
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         """Check rate limit before processing request.
 
         Args:
@@ -134,7 +136,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """
         # Skip rate limiting for health checks, OPTIONS, and when disabled
         if request.url.path in self._skip_paths or request.method == "OPTIONS" or self._rpm <= 0:
-            return await call_next(request)
+            response: Response = await call_next(request)
+            return response
 
         client_key = self._get_client_key(request)
         bucket = self._get_or_create_bucket(client_key)
@@ -155,4 +158,5 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 headers={"Retry-After": str(retry_after)},
             )
 
-        return await call_next(request)
+        response = await call_next(request)
+        return response

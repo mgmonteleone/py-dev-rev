@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_parts_list(
-    ctx: Context, cursor: str | None = None, limit: int | None = None
+    ctx: Context[Any, Any, Any], cursor: str | None = None, limit: int | None = None
 ) -> dict[str, Any]:
     """List DevRev parts (products, capabilities, features, enhancements).
 
@@ -58,7 +58,7 @@ async def devrev_parts_list(
 
 
 @mcp.tool()
-async def devrev_parts_get(ctx: Context, id: str) -> dict[str, Any]:
+async def devrev_parts_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
     """Get a specific DevRev part by ID.
 
     Args:
@@ -83,7 +83,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_parts_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         name: str,
         type: str,
         description: str | None = None,
@@ -122,7 +122,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_parts_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         name: str | None = None,
         description: str | None = None,
@@ -153,7 +153,7 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_parts_delete(ctx: Context, id: str) -> dict[str, Any]:
+    async def devrev_parts_delete(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
         """Delete a DevRev part.
 
         Args:

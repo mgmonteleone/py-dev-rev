@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_groups_list(
-    ctx: Context, cursor: str | None = None, limit: int | None = None
+    ctx: Context[Any, Any, Any], cursor: str | None = None, limit: int | None = None
 ) -> dict[str, Any]:
     """List all groups in the DevRev organization.
 
@@ -62,7 +62,7 @@ async def devrev_groups_list(
 
 
 @mcp.tool()
-async def devrev_groups_get(ctx: Context, id: str) -> dict[str, Any]:
+async def devrev_groups_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
     """Get a specific group by ID.
 
     Args:
@@ -89,7 +89,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_groups_create(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         name: str,
         description: str | None = None,
         type: str | None = None,
@@ -127,7 +127,7 @@ if _config.enable_destructive_tools:
 
     @mcp.tool()
     async def devrev_groups_update(
-        ctx: Context,
+        ctx: Context[Any, Any, Any],
         id: str,
         name: str | None = None,
         description: str | None = None,
@@ -155,7 +155,7 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_groups_add_member(ctx: Context, group: str, member: str) -> dict[str, Any]:
+    async def devrev_groups_add_member(ctx: Context[Any, Any, Any], group: str, member: str) -> dict[str, Any]:
         """Add a member to a group.
 
         Args:
@@ -178,7 +178,7 @@ if _config.enable_destructive_tools:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_groups_remove_member(ctx: Context, group: str, member: str) -> dict[str, Any]:
+    async def devrev_groups_remove_member(ctx: Context[Any, Any, Any], group: str, member: str) -> dict[str, Any]:
         """Remove a member from a group.
 
         Args:
@@ -203,7 +203,7 @@ if _config.enable_destructive_tools:
 
 @mcp.tool()
 async def devrev_groups_list_members(
-    ctx: Context, group: str, cursor: str | None = None, limit: int | None = None
+    ctx: Context[Any, Any, Any], group: str, cursor: str | None = None, limit: int | None = None
 ) -> dict[str, Any]:
     """List members of a group.
 
@@ -236,7 +236,7 @@ async def devrev_groups_list_members(
 
 
 @mcp.tool()
-async def devrev_groups_members_count(ctx: Context, group_id: str) -> dict[str, Any]:
+async def devrev_groups_members_count(ctx: Context[Any, Any, Any], group_id: str) -> dict[str, Any]:
     """Get the count of members in a group (beta feature).
 
     Args:

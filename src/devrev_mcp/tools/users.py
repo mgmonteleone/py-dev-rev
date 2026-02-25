@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @mcp.tool()
 async def devrev_dev_users_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     email: list[str] | None = None,
     state: list[str] | None = None,
     cursor: str | None = None,
@@ -52,7 +52,7 @@ async def devrev_dev_users_list(
 
 @mcp.tool()
 async def devrev_dev_users_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev developer user by ID.
@@ -70,7 +70,7 @@ async def devrev_dev_users_get(
 
 @mcp.tool()
 async def devrev_rev_users_list(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     email: list[str] | None = None,
     rev_org: list[str] | None = None,
     cursor: str | None = None,
@@ -102,7 +102,7 @@ async def devrev_rev_users_list(
 
 @mcp.tool()
 async def devrev_rev_users_get(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
     """Get a DevRev customer (rev) user by ID.
@@ -120,7 +120,7 @@ async def devrev_rev_users_get(
 
 @mcp.tool()
 async def devrev_rev_users_create(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     rev_org: str,
     display_name: str | None = None,
     email: str | None = None,
