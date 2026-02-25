@@ -125,6 +125,10 @@ plugins = ["pydantic.mypy"]
 module = "tests.*"
 disallow_untyped_defs = false
 
+[[tool.mypy.overrides]]
+module = ["starlette.*", "mcp.*"]
+ignore_missing_imports = true
+
 # pytest Configuration
 [tool.pytest.ini_options]
 testpaths = ["tests"]
