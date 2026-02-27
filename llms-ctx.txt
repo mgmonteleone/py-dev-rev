@@ -1,13 +1,14 @@
-# DevRev Python SDK - Core Context for AI Agents
+# DevRev Python SDK & MCP Server - Core Context for AI Agents
 
 ## Overview
-A modern, type-safe Python SDK for the DevRev API. Requires Python 3.11+.
+A modern, type-safe Python SDK and MCP Server for the DevRev API. Requires Python 3.11+.
 
-**Install**: `pip install devrev-python-sdk`
+**Install SDK**: `pip install devrev-python-sdk`
+**Install with MCP**: `pip install devrev-python-sdk[mcp]`
 **Docs**: https://mgmonteleone.github.io/py-dev-rev/
-**Version**: 2.0.0
+**Version**: 2.4.1
 
-## Quick Start
+## SDK Quick Start
 
 ```python
 from devrev import DevRevClient
@@ -49,7 +50,7 @@ async def main():
 asyncio.run(main())
 ```
 
-## Available Services
+## Available SDK Services
 
 All services are accessed as `client.<service>.<method>()`:
 
@@ -155,6 +156,52 @@ client = DevRevClient(api_version=APIVersion.BETA)
 incidents = client.incidents.list()
 ```
 
+## MCP Server
+
+The DevRev MCP Server exposes the DevRev platform as AI-accessible tools via the Model Context Protocol.
+
+### Quick Start
+```bash
+pip install devrev-python-sdk[mcp]
+export DEVREV_API_TOKEN="your-token"
+devrev-mcp-server
+```
+
+### Client Configuration (Augment Code / Claude Desktop)
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "command": "devrev-mcp-server",
+      "env": {
+        "DEVREV_API_TOKEN": "<your-token>",
+        "MCP_ENABLE_BETA_TOOLS": "true"
+      }
+    }
+  }
+}
+```
+
+### MCP Capabilities Summary
+
+- **78+ Tools**: CRUD for works, accounts, users, articles, conversations, parts, tags, groups, timeline, links, SLAs, plus beta tools (search, recommendations, incidents, engagements)
+- **7 Resources**: `devrev://` URI scheme for tickets, accounts, articles, users, parts, conversations
+- **8 Prompts**: triage_ticket, draft_response, escalate_ticket, summarize_account, investigate_issue, weekly_report, find_similar, onboard_customer
+- **3 Transports**: stdio (local), streamable-http (production), sse (legacy)
+- **Auth**: Per-user DevRev PAT (recommended) or static bearer token
+
+### Key Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DEVREV_API_TOKEN` | Required | DevRev API token |
+| `MCP_TRANSPORT` | `stdio` | Transport mode |
+| `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta tools |
+| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `true` | Enable delete operations |
+| `MCP_AUTH_MODE` | `devrev-pat` | Auth mode for HTTP transports |
+
+> For comprehensive MCP tool reference, see [llms-mcp.txt](llms-mcp.txt)
+
 ## Key Points for AI Code Generation
 
 1. **Always use environment variables** for DEVREV_API_TOKEN
@@ -164,4 +211,4 @@ incidents = client.incidents.list()
 5. **Pagination** uses `cursor` and `next_cursor`, not page numbers
 6. **Import models** from `devrev.models` (e.g., `WorkType`)
 7. **Import exceptions** from `devrev.exceptions`
-
+8. **MCP Server** is installed with `pip install devrev-python-sdk[mcp]` and run with `devrev-mcp-server`
