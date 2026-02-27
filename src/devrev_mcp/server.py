@@ -258,3 +258,54 @@ from devrev_mcp.resources import conversation as _conversation_resources  # noqa
 from devrev_mcp.resources import part as _part_resources  # noqa: E402, F401
 from devrev_mcp.resources import ticket as _ticket_resources  # noqa: E402, F401
 from devrev_mcp.resources import user as _user_resources  # noqa: E402, F401
+
+# ----- Audit logging for tool invocations -----
+if _config.audit_log_enabled:
+    import functools
+    import time as _time
+
+    from devrev_mcp.middleware.audit import audit_logger, classify_tool
+    from devrev_mcp.middleware.auth import _current_user_audit_info
+
+    def _wrap_tool_with_audit(tool_name: str, original_fn: Any) -> Any:
+        """Wrap an MCP tool function with audit logging."""
+
+        @functools.wraps(original_fn)
+        async def _audited_tool(*args: Any, **kwargs: Any) -> Any:
+            audit_info = _current_user_audit_info.get()
+            start_time = _time.monotonic()
+            outcome = "success"
+            error_msg = None
+            try:
+                result = await original_fn(*args, **kwargs)
+                return result
+            except Exception as e:
+                outcome = "failure"
+                error_msg = str(e)
+                raise
+            finally:
+                duration_ms = int((_time.monotonic() - start_time) * 1000)
+                if audit_info:
+                    audit_logger.log_tool_invocation(
+                        user_id=audit_info.get("user_id", "unknown"),
+                        email=audit_info.get("email", "unknown"),
+                        pat_hash=audit_info.get("pat_hash", "unknown"),
+                        tool_name=tool_name,
+                        tool_category=classify_tool(tool_name),
+                        client_ip=audit_info.get("client_ip", "unknown"),
+                        session_id="",  # Session ID is not easily available in this context
+                        outcome=outcome,
+                        duration_ms=duration_ms,
+                        error_message=error_msg,
+                    )
+
+        return _audited_tool
+
+    # Wrap all registered tools with audit logging
+    if hasattr(mcp, "_tool_manager") and hasattr(mcp._tool_manager, "_tools"):
+        for _tool_name, _tool in mcp._tool_manager._tools.items():
+            if hasattr(_tool, "fn"):
+                _tool.fn = _wrap_tool_with_audit(_tool_name, _tool.fn)
+        logger.info("Audit logging enabled for %d tools", len(mcp._tool_manager._tools))
+    else:
+        logger.warning("Could not enable tool audit logging: tool manager not accessible")

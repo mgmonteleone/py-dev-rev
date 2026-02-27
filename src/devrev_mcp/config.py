@@ -95,6 +95,12 @@ class MCPServerConfig(BaseSettings):
         description="Maximum requests per minute per session (0 to disable)",
     )
 
+    # Audit logging
+    audit_log_enabled: bool = Field(
+        default=True,
+        description="Enable structured audit logging for access and tool invocations",
+    )
+
     # Security
     enable_dns_rebinding_protection: bool = Field(
         default=True,
