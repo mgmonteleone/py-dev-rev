@@ -1,0 +1,168 @@
+# Alert Policies for DevRev MCP Server Audit Monitoring
+# 
+# Apply these using:
+#   gcloud alpha monitoring policies create --policy-from-file=deploy/monitoring/alert-policies.yaml
+#
+# Before applying:
+#   1. Create notification channels (email, Slack, PagerDuty):
+#      gcloud alpha monitoring channels create --display-name="DevRev Alerts" --type=email --channel-labels=email_address=alerts@example.com
+#   2. Get channel ID:
+#      gcloud alpha monitoring channels list
+#   3. Replace NOTIFICATION_CHANNEL_ID below with your channel ID
+#   4. Adjust thresholds to match your usage patterns
+#   5. Update PROJECT_ID with your GCP project ID
+
+---
+# Policy 1: High Authentication Failure Rate
+# Triggers when more than 10 failed authentication attempts occur within 5 minutes
+displayName: "DevRev MCP - High Auth Failure Rate"
+documentation:
+  content: |
+    ## High Authentication Failure Rate Detected
+    
+    More than 10 failed authentication attempts detected in a 5-minute window.
+    This may indicate:
+    - Brute force attack attempt
+    - Misconfigured client credentials
+    - Expired or invalid tokens
+    
+    **Action Required:**
+    1. Review audit logs for the affected user/IP
+    2. Check if credentials need rotation
+    3. Consider temporary IP blocking if attack is detected
+    
+    **Query logs:**
+    ```
+    resource.type="cloud_run_revision"
+    jsonPayload.event_type="audit"
+    jsonPayload.action="auth_failure"
+    ```
+  mimeType: "text/markdown"
+conditions:
+  - displayName: "Auth failure count > 10 in 5 minutes"
+    conditionThreshold:
+      filter: |
+        resource.type="cloud_run_revision"
+        jsonPayload.event_type="audit"
+        jsonPayload.action="auth_failure"
+      aggregations:
+        - alignmentPeriod: "300s"
+          perSeriesAligner: "ALIGN_RATE"
+          crossSeriesReducer: "REDUCE_COUNT"
+      comparison: "COMPARISON_GT"
+      thresholdValue: 10
+      duration: "0s"
+notificationChannels:
+  - "projects/PROJECT_ID/notificationChannels/NOTIFICATION_CHANNEL_ID"
+alertStrategy:
+  autoClose: "1800s"  # Auto-close after 30 minutes if resolved
+
+---
+# Policy 2: High Destructive Operation Rate
+# Triggers when more than 20 delete operations occur within 10 minutes
+displayName: "DevRev MCP - High Destructive Operation Rate"
+documentation:
+  content: |
+    ## High Rate of Destructive Operations
+    
+    More than 20 delete operations detected in a 10-minute window.
+    This may indicate:
+    - Accidental bulk deletion
+    - Malicious activity
+    - Runaway automation script
+    
+    **Action Required:**
+    1. Immediately review audit logs for affected resources
+    2. Identify the user/service account performing deletions
+    3. Verify if deletions are intentional
+    4. Consider pausing the service if unauthorized
+    5. Check if backups are available for recovery
+    
+    **Query logs:**
+    ```
+    resource.type="cloud_run_revision"
+    jsonPayload.event_type="audit"
+    jsonPayload.action="tool_invocation"
+    jsonPayload.tool.category="delete"
+    ```
+  mimeType: "text/markdown"
+conditions:
+  - displayName: "Delete operations > 20 in 10 minutes"
+    conditionThreshold:
+      filter: |
+        resource.type="cloud_run_revision"
+        jsonPayload.event_type="audit"
+        jsonPayload.action="tool_invocation"
+        jsonPayload.tool.category="delete"
+      aggregations:
+        - alignmentPeriod: "600s"
+          perSeriesAligner: "ALIGN_RATE"
+          crossSeriesReducer: "REDUCE_COUNT"
+      comparison: "COMPARISON_GT"
+      thresholdValue: 20
+      duration: "0s"
+notificationChannels:
+  - "projects/PROJECT_ID/notificationChannels/NOTIFICATION_CHANNEL_ID"
+alertStrategy:
+  autoClose: "3600s"  # Auto-close after 1 hour if resolved
+  notificationRateLimit:
+    period: "300s"  # Limit notifications to once per 5 minutes
+
+---
+# Policy 3: Elevated Tool Failure Rate
+# Triggers when tool failure rate exceeds 20% over 5 minutes
+displayName: "DevRev MCP - Elevated Error Rate"
+documentation:
+  content: |
+    ## Elevated Tool Failure Rate
+    
+    Tool failure rate has exceeded 20% over a 5-minute period.
+    This may indicate:
+    - API connectivity issues with DevRev
+    - Service degradation
+    - Invalid credentials or permissions
+    - Bug in tool implementation
+    
+    **Action Required:**
+    1. Check DevRev API status
+    2. Review error messages in audit logs
+    3. Verify service account permissions
+    4. Check for recent code deployments
+    5. Monitor for continued failures
+    
+    **Query logs:**
+    ```
+    resource.type="cloud_run_revision"
+    jsonPayload.event_type="audit"
+    jsonPayload.outcome="failure"
+    ```
+  mimeType: "text/markdown"
+conditions:
+  - displayName: "Failure rate > 20%"
+    conditionThreshold:
+      filter: |
+        resource.type="cloud_run_revision"
+        jsonPayload.event_type="audit"
+        jsonPayload.action="tool_invocation"
+      aggregations:
+        - alignmentPeriod: "300s"
+          perSeriesAligner: "ALIGN_RATE"
+          crossSeriesReducer: "REDUCE_COUNT"
+          groupByFields:
+            - "jsonPayload.outcome"
+      comparison: "COMPARISON_GT"
+      thresholdValue: 0.20
+      duration: "0s"
+      denominatorFilter: |
+        resource.type="cloud_run_revision"
+        jsonPayload.event_type="audit"
+        jsonPayload.action="tool_invocation"
+      denominatorAggregations:
+        - alignmentPeriod: "300s"
+          perSeriesAligner: "ALIGN_RATE"
+          crossSeriesReducer: "REDUCE_COUNT"
+notificationChannels:
+  - "projects/PROJECT_ID/notificationChannels/NOTIFICATION_CHANNEL_ID"
+alertStrategy:
+  autoClose: "1800s"  # Auto-close after 30 minutes if resolved
+

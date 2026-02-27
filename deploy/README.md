@@ -461,7 +461,94 @@ curl -X POST https://devrev-mcp-server-xxx.run.app/mcp/v1/initialize \
 
 ### Audit and Monitoring
 
-1. **Cloud Logging**: All requests logged in JSON format
+#### Application-Level Audit Logging
+
+The MCP server includes built-in structured audit logging for compliance. When enabled (default), every authentication event and tool invocation is logged with structured JSON fields.
+
+**Audit Event Schema:**
+```json
+{
+  "event_type": "audit",
+  "action": "tool_invocation",
+  "user": {"id": "don:...", "email": "user@example.com", "pat_hash": "sha256:..."},
+  "tool": {"name": "devrev_works_list", "category": "read"},
+  "request": {"client_ip": "203.0.113.42"},
+  "outcome": "success",
+  "duration_ms": 142
+}
+```
+
+**Configuration:**
+```bash
+# Enable/disable audit logging (default: true)
+MCP_AUDIT_LOG_ENABLED=true
+```
+
+**Querying audit logs:**
+```bash
+# View recent audit events
+gcloud logging read 'resource.type="cloud_run_revision" AND jsonPayload.event_type="audit"' \
+  --project=PROJECT_ID --limit=50 --format=json
+
+# View auth failures only
+gcloud logging read 'jsonPayload.event_type="audit" AND jsonPayload.action="auth_failure"' \
+  --project=PROJECT_ID --limit=50
+
+# View tool invocations for a specific user
+gcloud logging read 'jsonPayload.event_type="audit" AND jsonPayload.user.email="user@example.com"' \
+  --project=PROJECT_ID --limit=50
+```
+
+#### Immutable Audit Log Storage
+
+For compliance with immutable log requirements, set up a WORM-compliant Cloud Storage bucket with a Cloud Logging sink:
+
+```bash
+# Run the setup script
+./deploy/audit-logging-setup.sh --project=YOUR_PROJECT_ID
+
+# With WORM lock (IRREVERSIBLE — enables permanent retention):
+./deploy/audit-logging-setup.sh --project=YOUR_PROJECT_ID --lock
+```
+
+This creates:
+1. A GCS bucket with a 365-day retention policy
+2. A Cloud Logging sink that exports `event_type="audit"` entries
+3. IAM bindings for the sink's service account
+
+See `deploy/audit-logging-setup.sh --help` for all options.
+
+#### Monitoring and Alerting
+
+Alert policies and a dashboard are provided in `deploy/monitoring/`:
+
+```bash
+# Validate prerequisites
+./deploy/monitoring/validate-config.sh YOUR_PROJECT_ID
+
+# Create a notification channel
+gcloud alpha monitoring channels create \
+  --display-name="MCP Audit Alerts" \
+  --type=email \
+  --channel-labels=email_address=alerts@yourcompany.com
+
+# Apply alert policies (edit alert-policies.yaml first with your project/channel IDs)
+gcloud alpha monitoring policies create \
+  --policy-from-file=deploy/monitoring/alert-policies.yaml
+
+# Import dashboard
+gcloud monitoring dashboards create \
+  --config-from-file=deploy/monitoring/dashboard.json
+```
+
+**Alert policies include:**
+- High auth failure rate (>10 failures in 5 min)
+- High destructive operation rate (>20 deletes in 10 min)
+- Elevated tool error rate (>20% failure over 5 min)
+
+See `deploy/monitoring/README.md` for full details.
+
+1. **Cloud Logging**: All requests and audit events logged in JSON format
    ```bash
    gcloud run services logs read devrev-mcp-server --region=us-central1
    ```
