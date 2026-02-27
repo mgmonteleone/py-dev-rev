@@ -1,6 +1,6 @@
 site_name: DevRev Python SDK
 site_url: https://mgmonteleone.github.io/py-dev-rev/
-site_description: A modern, type-safe Python SDK for the DevRev API
+site_description: A modern, type-safe Python SDK and MCP Server for the DevRev API — built with Augment Code
 site_author: Matthew G. Monteleone
 repo_name: mgmonteleone/py-dev-rev
 repo_url: https://github.com/mgmonteleone/py-dev-rev
@@ -16,15 +16,15 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep purple
-      accent: purple
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep purple
-      accent: purple
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -36,6 +36,8 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.footer
+    - header.autohide
     - search.suggest
     - search.highlight
     - content.tabs.link
@@ -43,6 +45,12 @@ theme:
     - content.code.annotate
   icon:
     repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: IBM Plex Mono
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -129,6 +137,11 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
     - Authentication: getting-started/authentication.md
+  - MCP Server:
+    - mcp/index.md
+    - Quick Start: mcp/quickstart.md
+    - Tools Reference: mcp/tools-reference.md
+    - Deployment: mcp/deployment.md
   - Guides:
     - guides/index.md
     - Sync vs Async: guides/sync-vs-async.md

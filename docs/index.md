@@ -1,12 +1,37 @@
-# DevRev Python SDK
+# DevRev Python SDK & MCP Server
 
 [![Built with Augment](https://img.shields.io/badge/Built%20with-Auggie-6366f1?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyTDIgMTloMjBMMTIgMnptMCAzLjc1TDE4LjI1IDE3SDUuNzVMMTIgNS43NXoiLz48L3N2Zz4=)](https://www.augmentcode.com/)
 [![PyPI Version](https://img.shields.io/pypi/v/devrev-python-sdk.svg)](https://pypi.org/project/devrev-Python-SDK/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-A modern, type-safe Python SDK for the [DevRev API](https://devrev.ai).
+<div class="augment-hero" markdown>
+
+A modern, type-safe Python SDK and **MCP Server** for the [DevRev API](https://devrev.ai).
+
+<p class="hero-subtitle">Full API coverage with 78+ MCP tools for AI assistants. Built with Pydantic v2, async support, and production-ready deployment to Google Cloud Run.</p>
+
+</div>
+
+<div class="mcp-highlight" markdown>
+
+### :material-robot: MCP Server — Connect DevRev to Your AI Assistant
+
+The DevRev MCP Server exposes **78+ tools**, **7 resources**, and **8 workflow prompts** through the Model Context Protocol. Works with Augment Code, Claude Desktop, Cursor, and any MCP-compatible client.
+
+[:octicons-arrow-right-24: Get Started with MCP](mcp/index.md){ .md-button .md-button--primary }
+[:octicons-arrow-right-24: View Tools Reference](mcp/tools-reference.md){ .md-button }
+
+</div>
 
 <div class="grid cards" markdown>
+
+-   :material-robot:{ .lg .middle } __MCP Server__
+
+    ---
+
+    78+ AI-accessible tools for tickets, accounts, articles, and more. Deploy locally or on Cloud Run.
+
+    [:octicons-arrow-right-24: MCP Server](mcp/index.md)
 
 -   :material-clock-fast:{ .lg .middle } __Quick to Install__
 
@@ -32,6 +57,14 @@ A modern, type-safe Python SDK for the [DevRev API](https://devrev.ai).
 
     [:octicons-arrow-right-24: Sync vs Async](guides/sync-vs-async.md)
 
+-   :material-shield-check:{ .lg .middle } __Production Ready__
+
+    ---
+
+    Retries, rate limiting, circuit breaker, and Cloud Run deployment
+
+    [:octicons-arrow-right-24: Deployment](mcp/deployment.md)
+
 -   :material-book-open-variant:{ .lg .middle } __Well Documented__
 
     ---
@@ -42,15 +75,24 @@ A modern, type-safe Python SDK for the [DevRev API](https://devrev.ai).
 
 </div>
 
-## Features
+## SDK Features
 
-- ✅ **Full API Coverage** - All 209 DevRev public API endpoints
-- ✅ **Type-Safe Models** - Pydantic v2 models for all request/response objects
-- ✅ **Async Support** - Native async/await support
-- ✅ **Automatic Retries** - Configurable retry logic with exponential backoff
-- ✅ **Rate Limiting** - Built-in rate limit handling
-- ✅ **Rich Exceptions** - Detailed, actionable error messages
-- ✅ **Beautiful Logging** - Colored console output with configurable levels
+- ✅ **Full API Coverage** — All 209 DevRev public API endpoints + 74 beta endpoints
+- ✅ **Type-Safe Models** — Pydantic v2 models for all request/response objects
+- ✅ **Async Support** — Native async/await support
+- ✅ **Automatic Retries** — Configurable retry logic with exponential backoff
+- ✅ **Rate Limiting** — Built-in rate limit handling
+- ✅ **Rich Exceptions** — Detailed, actionable error messages
+- ✅ **Beautiful Logging** — Colored console output with configurable levels
+
+## MCP Server Features
+
+- ✅ **78+ MCP Tools** — Full CRUD for all DevRev resources
+- ✅ **7 Resource Templates** — `devrev://` URI scheme for data browsing
+- ✅ **8 Workflow Prompts** — Triage, respond, escalate, investigate, and more
+- ✅ **3 Transports** — stdio, Streamable HTTP, SSE
+- ✅ **Per-User Auth** — DevRev PAT authentication for teams
+- ✅ **Cloud Run Ready** — One-command production deployment
 
 ## Quick Example
 
@@ -94,13 +136,18 @@ A modern, type-safe Python SDK for the [DevRev API](https://devrev.ai).
 
 ## Requirements
 
-- **Python 3.11+** - Supports current stable Python and the two previous minor versions (N-2)
-- **DevRev API Token** - Get one from your DevRev dashboard
+- **Python 3.11+** — Supports current stable Python and the two previous minor versions (N-2)
+- **DevRev API Token** — Get one from your DevRev dashboard
 
 ## Installation
 
 ```bash
 pip install devrev-python-sdk
+```
+
+For MCP Server support:
+```bash
+pip install devrev-python-sdk[mcp]
 ```
 
 See the [Installation Guide](getting-started/installation.md) for more options.
@@ -109,17 +156,17 @@ See the [Installation Guide](getting-started/installation.md) for more options.
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch: [**Quick Start**](getting-started/quickstart.md)
+-   :material-robot: [**MCP Server Quick Start**](mcp/quickstart.md)
+
+    Connect your AI assistant to DevRev in 5 minutes
+
+-   :material-rocket-launch: [**SDK Quick Start**](getting-started/quickstart.md)
 
     Get up and running with your first API call
 
 -   :material-key: [**Authentication**](getting-started/authentication.md)
 
     Learn about authentication methods
-
--   :material-book: [**Guides**](guides/index.md)
-
-    In-depth guides for common tasks
 
 -   :material-api: [**API Reference**](api/index.md)
 

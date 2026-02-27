@@ -25,6 +25,7 @@ A modern, type-safe Python SDK for the DevRev API.
 - [Configuration](#configuration)
 - [Error Handling](#error-handling)
 - [Logging](#logging)
+- [MCP Server](#mcp-server)
 - [Development](#development)
 - [Testing Strategy](#testing-strategy)
 - [CI/CD Pipeline](#cicd-pipeline)
@@ -80,6 +81,15 @@ This SDK is generated and maintained from the official DevRev OpenAPI specificat
 - ✅ **Production Logging** - Structured JSON logging for cloud environments
 - ✅ **Health Checks** - Built-in health check endpoints for monitoring
 - ✅ **High Test Coverage** - 80%+ code coverage with unit and integration tests
+
+### MCP Server (AI Integration)
+
+- ✅ **78+ MCP Tools** — Full CRUD for tickets, accounts, users, articles, and all DevRev resources
+- ✅ **7 Resource Templates** — `devrev://` URI scheme for AI-accessible data browsing
+- ✅ **8 Workflow Prompts** — Pre-built triage, escalation, investigation, and reporting workflows
+- ✅ **3 Transport Modes** — stdio (local), Streamable HTTP (production), SSE (legacy)
+- ✅ **Per-User Authentication** — DevRev PAT auth mode for team deployments
+- ✅ **Cloud Run Deployment** — One-command deploy to Google Cloud Run with auto-scaling
 
 ---
 
