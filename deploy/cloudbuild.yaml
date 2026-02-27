@@ -17,8 +17,6 @@ steps:
     args:
       - 'build'
       - '-t'
-      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:$COMMIT_SHA'
-      - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:latest'
       - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:${_TAG_NAME}'
@@ -45,7 +43,7 @@ steps:
       - 'run'
       - 'deploy'
       - '${_SERVICE_NAME}'
-      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:$COMMIT_SHA'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:${_TAG_NAME}'
       - '--region=${_REGION}'
       - '--platform=managed'
       - '--allow-unauthenticated'
@@ -80,7 +78,6 @@ timeout: '1200s'
 
 # Images to be pushed to Artifact Registry
 images:
-  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:$COMMIT_SHA'
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:latest'
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/devrev-mcp-server:${_TAG_NAME}'
 
