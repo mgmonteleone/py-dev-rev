@@ -1,0 +1,209 @@
+# DevRev MCP Server - Context for AI Agents
+
+> The DevRev MCP Server exposes the DevRev platform as Model Context Protocol (MCP) tools, resources, and prompts. It enables AI assistants to manage support tickets, customer accounts, knowledge bases, and workflows through natural language.
+
+**Install**: `pip install devrev-python-sdk[mcp]`
+**Run**: `devrev-mcp-server`
+**Docs**: https://mgmonteleone.github.io/py-dev-rev/mcp/
+**Version**: 2.4.1
+**Protocol**: MCP 2025-06-18
+
+## Quick Setup
+
+```bash
+# Install
+pip install devrev-python-sdk[mcp]
+
+# Set token
+export DEVREV_API_TOKEN="your-token"
+
+# Run (stdio for local use)
+devrev-mcp-server
+```
+
+## Client Configuration
+
+### Augment Code (VS Code)
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "command": "devrev-mcp-server",
+      "env": {
+        "DEVREV_API_TOKEN": "<your-token>",
+        "MCP_ENABLE_BETA_TOOLS": "true"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "command": "devrev-mcp-server",
+      "env": { "DEVREV_API_TOKEN": "your-token" }
+    }
+  }
+}
+```
+
+### Remote (Cloud Run)
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "type": "http",
+      "url": "https://devrev-mcp-server-<hash>-uc.a.run.app/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-devrev-personal-access-token>"
+      }
+    }
+  }
+}
+```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DEVREV_API_TOKEN` | Required | DevRev API token |
+| `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `streamable-http`, `sse` |
+| `MCP_HOST` | `127.0.0.1` | Bind host (HTTP transports) |
+| `MCP_PORT` | `8080` | Bind port (HTTP transports) |
+| `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta tools (search, incidents, etc.) |
+| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `true` | Enable create/update/delete operations |
+| `MCP_LOG_LEVEL` | `INFO` | Logging level |
+| `MCP_LOG_FORMAT` | `json` | Log format: `text` or `json` |
+| `MCP_AUTH_MODE` | `devrev-pat` | Auth: `devrev-pat` (per-user) or `static-token` |
+| `MCP_AUTH_TOKEN` | — | Bearer token (static-token mode only) |
+| `MCP_AUTH_ALLOWED_DOMAINS` | `augmentcode.com` | Allowed email domains (devrev-pat mode) |
+| `MCP_RATE_LIMIT_RPM` | `120` | Max requests per minute per session |
+| `MCP_DEFAULT_PAGE_SIZE` | `25` | Default page size for list operations |
+| `MCP_MAX_PAGE_SIZE` | `100` | Maximum page size |
+
+## Tools (78+)
+
+### Works (Tickets & Issues)
+- `devrev_works_list` — List work items with filters (type, stage, owner, cursor, limit)
+- `devrev_works_get` — Get work item by ID
+- `devrev_works_create` — Create ticket or issue (requires: type, title, applies_to_part)
+- `devrev_works_update` — Update work item fields
+- `devrev_works_delete` — Delete work item (destructive)
+- `devrev_works_count` — Count work items matching filters
+- `devrev_works_export` — Export work items
+
+### Accounts
+- `devrev_accounts_list` — List customer accounts
+- `devrev_accounts_get` — Get account by ID
+- `devrev_accounts_create` — Create account (requires: display_name)
+- `devrev_accounts_update` — Update account
+- `devrev_accounts_delete` — Delete account (destructive)
+
+### Users
+- `devrev_dev_users_list` — List internal dev users
+- `devrev_dev_users_get` — Get dev user by ID
+- `devrev_rev_users_list` — List external customer users
+- `devrev_rev_users_get` — Get rev user by ID
+- `devrev_rev_users_create` — Create rev user
+- `devrev_rev_users_update` — Update rev user
+
+### Articles (Knowledge Base)
+- `devrev_articles_list` — List KB articles
+- `devrev_articles_get` — Get article by ID
+- `devrev_articles_create` — Create article
+- `devrev_articles_update` — Update article
+- `devrev_articles_delete` — Delete article (destructive)
+- `devrev_articles_count` — Count articles (beta)
+
+### Conversations
+- `devrev_conversations_list` — List conversations
+- `devrev_conversations_get` — Get conversation by ID
+- `devrev_conversations_create` — Create conversation
+- `devrev_conversations_update` — Update conversation
+
+### Parts (Products & Features)
+- `devrev_parts_list` — List product parts
+- `devrev_parts_get` — Get part by ID
+- `devrev_parts_create` — Create part
+- `devrev_parts_update` — Update part
+
+### Tags
+- `devrev_tags_list` — List tags
+- `devrev_tags_get` — Get tag by ID
+- `devrev_tags_create` — Create tag
+- `devrev_tags_update` — Update tag
+
+### Groups
+- `devrev_groups_list` — List user groups
+- `devrev_groups_get` — Get group by ID
+- `devrev_groups_create` — Create group
+- `devrev_groups_update` — Update group
+
+### Timeline Entries
+- `devrev_timeline_entries_list` — List timeline entries for an object
+- `devrev_timeline_entries_create` — Add comment/note to timeline
+
+### Links
+- `devrev_links_list` — List links between objects
+- `devrev_links_create` — Create link between objects
+- `devrev_links_delete` — Delete link (destructive)
+
+### SLAs
+- `devrev_slas_list` — List SLA policies
+- `devrev_slas_get` — Get SLA by ID
+
+### Engagements (Beta)
+- `devrev_engagements_list` — List customer engagements
+- `devrev_engagements_get` — Get engagement by ID
+
+### Incidents (Beta)
+- `devrev_incidents_list` — List incidents
+- `devrev_incidents_get` — Get incident by ID
+
+### Search (Beta)
+- `devrev_search` — Hybrid search across DevRev objects
+
+### Recommendations (Beta)
+- `devrev_recommendations` — AI-powered recommendations
+
+## Resources (7)
+
+URI-addressable DevRev objects using `devrev://` scheme:
+
+| URI Pattern | Description |
+|-------------|-------------|
+| `devrev://tickets/{id}` | Get a specific ticket |
+| `devrev://accounts/{id}` | Get a specific account |
+| `devrev://articles/{id}` | Get a specific article |
+| `devrev://users/{id}` | Get a specific user |
+| `devrev://parts/{id}` | Get a specific part |
+| `devrev://conversations/{id}` | Get a specific conversation |
+
+## Prompts (8)
+
+Pre-built workflow prompts for common support operations:
+
+| Prompt | Description | Key Arguments |
+|--------|-------------|---------------|
+| `triage_ticket` | Analyze and triage a support ticket | `ticket_id` |
+| `draft_response` | Draft a customer response | `ticket_id`, `tone` |
+| `escalate_ticket` | Prepare escalation summary | `ticket_id`, `reason` |
+| `summarize_account` | Generate account health summary | `account_id` |
+| `investigate_issue` | Deep-dive into a technical issue | `ticket_id` |
+| `weekly_report` | Generate weekly support metrics | `date_range` |
+| `find_similar` | Find similar past tickets | `ticket_id` |
+| `onboard_customer` | Generate onboarding checklist | `account_id` |
+
+## Key Patterns for AI Agents
+
+1. **IDs are DON format**: `don:core:dvrv-us-1:devo/1:ticket/123`
+2. **Pagination**: Cursor-based using `cursor` and `limit` parameters
+3. **Creating tickets**: Requires `type` (ticket/issue), `title`, and `applies_to_part`
+4. **Beta tools**: Require `MCP_ENABLE_BETA_TOOLS=true` (search, recommendations, incidents, engagements)
+5. **Destructive tools**: Require `MCP_ENABLE_DESTRUCTIVE_TOOLS=true` (delete operations)
+6. **Auth for teams**: Use `MCP_AUTH_MODE=devrev-pat` — each user sends their own DevRev PAT as Bearer token
+7. **Transports**: stdio for local dev, streamable-http for production, sse for legacy
+
