@@ -45,6 +45,12 @@ theme:
     - content.code.annotate
   icon:
     repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: IBM Plex Mono
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
