@@ -10,7 +10,7 @@ Key information:
 - Both sync and async clients available (DevRevClient, AsyncDevRevClient)
 - Uses Pydantic v2 for all request/response models
 - MCP Server command: `devrev-mcp-server`
-- Version 2.4.1 (current)
+- Version 2.5.0 (current)
 
 ## SDK Quick Start
 
