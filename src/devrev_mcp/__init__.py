@@ -2,4 +2,4 @@
 
 from __future__ import annotations
 
-__version__ = "2.3.1"
+__version__ = __import__("importlib.metadata", fromlist=["version"]).version("devrev-Python-SDK")
