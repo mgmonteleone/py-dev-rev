@@ -5,6 +5,14 @@ All notable changes to the DevRev Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2026-02-27
+
+### Fixed
+- **CI: Resolved all 99 mypy strict-mode type errors** (#145) — Added type annotations across the MCP server codebase and configured mypy overrides for untyped third-party packages (mcp, starlette, httpx).
+- **CI: Added mypy overrides for untyped BaseHTTPMiddleware subclassing** — Suppressed `[misc]` errors for Starlette middleware that lacks type stubs.
+- **CI: Installed MCP optional dependency for unit tests** — Fixed test collection failures by ensuring `mcp` extras are installed in CI.
+- **Style: Auto-formatted code after mypy type annotation additions** — Applied ruff formatting to files modified during mypy fixes.
+
 ## [2.4.0] - 2026-02-25
 
 ### Added
