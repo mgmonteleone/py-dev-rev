@@ -76,6 +76,9 @@ plugins:
             show_signature_annotations: true
             annotations_path: source
 
+hooks:
+  - docs/hooks/copy_llms.py
+
 markdown_extensions:
   - abbr
   - admonition
