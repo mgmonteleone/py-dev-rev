@@ -54,7 +54,7 @@ steps:
       - '--max-instances=10'
       - '--timeout=300s'
       - '--concurrency=80'
-      - '--set-env-vars=MCP_TRANSPORT=streamable-http,MCP_HOST=0.0.0.0,MCP_PORT=8080,MCP_LOG_FORMAT=json,MCP_LOG_LEVEL=INFO,MCP_AUTH_MODE=devrev-pat,MCP_AUTH_ALLOWED_DOMAINS=["augmentcode.com"]'
+      - '--set-env-vars=MCP_TRANSPORT=streamable-http,MCP_HOST=0.0.0.0,MCP_PORT=8080,MCP_LOG_FORMAT=json,MCP_LOG_LEVEL=INFO,MCP_AUTH_MODE=devrev-pat,MCP_AUTH_ALLOWED_DOMAINS=["augmentcode.com"],MCP_ENABLE_DNS_REBINDING_PROTECTION=true,MCP_ALLOWED_HOSTS=["devrev-mcp-server-ucpy26yrfa-uc.a.run.app"]'
       # Uncomment the next line if you need DEVREV_API_TOKEN for stdio/testing fallback
       # - '--set-secrets=DEVREV_API_TOKEN=devrev-api-token:latest'
     waitFor: ['push']
