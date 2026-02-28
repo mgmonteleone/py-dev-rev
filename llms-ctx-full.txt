@@ -443,7 +443,7 @@ devrev-mcp-server --transport streamable-http --host 0.0.0.0 --port 8080
 - Incidents: `devrev_incidents_list`, `devrev_incidents_get`
 - Engagements: `devrev_engagements_list`, `devrev_engagements_get`
 
-### Resources (7)
+### Resources (6)
 
 URI-addressable DevRev objects:
 - `devrev://tickets/{id}` — Ticket details
@@ -482,7 +482,7 @@ curl $SERVICE_URL/health
 - Per-user DevRev PAT validation (recommended for teams)
 - Rate limiting (configurable RPM per session)
 - DNS rebinding protection for HTTP transports
-- Destructive tool gating (disabled by default)
+- Destructive tool gating (enabled by default, set MCP_ENABLE_DESTRUCTIVE_TOOLS=false to disable)
 - Domain restrictions via MCP_AUTH_ALLOWED_DOMAINS
 
 ### Important Notes for AI Agents Using MCP

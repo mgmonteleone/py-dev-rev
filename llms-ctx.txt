@@ -185,7 +185,7 @@ devrev-mcp-server
 ### MCP Capabilities Summary
 
 - **78+ Tools**: CRUD for works, accounts, users, articles, conversations, parts, tags, groups, timeline, links, SLAs, plus beta tools (search, recommendations, incidents, engagements)
-- **7 Resources**: `devrev://` URI scheme for tickets, accounts, articles, users, parts, conversations
+- **6 Resources**: `devrev://` URI scheme for tickets, accounts, articles, users, parts, conversations
 - **8 Prompts**: triage_ticket, draft_response, escalate_ticket, summarize_account, investigate_issue, weekly_report, find_similar, onboard_customer
 - **3 Transports**: stdio (local), streamable-http (production), sse (legacy)
 - **Auth**: Per-user DevRev PAT (recommended) or static bearer token

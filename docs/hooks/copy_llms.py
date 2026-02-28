@@ -39,7 +39,7 @@ def on_post_build(config, **kwargs):
         if src.exists():
             dest = site_dir / filename
             shutil.copy2(src, dest)
-            print(f"✓ Copied {filename} to site root")
+            print(f"[OK] Copied {filename} to site root")
         else:
-            print(f"⚠ Warning: {filename} not found in repo root")
+            print(f"[WARNING] {filename} not found in repo root")
 

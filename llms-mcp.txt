@@ -169,7 +169,7 @@ devrev-mcp-server
 ### Recommendations (Beta)
 - `devrev_recommendations` — AI-powered recommendations
 
-## Resources (7)
+## Resources (6)
 
 URI-addressable DevRev objects using `devrev://` scheme:
 
