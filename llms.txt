@@ -1,20 +1,30 @@
-# DevRev Python SDK
+# DevRev Python SDK & MCP Server
 
-> Built with [Augment Code](https://www.augmentcode.com/) - A modern, type-safe Python SDK for the DevRev API with full async support, Pydantic v2 models, and comprehensive error handling.
+> Built with [Augment Code](https://www.augmentcode.com/) — A modern, type-safe Python SDK and MCP Server for the DevRev API. Provides both a programmatic SDK (sync/async) and an AI-accessible MCP server with 78+ tools, 7 resources, and 8 prompts.
 
 Key information:
 - Python 3.11+ required
-- Install: `pip install devrev-python-sdk`
+- Install SDK: `pip install devrev-python-sdk`
+- Install with MCP: `pip install devrev-python-sdk[mcp]`
 - Authentication via DEVREV_API_TOKEN environment variable
 - Both sync and async clients available (DevRevClient, AsyncDevRevClient)
 - Uses Pydantic v2 for all request/response models
-- Version 2.0.0 (current)
+- MCP Server command: `devrev-mcp-server`
+- Version 2.5.0 (current)
 
-## Quick Start
+## SDK Quick Start
 
 - [Installation](docs/getting-started/installation.md): Setup instructions and requirements
 - [Authentication](docs/getting-started/authentication.md): API token configuration
 - [Quick Start](docs/getting-started/quickstart.md): First API calls and basic patterns
+
+## MCP Server
+
+- [MCP Overview](docs/mcp/index.md): Architecture, features, and supported AI clients
+- [MCP Quick Start](docs/mcp/quickstart.md): Setup for Augment, Claude Desktop, Cursor
+- [Tools Reference](docs/mcp/tools-reference.md): All 78+ tools, 7 resources, 8 prompts
+- [Deployment](docs/mcp/deployment.md): Cloud Run deployment with per-user PAT auth
+- [MCP Context for AI](llms-mcp.txt): Standalone MCP-focused context file for AI agents
 
 ## API Reference
 
@@ -62,4 +72,6 @@ Key information:
 - [Changelog](docs/changelog.md): Version history and migration guides
 - [Version Support](docs/guides/version-support.md): Python version support policy
 - [Compatibility](docs/guides/compatibility.md): Compatibility matrix
+- [Full SDK Context](llms-ctx-full.txt): Comprehensive SDK reference for AI agents
+- [SDK Context](llms-ctx.txt): Concise SDK reference for AI agents
 

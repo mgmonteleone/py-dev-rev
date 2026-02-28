@@ -1,8 +1,8 @@
-# DevRev Python SDK - Full Context for AI Agents
+# DevRev Python SDK & MCP Server - Full Context for AI Agents
 
 ## Overview
 
-A modern, type-safe Python SDK for the DevRev API with:
+A modern, type-safe Python SDK and MCP Server for the DevRev API with:
 - Full async support (sync and async clients)
 - Pydantic v2 models for all requests/responses
 - Comprehensive error handling with typed exceptions
@@ -11,8 +11,9 @@ A modern, type-safe Python SDK for the DevRev API with:
 
 **Requirements**: Python 3.11+
 **Install**: `pip install devrev-python-sdk`
+**Install with MCP**: `pip install devrev-python-sdk[mcp]`
 **Docs**: https://mgmonteleone.github.io/py-dev-rev/
-**Version**: 2.0.0
+**Version**: 2.5.0
 
 ## Authentication
 
@@ -334,3 +335,162 @@ def list_accounts():
 8. **Async**: Use `AsyncDevRevClient` with `await` for all API calls
 9. **Error Properties**: All exceptions have `.message`, `.status_code`, `.request_id`
 10. **Rate Limits**: `RateLimitError` has `.retry_after` attribute in seconds
+
+## MCP Server
+
+The DevRev MCP Server exposes the full DevRev platform as AI-accessible tools, resources, and prompts through the Model Context Protocol (MCP).
+
+### Installation & Quick Start
+
+```bash
+# Install with MCP extras
+pip install devrev-python-sdk[mcp]
+
+# Set your DevRev API token
+export DEVREV_API_TOKEN="your-token"
+
+# Run the server (stdio transport for local use)
+devrev-mcp-server
+
+# Run with HTTP transport for production
+devrev-mcp-server --transport streamable-http --host 0.0.0.0 --port 8080
+```
+
+### Client Configuration
+
+#### Augment Code (VS Code / JetBrains)
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "command": "devrev-mcp-server",
+      "env": {
+        "DEVREV_API_TOKEN": "<your-token>",
+        "MCP_ENABLE_BETA_TOOLS": "true",
+        "MCP_ENABLE_DESTRUCTIVE_TOOLS": "false",
+        "MCP_LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}
+```
+
+#### Claude Desktop
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "command": "devrev-mcp-server",
+      "env": { "DEVREV_API_TOKEN": "your-token" }
+    }
+  }
+}
+```
+
+#### Remote (Cloud Run with per-user PAT)
+```json
+{
+  "mcpServers": {
+    "devrev": {
+      "type": "http",
+      "url": "https://devrev-mcp-server-<hash>-uc.a.run.app/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-devrev-personal-access-token>"
+      }
+    }
+  }
+}
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DEVREV_API_TOKEN` | Required | DevRev API token |
+| `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `streamable-http`, `sse` |
+| `MCP_HOST` | `127.0.0.1` | Bind host (HTTP transports) |
+| `MCP_PORT` | `8080` | Bind port (HTTP transports) |
+| `MCP_ENABLE_BETA_TOOLS` | `true` | Enable beta tools |
+| `MCP_ENABLE_DESTRUCTIVE_TOOLS` | `true` | Enable create/update/delete |
+| `MCP_LOG_LEVEL` | `INFO` | Logging level |
+| `MCP_LOG_FORMAT` | `json` | Log format: `text` or `json` |
+| `MCP_AUTH_MODE` | `devrev-pat` | Auth: `devrev-pat` or `static-token` |
+| `MCP_AUTH_TOKEN` | — | Bearer token (static-token mode) |
+| `MCP_AUTH_ALLOWED_DOMAINS` | `augmentcode.com` | Allowed email domains (devrev-pat mode) |
+| `MCP_RATE_LIMIT_RPM` | `120` | Max requests per minute per session |
+| `MCP_DEFAULT_PAGE_SIZE` | `25` | Default page size |
+| `MCP_MAX_PAGE_SIZE` | `100` | Maximum page size |
+
+### Tools (78+)
+
+#### Core Tools (always available)
+- Works: `devrev_works_list`, `devrev_works_get`, `devrev_works_create`, `devrev_works_update`, `devrev_works_delete`, `devrev_works_count`, `devrev_works_export`
+- Accounts: `devrev_accounts_list`, `devrev_accounts_get`, `devrev_accounts_create`, `devrev_accounts_update`, `devrev_accounts_delete`
+- Dev Users: `devrev_dev_users_list`, `devrev_dev_users_get`
+- Rev Users: `devrev_rev_users_list`, `devrev_rev_users_get`, `devrev_rev_users_create`, `devrev_rev_users_update`
+- Articles: `devrev_articles_list`, `devrev_articles_get`, `devrev_articles_create`, `devrev_articles_update`, `devrev_articles_delete`, `devrev_articles_count`
+- Conversations: `devrev_conversations_list`, `devrev_conversations_get`, `devrev_conversations_create`, `devrev_conversations_update`
+- Parts: `devrev_parts_list`, `devrev_parts_get`, `devrev_parts_create`, `devrev_parts_update`
+- Tags: `devrev_tags_list`, `devrev_tags_get`, `devrev_tags_create`, `devrev_tags_update`
+- Groups: `devrev_groups_list`, `devrev_groups_get`, `devrev_groups_create`, `devrev_groups_update`
+- Timeline: `devrev_timeline_entries_list`, `devrev_timeline_entries_create`
+- Links: `devrev_links_list`, `devrev_links_create`, `devrev_links_delete`
+- SLAs: `devrev_slas_list`, `devrev_slas_get`
+
+#### Beta Tools (require MCP_ENABLE_BETA_TOOLS=true)
+- Search: `devrev_search` — Hybrid search across DevRev objects
+- Recommendations: `devrev_recommendations` — AI-powered recommendations
+- Incidents: `devrev_incidents_list`, `devrev_incidents_get`
+- Engagements: `devrev_engagements_list`, `devrev_engagements_get`
+
+### Resources (6)
+
+URI-addressable DevRev objects:
+- `devrev://tickets/{id}` — Ticket details
+- `devrev://accounts/{id}` — Account details
+- `devrev://articles/{id}` — Article content
+- `devrev://users/{id}` — User profile
+- `devrev://parts/{id}` — Part details
+- `devrev://conversations/{id}` — Conversation history
+
+### Prompts (8)
+
+Pre-built workflow prompts:
+- `triage_ticket(ticket_id)` — Analyze and triage a support ticket
+- `draft_response(ticket_id, tone)` — Draft a customer response
+- `escalate_ticket(ticket_id, reason)` — Prepare escalation summary
+- `summarize_account(account_id)` — Generate account health summary
+- `investigate_issue(ticket_id)` — Deep-dive into a technical issue
+- `weekly_report(date_range)` — Generate weekly support metrics
+- `find_similar(ticket_id)` — Find similar past tickets
+- `onboard_customer(account_id)` — Generate onboarding checklist
+
+### Production Deployment (Cloud Run)
+
+```bash
+# Deploy with Cloud Build
+gcloud builds submit --config deploy/cloudbuild.yaml
+
+# Test
+SERVICE_URL=$(gcloud run services describe devrev-mcp-server \
+  --region=us-central1 --format='value(status.url)')
+curl $SERVICE_URL/health
+```
+
+### Security Features
+- Bearer token authentication on all MCP endpoints
+- Per-user DevRev PAT validation (recommended for teams)
+- Rate limiting (configurable RPM per session)
+- DNS rebinding protection for HTTP transports
+- Destructive tool gating (enabled by default, set MCP_ENABLE_DESTRUCTIVE_TOOLS=false to disable)
+- Domain restrictions via MCP_AUTH_ALLOWED_DOMAINS
+
+### Important Notes for AI Agents Using MCP
+
+1. **IDs are DON format**: `don:core:dvrv-us-1:devo/1:ticket/123`
+2. **Pagination**: Use `cursor` and `limit` parameters, check for `next_cursor` in response
+3. **Creating tickets**: Requires `type` (ticket/issue), `title`, and `applies_to_part`
+4. **Beta tools**: Need `MCP_ENABLE_BETA_TOOLS=true` for search, recommendations, incidents, engagements
+5. **Destructive tools**: Need `MCP_ENABLE_DESTRUCTIVE_TOOLS=true` for delete operations
+6. **Per-user auth**: With `MCP_AUTH_MODE=devrev-pat`, each user sends their own DevRev PAT as Bearer token
+7. **Transports**: Use stdio for local dev, streamable-http for production
