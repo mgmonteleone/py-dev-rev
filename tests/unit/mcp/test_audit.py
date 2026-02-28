@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -12,6 +13,7 @@ import pytest
 os.environ.setdefault("DEVREV_API_TOKEN", "test-token")
 
 from devrev_mcp.middleware.audit import AuditLogger, classify_tool
+from devrev_mcp.middleware.auth import _extract_request_metadata
 
 
 @pytest.fixture(autouse=True)
@@ -398,6 +400,24 @@ class TestAuditLogger:
         assert record.request["x_forwarded_for"] == "203.0.113.42, 10.0.0.1"
         assert record.request["trace_id"] == "abc123def456789"
 
+    def test_enriched_request_metadata_in_auth_failure(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify user_agent, x_forwarded_for, and trace_id appear in auth failure events."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_auth_failure(
+                reason="invalid_token",
+                client_ip="10.0.0.1",
+                user_agent="curl/7.88.1",
+                x_forwarded_for="198.51.100.5",
+                trace_id="trace-failure-test",
+            )
+
+        record = caplog.records[0]
+        assert record.request["user_agent"] == "curl/7.88.1"
+        assert record.request["x_forwarded_for"] == "198.51.100.5"
+        assert record.request["trace_id"] == "trace-failure-test"
+
     def test_enriched_request_metadata_in_tool_invocation(
         self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
     ) -> None:
@@ -439,3 +459,66 @@ class TestAuditLogger:
         assert record.request["user_agent"] == ""
         assert record.request["x_forwarded_for"] == ""
         assert record.request["trace_id"] == ""
+
+
+class TestExtractRequestMetadata:
+    """Tests for the _extract_request_metadata helper function."""
+
+    def _make_request(self, headers: dict[str, str] | None = None) -> MagicMock:
+        """Create a mock Starlette Request with given headers."""
+        request = MagicMock()
+        _headers = headers or {}
+        request.headers.get = lambda key, default="": _headers.get(key, default)
+        return request
+
+    def test_all_headers_present(self) -> None:
+        """Test extraction when all headers are present."""
+        request = self._make_request(
+            {
+                "user-agent": "mcp-client/1.0",
+                "x-forwarded-for": "203.0.113.42, 10.0.0.1",
+                "x-cloud-trace-context": "abc123def456789012345678901234ff/12345;o=1",
+            }
+        )
+        meta = _extract_request_metadata(request)
+        assert meta["user_agent"] == "mcp-client/1.0"
+        assert meta["x_forwarded_for"] == "203.0.113.42, 10.0.0.1"
+        assert meta["trace_id"] == "abc123def456789012345678901234ff"
+
+    def test_missing_all_headers(self) -> None:
+        """Test extraction when no headers are present."""
+        request = self._make_request({})
+        meta = _extract_request_metadata(request)
+        assert meta["user_agent"] == ""
+        assert meta["x_forwarded_for"] == ""
+        assert meta["trace_id"] == ""
+
+    def test_trace_context_without_span_id(self) -> None:
+        """Test trace ID extraction when header has no slash."""
+        request = self._make_request(
+            {
+                "x-cloud-trace-context": "abc123def456",
+            }
+        )
+        meta = _extract_request_metadata(request)
+        assert meta["trace_id"] == "abc123def456"
+
+    def test_trace_context_with_full_format(self) -> None:
+        """Test: 'abc123/def456;o=1' extracts 'abc123'."""
+        request = self._make_request(
+            {
+                "x-cloud-trace-context": "abc123/def456;o=1",
+            }
+        )
+        meta = _extract_request_metadata(request)
+        assert meta["trace_id"] == "abc123"
+
+    def test_trace_context_empty_string(self) -> None:
+        """Test empty string trace context returns empty trace_id."""
+        request = self._make_request(
+            {
+                "x-cloud-trace-context": "",
+            }
+        )
+        meta = _extract_request_metadata(request)
+        assert meta["trace_id"] == ""
