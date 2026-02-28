@@ -27,10 +27,10 @@ def on_post_build(config, **_kwargs):
 
     # List of llms.txt files to copy
     llms_files = [
-        "llms.txt",           # Main llms.txt file
-        "llms-ctx.txt",       # Context-focused version
+        "llms.txt",  # Main llms.txt file
+        "llms-ctx.txt",  # Context-focused version
         "llms-ctx-full.txt",  # Full context version
-        "llms-mcp.txt",       # MCP-specific version
+        "llms-mcp.txt",  # MCP-specific version
     ]
 
     # Copy each file if it exists
@@ -42,4 +42,3 @@ def on_post_build(config, **_kwargs):
             print(f"[OK] Copied {filename} to site root")
         else:
             print(f"[WARNING] {filename} not found in repo root")
-
