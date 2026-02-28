@@ -37,8 +37,8 @@ def _extract_request_metadata(request: Request) -> dict[str, str]:
     trace_id = trace_context.split("/")[0].strip() if trace_context else ""
     return {
         "user_agent": request.headers.get("user-agent", "")[:512],
-        "x_forwarded_for": request.headers.get("x-forwarded-for", ""),
-        "trace_id": trace_id,
+        "x_forwarded_for": request.headers.get("x-forwarded-for", "")[:512],
+        "trace_id": trace_id[:64],
     }
 
 
