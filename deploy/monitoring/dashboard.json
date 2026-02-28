@@ -7,47 +7,10 @@
         "width": 6,
         "height": 4,
         "widget": {
-          "title": "Authentication Success vs Failure Rate",
-          "xyChart": {
-            "chartOptions": {
-              "mode": "COLOR"
-            },
-            "dataSets": [
-              {
-                "timeSeriesQuery": {
-                  "timeSeriesFilter": {
-                    "filter": "resource.type=\"cloud_run_revision\" AND jsonPayload.event_type=\"audit\" AND jsonPayload.action=\"auth_success\"",
-                    "aggregation": {
-                      "alignmentPeriod": "60s",
-                      "perSeriesAligner": "ALIGN_RATE",
-                      "crossSeriesReducer": "REDUCE_SUM"
-                    }
-                  }
-                },
-                "plotType": "LINE",
-                "targetAxis": "Y1",
-                "legendTemplate": "Auth Success"
-              },
-              {
-                "timeSeriesQuery": {
-                  "timeSeriesFilter": {
-                    "filter": "resource.type=\"cloud_run_revision\" AND jsonPayload.event_type=\"audit\" AND jsonPayload.action=\"auth_failure\"",
-                    "aggregation": {
-                      "alignmentPeriod": "60s",
-                      "perSeriesAligner": "ALIGN_RATE",
-                      "crossSeriesReducer": "REDUCE_SUM"
-                    }
-                  }
-                },
-                "plotType": "LINE",
-                "targetAxis": "Y1",
-                "legendTemplate": "Auth Failure"
-              }
-            ],
-            "yAxis": {
-              "label": "Events per second",
-              "scale": "LINEAR"
-            }
+          "title": "Authentication Events",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\n(jsonPayload.action=\"auth_success\" OR jsonPayload.action=\"auth_failure\")"
           }
         }
       },
@@ -56,32 +19,10 @@
         "width": 6,
         "height": 4,
         "widget": {
-          "title": "Tool Invocations by Category",
-          "xyChart": {
-            "chartOptions": {
-              "mode": "COLOR"
-            },
-            "dataSets": [
-              {
-                "timeSeriesQuery": {
-                  "timeSeriesFilter": {
-                    "filter": "resource.type=\"cloud_run_revision\" AND jsonPayload.event_type=\"audit\" AND jsonPayload.action=\"tool_invocation\"",
-                    "aggregation": {
-                      "alignmentPeriod": "60s",
-                      "perSeriesAligner": "ALIGN_RATE",
-                      "crossSeriesReducer": "REDUCE_SUM",
-                      "groupByFields": ["jsonPayload.tool.category"]
-                    }
-                  }
-                },
-                "plotType": "STACKED_BAR",
-                "targetAxis": "Y1"
-              }
-            ],
-            "yAxis": {
-              "label": "Invocations per second",
-              "scale": "LINEAR"
-            }
+          "title": "Tool Invocations",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\njsonPayload.action=\"tool_invocation\""
           }
         }
       },
@@ -90,22 +31,10 @@
         "width": 6,
         "height": 4,
         "widget": {
-          "title": "Top 10 Users by Request Volume (Last Hour)",
-          "scorecard": {
-            "timeSeriesQuery": {
-              "timeSeriesFilter": {
-                "filter": "resource.type=\"cloud_run_revision\" AND jsonPayload.event_type=\"audit\" AND jsonPayload.action=\"tool_invocation\"",
-                "aggregation": {
-                  "alignmentPeriod": "3600s",
-                  "perSeriesAligner": "ALIGN_SUM",
-                  "crossSeriesReducer": "REDUCE_SUM",
-                  "groupByFields": ["jsonPayload.user.email"]
-                }
-              }
-            },
-            "sparkChartView": {
-              "sparkChartType": "SPARK_BAR"
-            }
+          "title": "User Activity",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\njsonPayload.action=\"tool_invocation\""
           }
         }
       },
@@ -115,47 +44,10 @@
         "width": 6,
         "height": 4,
         "widget": {
-          "title": "Error Rate Over Time",
-          "xyChart": {
-            "chartOptions": {
-              "mode": "COLOR"
-            },
-            "dataSets": [
-              {
-                "timeSeriesQuery": {
-                  "timeSeriesFilter": {
-                    "filter": "resource.type=\"cloud_run_revision\" AND jsonPayload.event_type=\"audit\" AND jsonPayload.outcome=\"failure\"",
-                    "aggregation": {
-                      "alignmentPeriod": "60s",
-                      "perSeriesAligner": "ALIGN_RATE",
-                      "crossSeriesReducer": "REDUCE_SUM"
-                    }
-                  }
-                },
-                "plotType": "LINE",
-                "targetAxis": "Y1",
-                "legendTemplate": "Failures"
-              },
-              {
-                "timeSeriesQuery": {
-                  "timeSeriesFilter": {
-                    "filter": "resource.type=\"cloud_run_revision\" AND jsonPayload.event_type=\"audit\" AND jsonPayload.outcome=\"success\"",
-                    "aggregation": {
-                      "alignmentPeriod": "60s",
-                      "perSeriesAligner": "ALIGN_RATE",
-                      "crossSeriesReducer": "REDUCE_SUM"
-                    }
-                  }
-                },
-                "plotType": "LINE",
-                "targetAxis": "Y1",
-                "legendTemplate": "Success"
-              }
-            ],
-            "yAxis": {
-              "label": "Events per second",
-              "scale": "LINEAR"
-            }
+          "title": "Errors and Failures",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\njsonPayload.outcome=\"failure\""
           }
         }
       },
@@ -164,24 +56,10 @@
         "width": 12,
         "height": 4,
         "widget": {
-          "title": "Audit Events by Action Type",
-          "pieChart": {
-            "chartType": "PIE",
-            "dataSets": [
-              {
-                "timeSeriesQuery": {
-                  "timeSeriesFilter": {
-                    "filter": "resource.type=\"cloud_run_revision\" AND jsonPayload.event_type=\"audit\"",
-                    "aggregation": {
-                      "alignmentPeriod": "3600s",
-                      "perSeriesAligner": "ALIGN_RATE",
-                      "crossSeriesReducer": "REDUCE_SUM",
-                      "groupByFields": ["jsonPayload.action"]
-                    }
-                  }
-                }
-              }
-            ]
+          "title": "All Audit Events",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\""
           }
         }
       }

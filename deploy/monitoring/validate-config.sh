@@ -10,7 +10,9 @@
 # - Alert policies are valid
 # - Dashboard JSON is valid
 
-set -e
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Colors for output
 RED='\033[0;31m'
@@ -72,11 +74,11 @@ fi
 
 # Validate alert-policies.yaml
 echo -n "Validating alert-policies.yaml... "
-if [ -f "alert-policies.yaml" ]; then
+if [ -f "$SCRIPT_DIR/alert-policies.yaml" ]; then
     # Check for placeholder values
-    if grep -q "NOTIFICATION_CHANNEL_ID" alert-policies.yaml; then
+    if grep -q "NOTIFICATION_CHANNEL_ID" "$SCRIPT_DIR/alert-policies.yaml"; then
         echo -e "${YELLOW}⚠${NC} Contains placeholder NOTIFICATION_CHANNEL_ID"
-    elif grep -q "PROJECT_ID" alert-policies.yaml; then
+    elif grep -q "PROJECT_ID" "$SCRIPT_DIR/alert-policies.yaml"; then
         echo -e "${YELLOW}⚠${NC} Contains placeholder PROJECT_ID"
     else
         echo -e "${GREEN}✓${NC}"
@@ -87,8 +89,8 @@ fi
 
 # Validate dashboard.json
 echo -n "Validating dashboard.json... "
-if [ -f "dashboard.json" ]; then
-    if python3 -m json.tool dashboard.json > /dev/null 2>&1; then
+if [ -f "$SCRIPT_DIR/dashboard.json" ]; then
+    if python3 -m json.tool "$SCRIPT_DIR/dashboard.json" > /dev/null 2>&1; then
         echo -e "${GREEN}✓${NC} Valid JSON"
     else
         echo -e "${RED}✗${NC} Invalid JSON"
@@ -113,7 +115,7 @@ echo "Validation complete!"
 echo ""
 
 # Summary and next steps
-if grep -q "NOTIFICATION_CHANNEL_ID\|PROJECT_ID" alert-policies.yaml 2>/dev/null; then
+if grep -q "NOTIFICATION_CHANNEL_ID\|PROJECT_ID" "$SCRIPT_DIR/alert-policies.yaml" 2>/dev/null; then
     echo -e "${YELLOW}Next steps:${NC}"
     echo "1. Replace placeholders in alert-policies.yaml:"
     echo "   - PROJECT_ID: $PROJECT_ID"

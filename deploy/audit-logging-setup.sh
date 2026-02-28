@@ -147,10 +147,15 @@ else
     log_success "Bucket created"
 fi
 
-# Set retention policy
-log_info "Setting retention policy to $RETENTION_DAYS days..."
-gsutil retention set "${RETENTION_DAYS}d" "gs://$BUCKET_NAME"
-log_success "Retention policy set"
+# Set retention policy (skip if bucket is already locked)
+LOCK_STATUS=$(gsutil retention get "gs://$BUCKET_NAME" 2>/dev/null | grep -i "Locked" || echo "")
+if echo "$LOCK_STATUS" | grep -qi "true"; then
+    log_warning "Bucket retention policy is locked; skipping retention update"
+else
+    log_info "Setting retention policy to $RETENTION_DAYS days..."
+    gsutil retention set "${RETENTION_DAYS}d" "gs://$BUCKET_NAME"
+    log_success "Retention policy set"
+fi
 
 # Step 2: Lock the bucket (optional, IRREVERSIBLE)
 if [ "$LOCK_BUCKET" = true ]; then

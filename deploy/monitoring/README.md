@@ -223,7 +223,7 @@ gcloud logging read "jsonPayload.action=auth_failure" \
 
 ### Missing Audit Events
 
-1. Check `AUDIT_LOG_ENABLED` environment variable is set to `true`
+1. Check `MCP_AUDIT_LOG_ENABLED` environment variable is set to `true`
 2. Verify Cloud Run service has logging permissions
 3. Check for errors in Cloud Run logs
 4. Ensure audit middleware is properly configured
