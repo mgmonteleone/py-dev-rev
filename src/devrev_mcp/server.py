@@ -299,6 +299,9 @@ if _config.audit_log_enabled:
                     outcome=outcome,
                     duration_ms=duration_ms,
                     error_message=error_msg,
+                    user_agent=audit_info.get("user_agent", "") if audit_info else "",
+                    x_forwarded_for=audit_info.get("x_forwarded_for", "") if audit_info else "",
+                    trace_id=audit_info.get("trace_id", "") if audit_info else "",
                 )
 
         return _audited_tool

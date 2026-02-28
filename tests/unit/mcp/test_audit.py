@@ -79,6 +79,9 @@ class TestAuditLogger:
                 email="user@example.com",
                 pat_hash="sha256:abc123",
                 client_ip="192.168.1.1",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         assert len(caplog.records) == 1
@@ -92,6 +95,9 @@ class TestAuditLogger:
         assert record.user["email"] == "user@example.com"
         assert record.user["pat_hash"] == "sha256:abc123"
         assert record.request["client_ip"] == "192.168.1.1"
+        assert record.request["user_agent"] == ""
+        assert record.request["x_forwarded_for"] == ""
+        assert record.request["trace_id"] == ""
         assert record.message == "Authentication successful"
 
     def test_log_auth_failure_emits_structured_event(
@@ -103,6 +109,9 @@ class TestAuditLogger:
                 reason="invalid_token",
                 client_ip="192.168.1.1",
                 email="user@example.com",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         assert len(caplog.records) == 1
@@ -125,6 +134,9 @@ class TestAuditLogger:
                 reason="forbidden_domain",
                 client_ip="192.168.1.1",
                 email="user@badomain.com",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         record = caplog.records[0]
@@ -160,6 +172,9 @@ class TestAuditLogger:
                 session_id="session-xyz",
                 outcome="success",
                 duration_ms=250,
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         assert len(caplog.records) == 1
@@ -176,6 +191,9 @@ class TestAuditLogger:
         assert record.tool["category"] == "read"
         assert record.request["client_ip"] == "192.168.1.1"
         assert record.request["session_id"] == "session-xyz"
+        assert record.request["user_agent"] == ""
+        assert record.request["x_forwarded_for"] == ""
+        assert record.request["trace_id"] == ""
         assert record.duration_ms == 250
         assert "Tool invocation: devrev_accounts_list (success)" in record.message
 
@@ -195,6 +213,9 @@ class TestAuditLogger:
                 outcome="failure",
                 duration_ms=150,
                 error_message="Validation error: missing required field 'title'",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         record = caplog.records[0]
@@ -212,10 +233,16 @@ class TestAuditLogger:
                 email="user@example.com",
                 pat_hash="sha256:abc123",
                 client_ip="192.168.1.1",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
             audit.log_auth_failure(
                 reason="invalid_token",
                 client_ip="192.168.1.1",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
             audit.log_tool_invocation(
                 user_id="don:identity:dvrv-us-1:devo/1:devu/123",
@@ -227,6 +254,9 @@ class TestAuditLogger:
                 session_id="session-xyz",
                 outcome="success",
                 duration_ms=250,
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         # No logs should be emitted
@@ -253,10 +283,16 @@ class TestAuditLogger:
                 email="user@example.com",
                 pat_hash="sha256:abc123",
                 client_ip="192.168.1.1",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
             audit.log_auth_failure(
                 reason="invalid_token",
                 client_ip="192.168.1.1",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
             audit.log_tool_invocation(
                 user_id="don:identity:dvrv-us-1:devo/1:devu/123",
@@ -268,6 +304,9 @@ class TestAuditLogger:
                 session_id="session-xyz",
                 outcome="success",
                 duration_ms=250,
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         # All three records should have event_type="audit"
@@ -285,6 +324,9 @@ class TestAuditLogger:
                 email="user@example.com",
                 pat_hash="sha256:abc123def456",
                 client_ip="192.168.1.1",
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         record = caplog.records[0]
@@ -311,6 +353,9 @@ class TestAuditLogger:
                 session_id="session-xyz",
                 outcome="success",
                 duration_ms=250,
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
             audit.log_tool_invocation(
                 user_id="don:identity:dvrv-us-1:devo/1:devu/123",
@@ -322,6 +367,9 @@ class TestAuditLogger:
                 session_id="session-xyz",
                 outcome="success",
                 duration_ms=500,
+                user_agent="",
+                x_forwarded_for="",
+                trace_id="",
             )
 
         assert len(caplog.records) == 2
@@ -329,3 +377,65 @@ class TestAuditLogger:
         assert caplog.records[0].duration_ms == 250
         assert caplog.records[1].tool["name"] == "devrev_works_create"
         assert caplog.records[1].duration_ms == 500
+
+    def test_enriched_request_metadata_in_auth_success(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify user_agent, x_forwarded_for, and trace_id appear in auth success events."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_auth_success(
+                user_id="don:identity:dvrv-us-1:devo/1:devu/123",
+                email="user@example.com",
+                pat_hash="sha256:abc123",
+                client_ip="10.0.0.1",
+                user_agent="mcp-client/1.0 Python/3.11",
+                x_forwarded_for="203.0.113.42, 10.0.0.1",
+                trace_id="abc123def456789",
+            )
+
+        record = caplog.records[0]
+        assert record.request["user_agent"] == "mcp-client/1.0 Python/3.11"
+        assert record.request["x_forwarded_for"] == "203.0.113.42, 10.0.0.1"
+        assert record.request["trace_id"] == "abc123def456789"
+
+    def test_enriched_request_metadata_in_tool_invocation(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify user_agent, x_forwarded_for, and trace_id appear in tool invocation events."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_tool_invocation(
+                user_id="don:identity:dvrv-us-1:devo/1:devu/123",
+                email="user@example.com",
+                pat_hash="sha256:abc123",
+                tool_name="devrev_works_list",
+                tool_category="read",
+                client_ip="10.0.0.1",
+                session_id="session-xyz",
+                outcome="success",
+                duration_ms=100,
+                user_agent="curl/7.88.1",
+                x_forwarded_for="198.51.100.5",
+                trace_id="trace-id-987",
+            )
+
+        record = caplog.records[0]
+        assert record.request["user_agent"] == "curl/7.88.1"
+        assert record.request["x_forwarded_for"] == "198.51.100.5"
+        assert record.request["trace_id"] == "trace-id-987"
+
+    def test_enriched_fields_default_to_empty_string(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify enriched fields default to empty string when not provided."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_auth_success(
+                user_id="don:identity:dvrv-us-1:devo/1:devu/123",
+                email="user@example.com",
+                pat_hash="sha256:abc123",
+                client_ip="192.168.1.1",
+            )
+
+        record = caplog.records[0]
+        assert record.request["user_agent"] == ""
+        assert record.request["x_forwarded_for"] == ""
+        assert record.request["trace_id"] == ""
