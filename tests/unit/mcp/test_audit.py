@@ -7,10 +7,17 @@ import os
 
 import pytest
 
-# Set DEVREV_API_TOKEN to prevent SDK config errors
+# Set DEVREV_API_TOKEN at module level before imports to prevent SDK config errors
+# This is required because the import triggers config loading
 os.environ.setdefault("DEVREV_API_TOKEN", "test-token")
 
 from devrev_mcp.middleware.audit import AuditLogger, classify_tool
+
+
+@pytest.fixture(autouse=True)
+def _mock_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Set required environment variables for tests and ensure cleanup."""
+    monkeypatch.setenv("DEVREV_API_TOKEN", "test-token-value")
 
 
 class TestClassifyTool:

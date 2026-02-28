@@ -14,6 +14,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from devrev import APIVersion, AsyncDevRevClient
 from devrev_mcp import __version__
 from devrev_mcp.config import MCPServerConfig
+from devrev_mcp.middleware.audit import audit_logger
 from devrev_mcp.middleware.auth import _current_devrev_client, _current_devrev_pat
 from devrev_mcp.middleware.health import init_start_time
 
@@ -133,6 +134,8 @@ def _build_transport_security(config: MCPServerConfig) -> TransportSecuritySetti
 
 # Create the FastMCP server instance
 _config = MCPServerConfig()
+# Sync audit logger enabled state from config
+audit_logger.enabled = _config.audit_log_enabled
 _transport_security = _build_transport_security(_config)
 
 mcp = FastMCP(
@@ -285,19 +288,18 @@ if _config.audit_log_enabled:
                 raise
             finally:
                 duration_ms = int((_time.monotonic() - start_time) * 1000)
-                if audit_info:
-                    audit_logger.log_tool_invocation(
-                        user_id=audit_info.get("user_id", "unknown"),
-                        email=audit_info.get("email", "unknown"),
-                        pat_hash=audit_info.get("pat_hash", "unknown"),
-                        tool_name=tool_name,
-                        tool_category=classify_tool(tool_name),
-                        client_ip=audit_info.get("client_ip", "unknown"),
-                        session_id="",  # Session ID is not easily available in this context
-                        outcome=outcome,
-                        duration_ms=duration_ms,
-                        error_message=error_msg,
-                    )
+                audit_logger.log_tool_invocation(
+                    user_id=audit_info.get("user_id", "unknown") if audit_info else "unknown",
+                    email=audit_info.get("email", "unknown") if audit_info else "unknown",
+                    pat_hash=audit_info.get("pat_hash", "unknown") if audit_info else "unknown",
+                    tool_name=tool_name,
+                    tool_category=classify_tool(tool_name),
+                    client_ip=audit_info.get("client_ip", "unknown") if audit_info else "unknown",
+                    session_id="",  # Session ID is not easily available in this context
+                    outcome=outcome,
+                    duration_ms=duration_ms,
+                    error_message=error_msg,
+                )
 
         return _audited_tool
 

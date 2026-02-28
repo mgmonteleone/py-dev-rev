@@ -186,7 +186,8 @@ class AuditLogger:
             extra["user"] = {"email": email}
 
         self._logger.info(
-            f"Authentication failed: {reason}",
+            "Authentication failed: %s",
+            reason,
             extra=extra,
         )
 
@@ -246,8 +247,12 @@ class AuditLogger:
         if error_message:
             extra["error_message"] = error_message
 
-        log_message = f"Tool invocation: {tool_name} ({outcome})"
-        self._logger.info(log_message, extra=extra)
+        self._logger.info(
+            "Tool invocation: %s (%s)",
+            tool_name,
+            outcome,
+            extra=extra,
+        )
 
 
 # Module-level singleton for easy import

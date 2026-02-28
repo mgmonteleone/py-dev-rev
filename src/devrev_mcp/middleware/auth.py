@@ -117,6 +117,14 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
                 content={"error": "Invalid Bearer token"},
             )
 
+        # Log successful authentication
+        audit_logger.log_auth_success(
+            user_id="static-token",
+            email="static-token",
+            pat_hash=hashlib.sha256(provided_token.encode()).hexdigest(),
+            client_ip=request.client.host if request.client else "unknown",
+        )
+
         response = await call_next(request)
         return response
 
@@ -273,7 +281,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
             {
                 "user_id": identity.user_id,
                 "email": identity.email,
-                "pat_hash": token_hash,
+                "pat_hash": f"sha256:{token_hash}",
                 "client_ip": request.client.host if request.client else "unknown",
             }
         )
