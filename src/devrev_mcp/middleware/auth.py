@@ -34,7 +34,7 @@ def _extract_request_metadata(request: Request) -> dict[str, str]:
     """
     trace_context = request.headers.get("x-cloud-trace-context", "")
     # Extract trace ID (format: TRACE_ID/SPAN_ID;o=TRACE_TRUE)
-    trace_id = trace_context.split("/")[0] if trace_context else ""
+    trace_id = trace_context.split("/")[0].strip() if trace_context else ""
     return {
         "user_agent": request.headers.get("user-agent", "")[:512],
         "x_forwarded_for": request.headers.get("x-forwarded-for", ""),
@@ -146,13 +146,30 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
         audit_logger.log_auth_success(
             user_id="static-token",
             email="static-token",
-            pat_hash=hashlib.sha256(provided_token.encode()).hexdigest(),
+            pat_hash=f"sha256:{hashlib.sha256(provided_token.encode()).hexdigest()}",
             client_ip=request.client.host if request.client else "unknown",
             **meta,
         )
 
-        response = await call_next(request)
-        return response
+        # Set context var for tool audit logging
+        pat_hash_prefixed = f"sha256:{hashlib.sha256(provided_token.encode()).hexdigest()}"
+        audit_info_token = _current_user_audit_info.set(
+            {
+                "user_id": "static-token",
+                "email": "static-token",
+                "pat_hash": pat_hash_prefixed,
+                "client_ip": request.client.host if request.client else "unknown",
+                "user_agent": meta["user_agent"],
+                "x_forwarded_for": meta["x_forwarded_for"],
+                "trace_id": meta["trace_id"],
+            }
+        )
+
+        try:
+            response = await call_next(request)
+            return response
+        finally:
+            _current_user_audit_info.reset(audit_info_token)
 
 
 @dataclass
@@ -331,7 +348,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         audit_logger.log_auth_success(
             user_id=identity.user_id,
             email=identity.email,
-            pat_hash=token_hash,
+            pat_hash=f"sha256:{token_hash}",
             client_ip=request.client.host if request.client else "unknown",
             **meta,
         )
