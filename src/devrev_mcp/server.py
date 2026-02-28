@@ -140,6 +140,12 @@ _transport_security = _build_transport_security(_config)
 
 mcp = FastMCP(
     _config.server_name,
+    instructions=(
+        f"DevRev MCP Server v{__version__} — provides AI access to the DevRev platform "
+        f"for managing support tickets, customer accounts, knowledge bases, and workflows. "
+        f"Use the devrev_server_info tool to check version details, capabilities, and whether "
+        f"this is the latest version."
+    ),
     lifespan=app_lifespan,
     host=_config.host,
     port=_config.port,
@@ -237,6 +243,7 @@ from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
 from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
 from devrev_mcp.tools import links as _links_tools  # noqa: E402, F401
 from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
+from devrev_mcp.tools import server_info as _server_info_tools  # noqa: E402, F401
 from devrev_mcp.tools import slas as _slas_tools  # noqa: E402, F401
 from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
 from devrev_mcp.tools import timeline as _timeline_tools  # noqa: E402, F401
@@ -259,6 +266,7 @@ from devrev_mcp.resources import account as _account_resources  # noqa: E402, F4
 from devrev_mcp.resources import article as _article_resources  # noqa: E402, F401
 from devrev_mcp.resources import conversation as _conversation_resources  # noqa: E402, F401
 from devrev_mcp.resources import part as _part_resources  # noqa: E402, F401
+from devrev_mcp.resources import server_info as _server_info_resources  # noqa: E402, F401
 from devrev_mcp.resources import ticket as _ticket_resources  # noqa: E402, F401
 from devrev_mcp.resources import user as _user_resources  # noqa: E402, F401
 
