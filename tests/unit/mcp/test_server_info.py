@@ -242,15 +242,13 @@ class TestVersionComparison:
             result = _compare_versions("invalid", "also-invalid")
             assert result is None
 
-    def test_invalid_version_with_packaging_raises(self):
-        """Test that invalid versions raise InvalidVersion when packaging is available."""
-        from packaging.version import InvalidVersion
-
+    def test_invalid_version_with_packaging_degrades_gracefully(self):
+        """Test that invalid versions degrade gracefully even when packaging is available."""
         from devrev_mcp.tools.server_info import _compare_versions
 
-        # When packaging is available, invalid versions should raise
-        with pytest.raises(InvalidVersion):
-            _compare_versions("invalid", "also-invalid")
+        # When packaging is available but version strings are invalid, should return None
+        result = _compare_versions("invalid", "also-invalid")
+        assert result is None
 
 
 class TestFetchLatestPyPIVersion:

@@ -32,7 +32,8 @@ def _compare_versions(current: str, latest: str) -> bool | None:
         from packaging.version import Version
 
         return Version(current) >= Version(latest)
-    except ImportError:
+    except Exception:
+        # Catches ImportError (packaging not installed) and InvalidVersion (malformed version)
         pass
     # Fallback: simple tuple comparison
     try:
