@@ -314,3 +314,91 @@ if _config.audit_log_enabled:
         logger.info("Audit logging enabled for %d tools", len(mcp._tool_manager._tools))
     else:
         logger.warning("Could not enable tool audit logging: tool manager not accessible")
+
+    def _wrap_resource_with_audit(resource_uri: str, original_fn: Any) -> Any:
+        """Wrap an MCP resource function with audit logging."""
+
+        @functools.wraps(original_fn)
+        async def _audited_resource(*args: Any, **kwargs: Any) -> Any:
+            audit_info = _current_user_audit_info.get()
+            start_time = _time.monotonic()
+            outcome = "success"
+            error_msg = None
+            try:
+                result = await original_fn(*args, **kwargs)
+                return result
+            except Exception as e:
+                outcome = "failure"
+                error_msg = str(e)
+                raise
+            finally:
+                duration_ms = int((_time.monotonic() - start_time) * 1000)
+                audit_logger.log_resource_access(
+                    user_id=audit_info.get("user_id", "unknown") if audit_info else "unknown",
+                    email=audit_info.get("email", "unknown") if audit_info else "unknown",
+                    pat_hash=audit_info.get("pat_hash", "unknown") if audit_info else "unknown",
+                    resource_uri=resource_uri,
+                    client_ip=audit_info.get("client_ip", "unknown") if audit_info else "unknown",
+                    outcome=outcome,
+                    duration_ms=duration_ms,
+                    error_message=error_msg,
+                    user_agent=audit_info.get("user_agent", "") if audit_info else "",
+                    x_forwarded_for=audit_info.get("x_forwarded_for", "") if audit_info else "",
+                    trace_id=audit_info.get("trace_id", "") if audit_info else "",
+                )
+
+        return _audited_resource
+
+    def _wrap_prompt_with_audit(prompt_name: str, original_fn: Any) -> Any:
+        """Wrap an MCP prompt function with audit logging."""
+
+        @functools.wraps(original_fn)
+        async def _audited_prompt(*args: Any, **kwargs: Any) -> Any:
+            audit_info = _current_user_audit_info.get()
+            start_time = _time.monotonic()
+            outcome = "success"
+            error_msg = None
+            try:
+                result = await original_fn(*args, **kwargs)
+                return result
+            except Exception as e:
+                outcome = "failure"
+                error_msg = str(e)
+                raise
+            finally:
+                duration_ms = int((_time.monotonic() - start_time) * 1000)
+                audit_logger.log_prompt_invocation(
+                    user_id=audit_info.get("user_id", "unknown") if audit_info else "unknown",
+                    email=audit_info.get("email", "unknown") if audit_info else "unknown",
+                    pat_hash=audit_info.get("pat_hash", "unknown") if audit_info else "unknown",
+                    prompt_name=prompt_name,
+                    client_ip=audit_info.get("client_ip", "unknown") if audit_info else "unknown",
+                    outcome=outcome,
+                    duration_ms=duration_ms,
+                    error_message=error_msg,
+                    user_agent=audit_info.get("user_agent", "") if audit_info else "",
+                    x_forwarded_for=audit_info.get("x_forwarded_for", "") if audit_info else "",
+                    trace_id=audit_info.get("trace_id", "") if audit_info else "",
+                )
+
+        return _audited_prompt
+
+    # Wrap all registered resource templates with audit logging
+    if hasattr(mcp, "_resource_manager") and hasattr(mcp._resource_manager, "_templates"):
+        for _uri, _template in mcp._resource_manager._templates.items():
+            if hasattr(_template, "fn"):
+                _template.fn = _wrap_resource_with_audit(str(_uri), _template.fn)
+        logger.info(
+            "Audit logging enabled for %d resource templates", len(mcp._resource_manager._templates)
+        )
+    else:
+        logger.warning("Could not enable resource audit logging: resource manager not accessible")
+
+    # Wrap all registered prompts with audit logging
+    if hasattr(mcp, "_prompt_manager") and hasattr(mcp._prompt_manager, "_prompts"):
+        for _prompt_name, _prompt in mcp._prompt_manager._prompts.items():
+            if hasattr(_prompt, "fn"):
+                _prompt.fn = _wrap_prompt_with_audit(_prompt_name, _prompt.fn)
+        logger.info("Audit logging enabled for %d prompts", len(mcp._prompt_manager._prompts))
+    else:
+        logger.warning("Could not enable prompt audit logging: prompt manager not accessible")

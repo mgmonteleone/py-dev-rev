@@ -297,6 +297,120 @@ class AuditLogger:
             extra=extra,
         )
 
+    def log_resource_access(
+        self,
+        user_id: str,
+        email: str,
+        pat_hash: str,
+        resource_uri: str,
+        client_ip: str,
+        outcome: str,
+        duration_ms: int,
+        error_message: str | None = None,
+        user_agent: str = "",
+        x_forwarded_for: str = "",
+        trace_id: str = "",
+    ) -> None:
+        """Log an MCP resource access.
+
+        Args:
+            user_id: DevRev user ID (DON format).
+            email: User email address.
+            pat_hash: Hash of the Personal Access Token used.
+            resource_uri: URI of the resource accessed (e.g., "devrev://account/123").
+            client_ip: Client IP address.
+            outcome: "success" or "failure".
+            duration_ms: Resource access duration in milliseconds.
+            error_message: Error message if outcome is "failure" (optional).
+            user_agent: User-Agent header from the request.
+            x_forwarded_for: X-Forwarded-For header from the request.
+            trace_id: Trace ID extracted from x-cloud-trace-context header.
+        """
+        if not self._enabled:
+            return
+
+        extra: dict[str, Any] = {
+            "event_type": "audit",
+            "action": "resource_access",
+            "user": {"id": user_id, "email": email, "pat_hash": pat_hash},
+            "resource": {"uri": resource_uri},
+            "request": {
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "x_forwarded_for": x_forwarded_for,
+                "trace_id": trace_id,
+            },
+            "outcome": outcome,
+            "duration_ms": duration_ms,
+        }
+
+        if error_message:
+            extra["error_message"] = error_message
+
+        self._logger.info(
+            "Resource access: %s (%s)",
+            resource_uri,
+            outcome,
+            extra=extra,
+        )
+
+    def log_prompt_invocation(
+        self,
+        user_id: str,
+        email: str,
+        pat_hash: str,
+        prompt_name: str,
+        client_ip: str,
+        outcome: str,
+        duration_ms: int,
+        error_message: str | None = None,
+        user_agent: str = "",
+        x_forwarded_for: str = "",
+        trace_id: str = "",
+    ) -> None:
+        """Log an MCP prompt invocation.
+
+        Args:
+            user_id: DevRev user ID (DON format).
+            email: User email address.
+            pat_hash: Hash of the Personal Access Token used.
+            prompt_name: Name of the prompt invoked.
+            client_ip: Client IP address.
+            outcome: "success" or "failure".
+            duration_ms: Prompt invocation duration in milliseconds.
+            error_message: Error message if outcome is "failure" (optional).
+            user_agent: User-Agent header from the request.
+            x_forwarded_for: X-Forwarded-For header from the request.
+            trace_id: Trace ID extracted from x-cloud-trace-context header.
+        """
+        if not self._enabled:
+            return
+
+        extra: dict[str, Any] = {
+            "event_type": "audit",
+            "action": "prompt_invocation",
+            "user": {"id": user_id, "email": email, "pat_hash": pat_hash},
+            "prompt": {"name": prompt_name},
+            "request": {
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "x_forwarded_for": x_forwarded_for,
+                "trace_id": trace_id,
+            },
+            "outcome": outcome,
+            "duration_ms": duration_ms,
+        }
+
+        if error_message:
+            extra["error_message"] = error_message
+
+        self._logger.info(
+            "Prompt invocation: %s (%s)",
+            prompt_name,
+            outcome,
+            extra=extra,
+        )
+
 
 # Module-level singleton for easy import
 audit_logger = AuditLogger()

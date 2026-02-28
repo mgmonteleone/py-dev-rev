@@ -460,6 +460,138 @@ class TestAuditLogger:
         assert record.request["x_forwarded_for"] == ""
         assert record.request["trace_id"] == ""
 
+    def test_log_resource_access_success(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify resource access events are logged with correct structure."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_resource_access(
+                user_id="don:identity:dvrv-us-1:devo/1:devu/1",
+                email="user@example.com",
+                pat_hash="sha256:abc123",
+                resource_uri="devrev://account/123",
+                client_ip="10.0.0.1",
+                outcome="success",
+                duration_ms=5,
+                user_agent="mcp-client/1.0",
+                x_forwarded_for="203.0.113.42",
+                trace_id="trace-res-test",
+            )
+
+        assert len(caplog.records) == 1
+        record = caplog.records[0]
+        assert record.event_type == "audit"
+        assert record.action == "resource_access"
+        assert record.resource == {"uri": "devrev://account/123"}
+        assert record.user["id"] == "don:identity:dvrv-us-1:devo/1:devu/1"
+        assert record.outcome == "success"
+        assert record.duration_ms == 5
+        assert record.request["user_agent"] == "mcp-client/1.0"
+        assert record.request["x_forwarded_for"] == "203.0.113.42"
+        assert record.request["trace_id"] == "trace-res-test"
+
+    def test_log_resource_access_failure(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify resource access failure events include error message."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_resource_access(
+                user_id="don:identity:dvrv-us-1:devo/1:devu/1",
+                email="user@example.com",
+                pat_hash="sha256:abc123",
+                resource_uri="devrev://ticket/999",
+                client_ip="10.0.0.1",
+                outcome="failure",
+                duration_ms=2,
+                error_message="Resource not found",
+            )
+
+        record = caplog.records[0]
+        assert record.action == "resource_access"
+        assert record.outcome == "failure"
+        assert record.error_message == "Resource not found"
+
+    def test_log_prompt_invocation_success(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify prompt invocation events are logged with correct structure."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_prompt_invocation(
+                user_id="don:identity:dvrv-us-1:devo/1:devu/1",
+                email="user@example.com",
+                pat_hash="sha256:abc123",
+                prompt_name="triage_ticket",
+                client_ip="10.0.0.1",
+                outcome="success",
+                duration_ms=3,
+                user_agent="mcp-client/1.0",
+                x_forwarded_for="203.0.113.42",
+                trace_id="trace-prompt-test",
+            )
+
+        assert len(caplog.records) == 1
+        record = caplog.records[0]
+        assert record.event_type == "audit"
+        assert record.action == "prompt_invocation"
+        assert record.prompt == {"name": "triage_ticket"}
+        assert record.user["id"] == "don:identity:dvrv-us-1:devo/1:devu/1"
+        assert record.outcome == "success"
+        assert record.duration_ms == 3
+        assert record.request["user_agent"] == "mcp-client/1.0"
+        assert record.request["x_forwarded_for"] == "203.0.113.42"
+        assert record.request["trace_id"] == "trace-prompt-test"
+
+    def test_log_prompt_invocation_failure(
+        self, audit: AuditLogger, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Verify prompt invocation failure events include error message."""
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            audit.log_prompt_invocation(
+                user_id="don:identity:dvrv-us-1:devo/1:devu/1",
+                email="user@example.com",
+                pat_hash="sha256:abc123",
+                prompt_name="triage_ticket",
+                client_ip="10.0.0.1",
+                outcome="failure",
+                duration_ms=1,
+                error_message="Invalid argument",
+            )
+
+        record = caplog.records[0]
+        assert record.action == "prompt_invocation"
+        assert record.outcome == "failure"
+        assert record.error_message == "Invalid argument"
+
+    def test_log_resource_access_disabled(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Verify resource access events are not logged when disabled."""
+        disabled_audit = AuditLogger(enabled=False)
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            disabled_audit.log_resource_access(
+                user_id="u1",
+                email="e@e.com",
+                pat_hash="h",
+                resource_uri="devrev://account/1",
+                client_ip="1.2.3.4",
+                outcome="success",
+                duration_ms=1,
+            )
+        assert len(caplog.records) == 0
+
+    def test_log_prompt_invocation_disabled(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Verify prompt invocation events are not logged when disabled."""
+        disabled_audit = AuditLogger(enabled=False)
+        with caplog.at_level(logging.INFO, logger="devrev_mcp.audit"):
+            disabled_audit.log_prompt_invocation(
+                user_id="u1",
+                email="e@e.com",
+                pat_hash="h",
+                prompt_name="triage_ticket",
+                client_ip="1.2.3.4",
+                outcome="success",
+                duration_ms=1,
+            )
+        assert len(caplog.records) == 0
+
 
 class TestExtractRequestMetadata:
     """Tests for the _extract_request_metadata helper function."""
