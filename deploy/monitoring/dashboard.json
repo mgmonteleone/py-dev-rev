@@ -1,0 +1,69 @@
+{
+  "displayName": "DevRev MCP Server - Audit Dashboard",
+  "mosaicLayout": {
+    "columns": 12,
+    "tiles": [
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Authentication Events",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\n(jsonPayload.action=\"auth_success\" OR jsonPayload.action=\"auth_failure\")"
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Tool Invocations",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\njsonPayload.action=\"tool_invocation\""
+          }
+        }
+      },
+      {
+        "yPos": 4,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "User Activity",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\njsonPayload.action=\"tool_invocation\""
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "yPos": 4,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Errors and Failures",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\"\njsonPayload.outcome=\"failure\""
+          }
+        }
+      },
+      {
+        "yPos": 8,
+        "width": 12,
+        "height": 4,
+        "widget": {
+          "title": "All Audit Events",
+          "logsPanel": {
+            "resourceNames": [],
+            "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event_type=\"audit\""
+          }
+        }
+      }
+    ]
+  }
+}
+

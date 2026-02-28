@@ -18,6 +18,7 @@ from starlette.responses import JSONResponse, Response
 
 from devrev import AsyncDevRevClient
 from devrev.exceptions import DevRevError
+from devrev_mcp.middleware.audit import audit_logger
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,11 @@ _current_devrev_pat: ContextVar[str | None] = ContextVar("_current_devrev_pat", 
 # Context variable for storing the current user's DevRev client (per-request)
 _current_devrev_client: ContextVar[AsyncDevRevClient | None] = ContextVar(
     "_current_devrev_client", default=None
+)
+
+# Context variable for audit metadata (set by auth middleware, read by tool audit wrapper)
+_current_user_audit_info: ContextVar[dict[str, str] | None] = ContextVar(
+    "_current_user_audit_info", default=None
 )
 
 
@@ -77,6 +83,10 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
                 "Missing Authorization header from %s",
                 request.client.host if request.client else "unknown",
             )
+            audit_logger.log_auth_failure(
+                reason="missing_authorization_header",
+                client_ip=request.client.host if request.client else "unknown",
+            )
             return JSONResponse(
                 status_code=401,
                 content={"error": "Missing Authorization header"},
@@ -86,6 +96,10 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
         parts = auth_header.split(" ", 1)
         if len(parts) != 2 or parts[0].lower() != "bearer":
             logger.warning("Invalid Authorization header format")
+            audit_logger.log_auth_failure(
+                reason="invalid_authorization_format",
+                client_ip=request.client.host if request.client else "unknown",
+            )
             return JSONResponse(
                 status_code=401,
                 content={"error": "Invalid Authorization header format. Expected: Bearer <token>"},
@@ -94,10 +108,22 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
         provided_token = parts[1].strip()
         if not secrets.compare_digest(provided_token.encode("utf-8"), self._token.encode("utf-8")):
             logger.warning("Invalid Bearer token")
+            audit_logger.log_auth_failure(
+                reason="invalid_bearer_token",
+                client_ip=request.client.host if request.client else "unknown",
+            )
             return JSONResponse(
                 status_code=403,
                 content={"error": "Invalid Bearer token"},
             )
+
+        # Log successful authentication
+        audit_logger.log_auth_success(
+            user_id="static-token",
+            email="static-token",
+            pat_hash=hashlib.sha256(provided_token.encode()).hexdigest(),
+            client_ip=request.client.host if request.client else "unknown",
+        )
 
         response = await call_next(request)
         return response
@@ -175,6 +201,10 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
                 "Missing Authorization header from %s",
                 request.client.host if request.client else "unknown",
             )
+            audit_logger.log_auth_failure(
+                reason="missing_authorization_header",
+                client_ip=request.client.host if request.client else "unknown",
+            )
             return JSONResponse(
                 status_code=401,
                 content={"error": "Missing Authorization header"},
@@ -184,6 +214,10 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         parts = auth_header.split(" ", 1)
         if len(parts) != 2 or parts[0].lower() != "bearer":
             logger.warning("Invalid Authorization header format")
+            audit_logger.log_auth_failure(
+                reason="invalid_authorization_format",
+                client_ip=request.client.host if request.client else "unknown",
+            )
             return JSONResponse(
                 status_code=401,
                 content={"error": "Invalid Authorization header format. Expected: Bearer <token>"},
@@ -192,6 +226,10 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         token = parts[1].strip()
         if not token:
             logger.warning("Empty Bearer token provided")
+            audit_logger.log_auth_failure(
+                reason="empty_bearer_token",
+                client_ip=request.client.host if request.client else "unknown",
+            )
             return JSONResponse(
                 status_code=401,
                 content={"error": "Empty Bearer token. Expected: Bearer <token>"},
@@ -205,6 +243,10 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
             # Validate token against DevRev API
             identity = await self._validate_token(token, token_hash)
             if identity is None:
+                audit_logger.log_auth_failure(
+                    reason="invalid_devrev_pat",
+                    client_ip=request.client.host if request.client else "unknown",
+                )
                 return JSONResponse(
                     status_code=403,
                     content={"error": "Invalid DevRev PAT"},
@@ -218,6 +260,11 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
                 "User %s from disallowed domain attempted access",
                 identity.email,
             )
+            audit_logger.log_auth_failure(
+                reason="forbidden_domain",
+                client_ip=request.client.host if request.client else "unknown",
+                email=identity.email,
+            )
             return JSONResponse(
                 status_code=403,
                 content={"error": "Email domain not allowed"},
@@ -229,13 +276,27 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         request.state.devrev_user_email = identity.email
         request.state.devrev_user_display_name = identity.display_name
 
-        # Set context var for access from tools
+        # Set context vars for access from tools
+        audit_info_token = _current_user_audit_info.set(
+            {
+                "user_id": identity.user_id,
+                "email": identity.email,
+                "pat_hash": f"sha256:{token_hash}",
+                "client_ip": request.client.host if request.client else "unknown",
+            }
+        )
         pat_token = _current_devrev_pat.set(token)
 
-        logger.debug(
+        logger.info(
             "Authenticated user: %s (%s)",
             identity.email,
             identity.display_name,
+        )
+        audit_logger.log_auth_success(
+            user_id=identity.user_id,
+            email=identity.email,
+            pat_hash=token_hash,
+            client_ip=request.client.host if request.client else "unknown",
         )
 
         try:
@@ -248,6 +309,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
                 await client.close()
             _current_devrev_client.set(None)
             _current_devrev_pat.reset(pat_token)
+            _current_user_audit_info.reset(audit_info_token)
 
     async def _get_cached_identity(self, token_hash: str) -> _CachedIdentity | None:
         """Get cached identity if valid.
