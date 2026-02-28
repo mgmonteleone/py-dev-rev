@@ -10,16 +10,16 @@ import shutil
 from pathlib import Path
 
 
-def on_post_build(config, **kwargs):
+def on_post_build(config, **_kwargs):
     """Copy llms*.txt files from repo root to site output directory.
-    
+
     This hook runs after MkDocs builds the site and copies all llms*.txt files
     from the repository root to the site output directory, making them accessible
     at the root URL of the documentation site.
-    
+
     Args:
         config: MkDocs configuration dictionary.
-        **kwargs: Additional keyword arguments (unused).
+        **_kwargs: Additional keyword arguments (unused).
     """
     # Get paths from config
     repo_root = Path(config["config_file_path"]).parent
