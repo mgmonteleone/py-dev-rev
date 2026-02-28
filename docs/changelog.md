@@ -5,6 +5,20 @@ All notable changes to the DevRev Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-02-28
+
+### Added
+
+- **Server Version Discoverability**: AI agents can now discover the server's version, capabilities, and update status dynamically
+  - **Server Instructions**: `FastMCP` constructor includes `instructions` parameter with version info, delivered to agents on connection
+  - **`devrev_server_info` Tool**: Returns server version, uptime, Python version, platform, enabled capabilities, and checks PyPI for the latest published version
+  - **`devrev://server/info` Resource**: Static server metadata resource for agents preferring resource-based discovery
+  - **PyPI Version Check**: Runtime check against PyPI to determine if the server is running the latest version, with graceful degradation on network failure
+
+### Fixed
+
+- **Version Comparison**: `_compare_versions` now catches `InvalidVersion` from the `packaging` library for graceful degradation with malformed version strings
+
 ## [2.6.0] - 2026-02-28
 
 ### Added
@@ -474,6 +488,7 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.7.0 | 2026-02-28 | 🔍 Server version discoverability for AI agents |
 | 2.6.0 | 2026-02-28 | 🔐 Compliance-grade audit logging, MCP documentation |
 | 2.4.1 | 2026-02-27 | 🐛 CI: mypy strict-mode type errors, test collection |
 | 2.4.0 | 2026-02-25 | 🔑 MCP Server: Per-user DevRev PAT authentication |

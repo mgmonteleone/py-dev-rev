@@ -5,7 +5,7 @@
 **Install**: `pip install devrev-python-sdk[mcp]`
 **Run**: `devrev-mcp-server`
 **Docs**: https://mgmonteleone.github.io/py-dev-rev/mcp/
-**Version**: 2.6.0
+**Version**: 2.7.0
 **Protocol**: MCP 2025-06-18
 
 ## Quick Setup
