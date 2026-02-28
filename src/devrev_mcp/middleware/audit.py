@@ -117,6 +117,9 @@ class AuditLogger:
         email: str,
         pat_hash: str,
         client_ip: str,
+        user_agent: str = "",
+        x_forwarded_for: str = "",
+        trace_id: str = "",
     ) -> None:
         """Log a successful authentication event.
 
@@ -125,13 +128,19 @@ class AuditLogger:
             email: User email address.
             pat_hash: Hash of the Personal Access Token used.
             client_ip: Client IP address.
+            user_agent: User-Agent header from the request.
+            x_forwarded_for: X-Forwarded-For header from the request.
+            trace_id: Trace ID extracted from x-cloud-trace-context header.
 
         Example:
             >>> audit_logger.log_auth_success(
             ...     user_id="don:identity:dvrv-us-1:devo/1:devu/123",
             ...     email="user@example.com",
             ...     pat_hash="sha256:abc123...",
-            ...     client_ip="192.168.1.1"
+            ...     client_ip="192.168.1.1",
+            ...     user_agent="mcp-client/1.0",
+            ...     x_forwarded_for="203.0.113.42",
+            ...     trace_id="abc123def456789"
             ... )
         """
         if not self._enabled:
@@ -141,7 +150,12 @@ class AuditLogger:
             "event_type": "audit",
             "action": "auth_success",
             "user": {"id": user_id, "email": email, "pat_hash": pat_hash},
-            "request": {"client_ip": client_ip},
+            "request": {
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "x_forwarded_for": x_forwarded_for,
+                "trace_id": trace_id,
+            },
             "outcome": "success",
         }
 
@@ -155,6 +169,9 @@ class AuditLogger:
         reason: str,
         client_ip: str,
         email: str | None = None,
+        user_agent: str = "",
+        x_forwarded_for: str = "",
+        trace_id: str = "",
     ) -> None:
         """Log a failed authentication attempt.
 
@@ -162,12 +179,18 @@ class AuditLogger:
             reason: Reason for authentication failure (e.g., "invalid_token", "forbidden_domain").
             client_ip: Client IP address.
             email: User email address if available (optional).
+            user_agent: User-Agent header from the request.
+            x_forwarded_for: X-Forwarded-For header from the request.
+            trace_id: Trace ID extracted from x-cloud-trace-context header.
 
         Example:
             >>> audit_logger.log_auth_failure(
             ...     reason="invalid_token",
             ...     client_ip="192.168.1.1",
-            ...     email="user@example.com"
+            ...     email="user@example.com",
+            ...     user_agent="curl/7.88.1",
+            ...     x_forwarded_for="198.51.100.5",
+            ...     trace_id="trace-id-987"
             ... )
         """
         if not self._enabled:
@@ -176,7 +199,12 @@ class AuditLogger:
         extra: dict[str, Any] = {
             "event_type": "audit",
             "action": "auth_failure",
-            "request": {"client_ip": client_ip},
+            "request": {
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "x_forwarded_for": x_forwarded_for,
+                "trace_id": trace_id,
+            },
             "outcome": "failure",
             "error_message": reason,
         }
@@ -203,6 +231,9 @@ class AuditLogger:
         outcome: str,
         duration_ms: int,
         error_message: str | None = None,
+        user_agent: str = "",
+        x_forwarded_for: str = "",
+        trace_id: str = "",
     ) -> None:
         """Log an MCP tool invocation.
 
@@ -217,6 +248,9 @@ class AuditLogger:
             outcome: "success" or "failure".
             duration_ms: Tool execution duration in milliseconds.
             error_message: Error message if outcome is "failure" (optional).
+            user_agent: User-Agent header from the request.
+            x_forwarded_for: X-Forwarded-For header from the request.
+            trace_id: Trace ID extracted from x-cloud-trace-context header.
 
         Example:
             >>> audit_logger.log_tool_invocation(
@@ -228,7 +262,10 @@ class AuditLogger:
             ...     client_ip="192.168.1.1",
             ...     session_id="session-xyz",
             ...     outcome="success",
-            ...     duration_ms=250
+            ...     duration_ms=250,
+            ...     user_agent="mcp-client/1.0",
+            ...     x_forwarded_for="203.0.113.42",
+            ...     trace_id="abc123def456789"
             ... )
         """
         if not self._enabled:
@@ -239,7 +276,13 @@ class AuditLogger:
             "action": "tool_invocation",
             "user": {"id": user_id, "email": email, "pat_hash": pat_hash},
             "tool": {"name": tool_name, "category": tool_category},
-            "request": {"client_ip": client_ip, "session_id": session_id},
+            "request": {
+                "client_ip": client_ip,
+                "session_id": session_id,
+                "user_agent": user_agent,
+                "x_forwarded_for": x_forwarded_for,
+                "trace_id": trace_id,
+            },
             "outcome": outcome,
             "duration_ms": duration_ms,
         }
@@ -250,6 +293,120 @@ class AuditLogger:
         self._logger.info(
             "Tool invocation: %s (%s)",
             tool_name,
+            outcome,
+            extra=extra,
+        )
+
+    def log_resource_access(
+        self,
+        user_id: str,
+        email: str,
+        pat_hash: str,
+        resource_uri: str,
+        client_ip: str,
+        outcome: str,
+        duration_ms: int,
+        error_message: str | None = None,
+        user_agent: str = "",
+        x_forwarded_for: str = "",
+        trace_id: str = "",
+    ) -> None:
+        """Log an MCP resource access.
+
+        Args:
+            user_id: DevRev user ID (DON format).
+            email: User email address.
+            pat_hash: Hash of the Personal Access Token used.
+            resource_uri: URI of the resource accessed (e.g., "devrev://account/123").
+            client_ip: Client IP address.
+            outcome: "success" or "failure".
+            duration_ms: Resource access duration in milliseconds.
+            error_message: Error message if outcome is "failure" (optional).
+            user_agent: User-Agent header from the request.
+            x_forwarded_for: X-Forwarded-For header from the request.
+            trace_id: Trace ID extracted from x-cloud-trace-context header.
+        """
+        if not self._enabled:
+            return
+
+        extra: dict[str, Any] = {
+            "event_type": "audit",
+            "action": "resource_access",
+            "user": {"id": user_id, "email": email, "pat_hash": pat_hash},
+            "resource": {"uri": resource_uri},
+            "request": {
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "x_forwarded_for": x_forwarded_for,
+                "trace_id": trace_id,
+            },
+            "outcome": outcome,
+            "duration_ms": duration_ms,
+        }
+
+        if error_message:
+            extra["error_message"] = error_message
+
+        self._logger.info(
+            "Resource access: %s (%s)",
+            resource_uri,
+            outcome,
+            extra=extra,
+        )
+
+    def log_prompt_invocation(
+        self,
+        user_id: str,
+        email: str,
+        pat_hash: str,
+        prompt_name: str,
+        client_ip: str,
+        outcome: str,
+        duration_ms: int,
+        error_message: str | None = None,
+        user_agent: str = "",
+        x_forwarded_for: str = "",
+        trace_id: str = "",
+    ) -> None:
+        """Log an MCP prompt invocation.
+
+        Args:
+            user_id: DevRev user ID (DON format).
+            email: User email address.
+            pat_hash: Hash of the Personal Access Token used.
+            prompt_name: Name of the prompt invoked.
+            client_ip: Client IP address.
+            outcome: "success" or "failure".
+            duration_ms: Prompt invocation duration in milliseconds.
+            error_message: Error message if outcome is "failure" (optional).
+            user_agent: User-Agent header from the request.
+            x_forwarded_for: X-Forwarded-For header from the request.
+            trace_id: Trace ID extracted from x-cloud-trace-context header.
+        """
+        if not self._enabled:
+            return
+
+        extra: dict[str, Any] = {
+            "event_type": "audit",
+            "action": "prompt_invocation",
+            "user": {"id": user_id, "email": email, "pat_hash": pat_hash},
+            "prompt": {"name": prompt_name},
+            "request": {
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "x_forwarded_for": x_forwarded_for,
+                "trace_id": trace_id,
+            },
+            "outcome": outcome,
+            "duration_ms": duration_ms,
+        }
+
+        if error_message:
+            extra["error_message"] = error_message
+
+        self._logger.info(
+            "Prompt invocation: %s (%s)",
+            prompt_name,
             outcome,
             extra=extra,
         )

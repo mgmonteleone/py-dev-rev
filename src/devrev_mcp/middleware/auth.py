@@ -22,6 +22,26 @@ from devrev_mcp.middleware.audit import audit_logger
 
 logger = logging.getLogger(__name__)
 
+
+def _extract_request_metadata(request: Request) -> dict[str, str]:
+    """Extract audit-relevant metadata from an HTTP request.
+
+    Args:
+        request: The incoming HTTP request.
+
+    Returns:
+        Dictionary containing user_agent, x_forwarded_for, and trace_id.
+    """
+    trace_context = request.headers.get("x-cloud-trace-context", "")
+    # Extract trace ID (format: TRACE_ID/SPAN_ID;o=TRACE_TRUE)
+    trace_id = trace_context.split("/")[0].strip() if trace_context else ""
+    return {
+        "user_agent": request.headers.get("user-agent", "")[:512],
+        "x_forwarded_for": request.headers.get("x-forwarded-for", "")[:512],
+        "trace_id": trace_id[:64],
+    }
+
+
 # Context variable for storing the current user's DevRev PAT
 _current_devrev_pat: ContextVar[str | None] = ContextVar("_current_devrev_pat", default=None)
 
@@ -77,6 +97,8 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
             response: Response = await call_next(request)
             return response
 
+        meta = _extract_request_metadata(request)
+
         auth_header = request.headers.get("authorization", "")
         if not auth_header:
             logger.warning(
@@ -86,6 +108,7 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
             audit_logger.log_auth_failure(
                 reason="missing_authorization_header",
                 client_ip=request.client.host if request.client else "unknown",
+                **meta,
             )
             return JSONResponse(
                 status_code=401,
@@ -99,6 +122,7 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
             audit_logger.log_auth_failure(
                 reason="invalid_authorization_format",
                 client_ip=request.client.host if request.client else "unknown",
+                **meta,
             )
             return JSONResponse(
                 status_code=401,
@@ -111,6 +135,7 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
             audit_logger.log_auth_failure(
                 reason="invalid_bearer_token",
                 client_ip=request.client.host if request.client else "unknown",
+                **meta,
             )
             return JSONResponse(
                 status_code=403,
@@ -121,12 +146,30 @@ class BearerTokenMiddleware(BaseHTTPMiddleware):
         audit_logger.log_auth_success(
             user_id="static-token",
             email="static-token",
-            pat_hash=hashlib.sha256(provided_token.encode()).hexdigest(),
+            pat_hash=f"sha256:{hashlib.sha256(provided_token.encode()).hexdigest()}",
             client_ip=request.client.host if request.client else "unknown",
+            **meta,
         )
 
-        response = await call_next(request)
-        return response
+        # Set context var for tool audit logging
+        pat_hash_prefixed = f"sha256:{hashlib.sha256(provided_token.encode()).hexdigest()}"
+        audit_info_token = _current_user_audit_info.set(
+            {
+                "user_id": "static-token",
+                "email": "static-token",
+                "pat_hash": pat_hash_prefixed,
+                "client_ip": request.client.host if request.client else "unknown",
+                "user_agent": meta["user_agent"],
+                "x_forwarded_for": meta["x_forwarded_for"],
+                "trace_id": meta["trace_id"],
+            }
+        )
+
+        try:
+            response = await call_next(request)
+            return response
+        finally:
+            _current_user_audit_info.reset(audit_info_token)
 
 
 @dataclass
@@ -195,6 +238,8 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
             response: Response = await call_next(request)
             return response
 
+        meta = _extract_request_metadata(request)
+
         auth_header = request.headers.get("authorization", "")
         if not auth_header:
             logger.warning(
@@ -204,6 +249,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
             audit_logger.log_auth_failure(
                 reason="missing_authorization_header",
                 client_ip=request.client.host if request.client else "unknown",
+                **meta,
             )
             return JSONResponse(
                 status_code=401,
@@ -217,6 +263,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
             audit_logger.log_auth_failure(
                 reason="invalid_authorization_format",
                 client_ip=request.client.host if request.client else "unknown",
+                **meta,
             )
             return JSONResponse(
                 status_code=401,
@@ -229,6 +276,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
             audit_logger.log_auth_failure(
                 reason="empty_bearer_token",
                 client_ip=request.client.host if request.client else "unknown",
+                **meta,
             )
             return JSONResponse(
                 status_code=401,
@@ -246,6 +294,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
                 audit_logger.log_auth_failure(
                     reason="invalid_devrev_pat",
                     client_ip=request.client.host if request.client else "unknown",
+                    **meta,
                 )
                 return JSONResponse(
                     status_code=403,
@@ -264,6 +313,7 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
                 reason="forbidden_domain",
                 client_ip=request.client.host if request.client else "unknown",
                 email=identity.email,
+                **meta,
             )
             return JSONResponse(
                 status_code=403,
@@ -283,6 +333,9 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
                 "email": identity.email,
                 "pat_hash": f"sha256:{token_hash}",
                 "client_ip": request.client.host if request.client else "unknown",
+                "user_agent": meta["user_agent"],
+                "x_forwarded_for": meta["x_forwarded_for"],
+                "trace_id": meta["trace_id"],
             }
         )
         pat_token = _current_devrev_pat.set(token)
@@ -295,8 +348,9 @@ class DevRevPATAuthMiddleware(BaseHTTPMiddleware):
         audit_logger.log_auth_success(
             user_id=identity.user_id,
             email=identity.email,
-            pat_hash=token_hash,
+            pat_hash=f"sha256:{token_hash}",
             client_ip=request.client.host if request.client else "unknown",
+            **meta,
         )
 
         try:
