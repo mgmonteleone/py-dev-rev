@@ -5,6 +5,45 @@ All notable changes to the DevRev Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-02-28
+
+### Added
+
+- **Compliance-grade audit logging** (#153, #155) — Structured JSON audit events for all MCP operations:
+  - 5 event types: `auth_success`, `auth_failure`, `tool_invocation`, `resource_access`, `prompt_invocation`
+  - Tool classification (read/write/delete/search) for risk categorization
+  - Request metadata enrichment: `User-Agent`, `X-Forwarded-For`, `trace_id` (GCP Cloud Trace)
+  - Truncation for user-controlled headers (512 chars UA/XFF, 64 chars trace)
+  - GCS bucket with WORM retention policy for immutable log storage
+  - Cloud Logging sink, monitoring alert policies, and dashboard
+  - 31 audit-specific tests, 793 total tests passing
+
+### Documentation
+
+- **MCP Server documentation** (#149) — Added MCP Server to docs site homepage, README features, and navigation with Augment Code-inspired styling
+- **LLM context files** (#151) — Updated all `llms*.txt` files with MCP Server coverage, created `llms-mcp.txt`, served from docs site via MkDocs hook
+- Version bumped across all LLM context files
+
+### Security
+
+- **cryptography** 46.0.3 → 46.0.5 (CVE-2026-26007: binary elliptic curve key leak)
+- **nltk** 3.9.2 → 3.9.3 (CVE-2025-14009: secure ZIP extraction)
+
+### Fixed
+
+- `__version__` now reads from `importlib.metadata` instead of hardcoded string — pyproject.toml is single source of truth
+- Removed unused `_IMAGE` substitution from `cloudbuild.yaml`
+- Fixed `$COMMIT_SHA` refs in `cloudbuild.yaml` for manual builds (replaced with `$SHORT_SHA`)
+- Added Cloud Run hostname to `MCP_ALLOWED_HOSTS` for DNS rebinding protection
+
+### Performance
+
+- Set `min-instances=1` on Cloud Run to eliminate cold starts
+
+### Changed
+
+- Updated Dockerfile version labels
+
 ## [2.4.1] - 2026-02-27
 
 ### Fixed
@@ -435,6 +474,9 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.6.0 | 2026-02-28 | 🔐 Compliance-grade audit logging, MCP documentation |
+| 2.4.1 | 2026-02-27 | 🐛 CI: mypy strict-mode type errors, test collection |
+| 2.4.0 | 2026-02-25 | 🔑 MCP Server: Per-user DevRev PAT authentication |
 | 2.3.1 | 2026-02-24 | 🐛 Fix DevUserState enum missing states |
 | 2.3.0 | 2026-02-11 | 🔍 Search SDK improvements & client-side re-ranking |
 | 2.2.0 | 2026-02-09 | 🤖 MCP Server - Full DevRev platform as AI-accessible tools |
