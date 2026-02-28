@@ -39,11 +39,11 @@ FROM python:3.11-slim AS runtime
 # Metadata labels
 LABEL maintainer="Matthew G. Monteleone <matthewm@augmentcode.com>" \
       description="DevRev MCP Server - A Model Context Protocol server for the DevRev platform" \
-      version="2.4.1" \
+      version="2.6.0" \
       org.opencontainers.image.source="https://github.com/mgmonteleone/py-dev-rev" \
       org.opencontainers.image.title="DevRev MCP Server" \
       org.opencontainers.image.description="Production-ready MCP server for DevRev API integration" \
-      org.opencontainers.image.version="2.4.1" \
+      org.opencontainers.image.version="2.6.0" \
       org.opencontainers.image.licenses="MIT"
 
 # Set environment variables for Python

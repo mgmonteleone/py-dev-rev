@@ -6,7 +6,7 @@ A modern, type-safe Python SDK and MCP Server for the DevRev API. Requires Pytho
 **Install SDK**: `pip install devrev-python-sdk`
 **Install with MCP**: `pip install devrev-python-sdk[mcp]`
 **Docs**: https://mgmonteleone.github.io/py-dev-rev/
-**Version**: 2.5.0
+**Version**: 2.6.0
 
 ## SDK Quick Start
 
