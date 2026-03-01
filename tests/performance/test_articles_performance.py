@@ -343,7 +343,6 @@ def test_benchmark_update_content(
         return articles_service.update_content(
             "article-123",
             sample_content_small,
-            content_format="text/html",
         )
 
     result = benchmark(update_article)
