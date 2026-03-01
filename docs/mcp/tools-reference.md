@@ -46,11 +46,16 @@ Tools are the primary way AI assistants interact with DevRev. Each tool maps to 
 | Tool | Description |
 |------|-------------|
 | `devrev_articles_list` | List knowledge base articles |
-| `devrev_articles_get` | Get article by ID |
-| `devrev_articles_create` | Create a new article |
-| `devrev_articles_update` | Update an article |
+| `devrev_articles_get` | Get article by ID with optional content |
+| `devrev_articles_create` | Create a new article with content (automatic artifact handling) |
+| `devrev_articles_update` | Update article metadata and/or content |
 | `devrev_articles_delete` | Delete an article |
 | `devrev_articles_count` | Count articles (beta) |
+
+**Key Features:**
+- **Unified Content Management**: Create and update articles with automatic artifact handling
+- **Optional Content Loading**: Use `include_content=true` in `get` to fetch article body
+- **Clear Parameters**: `content` for article body, `description` for metadata summary
 
 ### Conversations
 

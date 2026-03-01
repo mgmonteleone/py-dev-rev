@@ -62,24 +62,32 @@ async def devrev_articles_list(
 
 
 @mcp.tool()
-async def devrev_articles_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any]:
+async def devrev_articles_get(
+    ctx: Context[Any, Any, Any], id: str, include_content: bool = False
+) -> dict[str, Any]:
     """Get a specific article by ID.
 
     Args:
         ctx: MCP context containing the DevRev client.
         id: The article ID.
+        include_content: If True, fetch and include article body content.
 
     Returns:
-        Dictionary containing the article details.
+        Dictionary containing the article details. When include_content=True,
+        returns ArticleWithContent including the content field.
 
     Raises:
         RuntimeError: If the DevRev API call fails.
     """
     app = ctx.request_context.lifespan_context
     try:
-        request = ArticlesGetRequest(id=id)
-        article = await app.get_client().articles.get(request)
-        return serialize_model(article)
+        if include_content:
+            article_with_content = await app.get_client().articles.get_with_content(id)
+            return serialize_model(article_with_content)
+        else:
+            request = ArticlesGetRequest(id=id)
+            article = await app.get_client().articles.get(request)
+            return serialize_model(article)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
 
@@ -91,18 +99,22 @@ if _config.enable_destructive_tools:
     async def devrev_articles_create(
         ctx: Context[Any, Any, Any],
         title: str,
-        description: str,
+        content: str,
         owned_by: list[str],
+        description: str | None = None,
         status: str | None = None,
+        content_format: str = "text/html",
     ) -> dict[str, Any]:
-        """Create a new article in DevRev.
+        """Create a new article with content.
 
         Args:
             ctx: MCP context containing the DevRev client.
-            title: The article title.
-            description: The article description/body.
+            title: Article title.
+            content: The article body content (HTML, markdown, or plain text).
             owned_by: List of dev user IDs who own the article.
+            description: Optional short metadata description (NOT the article body).
             status: Optional article status (draft, published, archived).
+            content_format: Content MIME type (default: text/html).
 
         Returns:
             Dictionary containing the created article details.
@@ -121,13 +133,15 @@ if _config.enable_destructive_tools:
                         f"Invalid article status: {e.args[0]}. "
                         f"Valid statuses: {', '.join(s.name for s in ArticleStatus)}"
                     ) from e
-            request = ArticlesCreateRequest(
+
+            article = await app.get_client().articles.create_with_content(
                 title=title,
-                description=description,
+                content=content,
                 owned_by=owned_by,
+                description=description,
                 status=article_status,
+                content_format=content_format,
             )
-            article = await app.get_client().articles.create(request)
             return serialize_model(article)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
@@ -137,6 +151,7 @@ if _config.enable_destructive_tools:
         ctx: Context[Any, Any, Any],
         id: str,
         title: str | None = None,
+        content: str | None = None,
         description: str | None = None,
         status: str | None = None,
     ) -> dict[str, Any]:
@@ -146,7 +161,8 @@ if _config.enable_destructive_tools:
             ctx: MCP context containing the DevRev client.
             id: The article ID to update.
             title: Optional new title.
-            description: Optional new description/body.
+            content: Optional new article body content.
+            description: Optional new metadata description (NOT the article body).
             status: Optional new status (draft, published, archived).
 
         Returns:
@@ -166,13 +182,14 @@ if _config.enable_destructive_tools:
                         f"Invalid article status: {e.args[0]}. "
                         f"Valid statuses: {', '.join(s.name for s in ArticleStatus)}"
                     ) from e
-            request = ArticlesUpdateRequest(
+
+            article = await app.get_client().articles.update_with_content(
                 id=id,
                 title=title,
+                content=content,
                 description=description,
                 status=article_status,
             )
-            article = await app.get_client().articles.update(request)
             return serialize_model(article)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e

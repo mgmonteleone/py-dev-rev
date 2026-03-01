@@ -433,24 +433,40 @@ export_result = client.works.export(
 ### Articles and Knowledge Base
 
 ```python
-# Create an article
-article = client.articles.create(
+from devrev.models.articles import ArticleStatus
+
+# Create an article with content (recommended - automatic artifact handling)
+article = client.articles.create_with_content(
     title="Getting Started Guide",
-    applies_to_parts=["don:core:..."],
-    authored_by="don:identity:...",
-    description="# Welcome\n\nThis guide will help you get started..."
+    content="<h1>Welcome</h1><p>This guide will help you get started...</p>",
+    owned_by=["don:identity:dvrv-us-1:devo/1:devu/1"],
+    description="Quick start guide for new users",  # Optional metadata
+    status=ArticleStatus.PUBLISHED,
 )
 
-# List published articles
-published = client.articles.list(
-    status=["published"]
-)
+# Get article with content
+article_with_content = client.articles.get_with_content(article.id)
+print(f"Title: {article_with_content.article.title}")
+print(f"Content: {article_with_content.content[:100]}...")
 
-# Update article description
-client.articles.update(
+# Update article content
+client.articles.update_content(
     id=article.id,
-    description="# Updated Description\n\n..."
+    content="<h1>Updated Welcome</h1><p>Updated guide...</p>",
 )
+
+# Update both metadata and content
+client.articles.update_with_content(
+    id=article.id,
+    title="Updated Getting Started Guide",
+    content="<h1>New Content</h1>",
+    status=ArticleStatus.ARCHIVED,
+)
+
+# List published articles (metadata only)
+published = client.articles.list(limit=20)
+for article in published:
+    print(f"{article.title} - {article.status}")
 ```
 
 ### Webhooks

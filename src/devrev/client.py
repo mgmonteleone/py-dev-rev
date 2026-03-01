@@ -9,6 +9,7 @@ from devrev.config import APIVersion, DevRevConfig, get_config
 from devrev.exceptions import BetaAPIRequiredError
 from devrev.services.accounts import AccountsService, AsyncAccountsService
 from devrev.services.articles import ArticlesService, AsyncArticlesService
+from devrev.services.artifacts import ArtifactsService, AsyncArtifactsService
 from devrev.services.brands import AsyncBrandsService, BrandsService
 from devrev.services.code_changes import AsyncCodeChangesService, CodeChangesService
 from devrev.services.conversations import (
@@ -151,7 +152,8 @@ class DevRevClient:
 
         # Initialize services
         self._accounts = AccountsService(self._http)
-        self._articles = ArticlesService(self._http)
+        self._articles = ArticlesService(self._http, parent_client=self)
+        self._artifacts = ArtifactsService(self._http)
         self._code_changes = CodeChangesService(self._http)
         self._conversations = ConversationsService(self._http)
         self._dev_users = DevUsersService(self._http)
@@ -204,6 +206,11 @@ class DevRevClient:
     def articles(self) -> ArticlesService:
         """Access the Articles service."""
         return self._articles
+
+    @property
+    def artifacts(self) -> ArtifactsService:
+        """Access the Artifacts service."""
+        return self._artifacts
 
     @property
     def code_changes(self) -> CodeChangesService:
@@ -467,7 +474,8 @@ class AsyncDevRevClient:
 
         # Initialize async services
         self._accounts = AsyncAccountsService(self._http)
-        self._articles = AsyncArticlesService(self._http)
+        self._articles = AsyncArticlesService(self._http, parent_client=self)
+        self._artifacts = AsyncArtifactsService(self._http)
         self._code_changes = AsyncCodeChangesService(self._http)
         self._conversations = AsyncConversationsService(self._http)
         self._dev_users = AsyncDevUsersService(self._http)
@@ -520,6 +528,11 @@ class AsyncDevRevClient:
     def articles(self) -> AsyncArticlesService:
         """Access the Articles service."""
         return self._articles
+
+    @property
+    def artifacts(self) -> AsyncArtifactsService:
+        """Access the Artifacts service."""
+        return self._artifacts
 
     @property
     def code_changes(self) -> AsyncCodeChangesService:

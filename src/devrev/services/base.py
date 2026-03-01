@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
+    from devrev.client import AsyncDevRevClient, DevRevClient
     from devrev.utils.http import AsyncHTTPClient, HTTPClient
 
 logger = logging.getLogger(__name__)
@@ -26,15 +27,20 @@ class BaseService:
 
     Args:
         http_client: The HTTP client to use for requests
+        parent_client: Optional reference to parent DevRevClient for cross-service access
     """
 
-    def __init__(self, http_client: HTTPClient) -> None:
+    def __init__(
+        self, http_client: HTTPClient, parent_client: DevRevClient | None = None
+    ) -> None:
         """Initialize the service.
 
         Args:
             http_client: The HTTP client to use for requests
+            parent_client: Optional reference to parent DevRevClient for cross-service access
         """
         self._http = http_client
+        self._parent_client = parent_client
 
     @overload
     def _post(
@@ -134,15 +140,20 @@ class AsyncBaseService:
 
     Args:
         http_client: The async HTTP client to use for requests
+        parent_client: Optional reference to parent AsyncDevRevClient for cross-service access
     """
 
-    def __init__(self, http_client: AsyncHTTPClient) -> None:
+    def __init__(
+        self, http_client: AsyncHTTPClient, parent_client: AsyncDevRevClient | None = None
+    ) -> None:
         """Initialize the service.
 
         Args:
             http_client: The async HTTP client to use for requests
+            parent_client: Optional reference to parent AsyncDevRevClient for cross-service access
         """
         self._http = http_client
+        self._parent_client = parent_client
 
     @overload
     async def _post(
