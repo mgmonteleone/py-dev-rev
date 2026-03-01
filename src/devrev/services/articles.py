@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 
 from devrev.exceptions import DevRevError
@@ -22,8 +23,19 @@ from devrev.models.articles import (
     ArticleStatus,
     ArticleWithContent,
 )
-from devrev.models.artifacts import ArtifactPrepareRequest
+from devrev.models.artifacts import (
+    ArtifactGetRequest,
+    ArtifactPrepareRequest,
+    ArtifactVersionsPrepareRequest,
+)
 from devrev.services.base import AsyncBaseService, BaseService
+
+# Content format to file extension mapping
+_CONTENT_FORMAT_EXTENSIONS = {
+    "text/html": ".html",
+    "text/markdown": ".md",
+    "text/plain": ".txt",
+}
 
 
 class ArticlesService(BaseService):
@@ -130,12 +142,7 @@ class ArticlesService(BaseService):
         try:
             # Step 1: Prepare artifact
             # Derive file extension from content format
-            ext_map = {
-                "text/html": ".html",
-                "text/markdown": ".md",
-                "text/plain": ".txt",
-            }
-            ext = ext_map.get(content_format, ".txt")
+            ext = _CONTENT_FORMAT_EXTENSIONS.get(content_format, ".txt")
 
             prepare_req = ArtifactPrepareRequest(
                 file_name=f"{title}{ext}",
@@ -163,7 +170,6 @@ class ArticlesService(BaseService):
             # The API does not provide artifact deletion, only version deletion
             # This may result in orphaned artifacts if article creation fails
             if artifact_id:
-                import logging
                 logging.warning(
                     f"Orphaned artifact {artifact_id} may remain due to failed article creation. "
                     "Manual cleanup may be required."
@@ -225,8 +231,6 @@ class ArticlesService(BaseService):
             content = content_bytes.decode("utf-8")
 
             # Get artifact metadata for format and version
-            from devrev.models.artifacts import ArtifactGetRequest
-
             artifact = self._parent_client.artifacts.get(
                 ArtifactGetRequest(id=content_artifact_id)
             )
@@ -295,8 +299,6 @@ class ArticlesService(BaseService):
 
         try:
             # Step 2: Prepare new version
-            from devrev.models.artifacts import ArtifactVersionsPrepareRequest
-
             version_req = ArtifactVersionsPrepareRequest(id=content_artifact_id)
             version_resp = self._parent_client.artifacts.prepare_version(version_req)
 
@@ -480,12 +482,7 @@ class AsyncArticlesService(AsyncBaseService):
         try:
             # Step 1: Prepare artifact
             # Derive file extension from content format
-            ext_map = {
-                "text/html": ".html",
-                "text/markdown": ".md",
-                "text/plain": ".txt",
-            }
-            ext = ext_map.get(content_format, ".txt")
+            ext = _CONTENT_FORMAT_EXTENSIONS.get(content_format, ".txt")
 
             prepare_req = ArtifactPrepareRequest(
                 file_name=f"{title}{ext}",
@@ -513,7 +510,6 @@ class AsyncArticlesService(AsyncBaseService):
             # The API does not provide artifact deletion, only version deletion
             # This may result in orphaned artifacts if article creation fails
             if artifact_id:
-                import logging
                 logging.warning(
                     f"Orphaned artifact {artifact_id} may remain due to failed article creation. "
                     "Manual cleanup may be required."
@@ -630,8 +626,6 @@ class AsyncArticlesService(AsyncBaseService):
 
         try:
             # Step 2: Prepare new version
-            from devrev.models.artifacts import ArtifactVersionsPrepareRequest
-
             version_req = ArtifactVersionsPrepareRequest(id=content_artifact_id)
             version_resp = await self._parent_client.artifacts.prepare_version(version_req)
 
