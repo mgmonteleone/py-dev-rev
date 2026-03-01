@@ -51,7 +51,11 @@ class ArtifactsService(BaseService):
         """
         return self._post("/artifacts.prepare", request, ArtifactPrepareResponse)
 
-    def upload(self, prepare_response: ArtifactPrepareResponse, content: bytes | str) -> str:
+    def upload(
+        self,
+        prepare_response: ArtifactPrepareResponse | ArtifactVersionsPrepareResponse,
+        content: bytes | str,
+    ) -> str:
         """Upload content to a prepared artifact.
 
         This is a helper method that uploads content to the URL returned by prepare().
@@ -237,7 +241,9 @@ class AsyncArtifactsService(AsyncBaseService):
         return await self._post("/artifacts.prepare", request, ArtifactPrepareResponse)
 
     async def upload(
-        self, prepare_response: ArtifactPrepareResponse, content: bytes | str
+        self,
+        prepare_response: ArtifactPrepareResponse | ArtifactVersionsPrepareResponse,
+        content: bytes | str,
     ) -> str:
         """Upload content to a prepared artifact.
 
