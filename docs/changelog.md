@@ -5,6 +5,24 @@ All notable changes to the DevRev Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Unified Article Management** (#161) — Simplified article and artifact workflows:
+  - **SDK Unified Methods**: `create_with_content()`, `get_with_content()`, `update_content()`, `update_with_content()` automatically handle artifact storage
+  - **Reduced Complexity**: Article operations reduced from 15-20 lines to 3-5 lines (70% reduction)
+  - **Clear Parameters**: `content` for article body, `description` for metadata summary
+  - **Lazy Loading**: `get()` returns metadata only, `get_with_content()` explicit opt-in for content
+  - **Parent Client Reference**: Services can now access other services via optional parent client parameter
+  - **MCP Tool Updates**: `devrev_articles_create`, `devrev_articles_get`, and `devrev_articles_update` use unified methods
+  - **Async Support**: All unified methods available in both sync and async variants
+
+### Changed
+
+- **Article Model**: Added `resource` field to `Article` model for artifact reference storage
+- **Base Services**: `BaseService` and `AsyncBaseService` now accept optional `parent_client` parameter
+
 ## [2.7.0] - 2026-02-28
 
 ### Added

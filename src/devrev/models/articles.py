@@ -42,6 +42,9 @@ class Article(DevRevResponseModel):
     owned_by: list[UserSummary] | None = Field(default=None, description="Owners of the article")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")
+    resource: dict[str, Any] | None = Field(
+        default=None, description="Resource configuration including artifact references"
+    )
 
 
 class ArticleSummary(DevRevResponseModel):
@@ -49,6 +52,19 @@ class ArticleSummary(DevRevResponseModel):
 
     id: str = Field(..., description="Article ID")
     title: str | None = Field(default=None, description="Article title")
+
+
+class ArticleWithContent(DevRevResponseModel):
+    """Article with its content loaded.
+
+    This model combines article metadata with the actual article body content,
+    which is stored separately as an artifact in the DevRev system.
+    """
+
+    article: Article = Field(..., description="Article metadata")
+    content: str = Field(..., description="Article body content")
+    content_format: str = Field(default="text/plain", description="Content MIME type")
+    content_version: str | None = Field(default=None, description="Artifact version")
 
 
 class ArticlesCreateRequest(DevRevBaseModel):

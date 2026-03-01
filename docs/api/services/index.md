@@ -34,7 +34,7 @@ client.dev_users     # DevUsersService
 
 | Service | Description | Reference |
 |---------|-------------|-----------|
-| **Articles** | Knowledge base articles | [articles](articles.md) |
+| **Articles** | Knowledge base articles with unified content management | [articles](articles.md) |
 | **Conversations** | Customer conversations | [conversations](conversations.md) |
 | **Tags** | Categorization | [tags](tags.md) |
 | **Timeline Entries** | Activity tracking | [timeline-entries](timeline-entries.md) |
@@ -81,6 +81,33 @@ response = client.accounts.update(id="ACC-123", ...)
 # Delete resource
 client.accounts.delete(id="ACC-123")
 ```
+
+### Unified Article Management
+
+The Articles service provides unified methods that automatically handle artifact storage:
+
+```python
+from devrev.models.articles import ArticleStatus
+
+# Create article with content (3 lines vs 15+ with manual artifact handling)
+article = client.articles.create_with_content(
+    title="Getting Started",
+    content="<h1>Welcome</h1><p>Guide content...</p>",
+    owned_by=["don:identity:dvrv-us-1:devo/1:devu/1"],
+)
+
+# Get article with content
+article_with_content = client.articles.get_with_content(article.id)
+print(article_with_content.content)
+
+# Update content
+client.articles.update_content(
+    id=article.id,
+    content="<h1>Updated Content</h1>",
+)
+```
+
+See the [Articles service documentation](articles.md) for detailed examples.
 
 ### Pagination
 
