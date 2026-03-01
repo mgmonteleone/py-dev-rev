@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 
 from devrev.exceptions import DevRevError
@@ -22,8 +23,19 @@ from devrev.models.articles import (
     ArticleStatus,
     ArticleWithContent,
 )
-from devrev.models.artifacts import ArtifactPrepareRequest
+from devrev.models.artifacts import (
+    ArtifactGetRequest,
+    ArtifactPrepareRequest,
+    ArtifactVersionsPrepareRequest,
+)
 from devrev.services.base import AsyncBaseService, BaseService
+
+# Content format to file extension mapping
+_CONTENT_FORMAT_EXTENSIONS = {
+    "text/html": ".html",
+    "text/markdown": ".md",
+    "text/plain": ".txt",
+}
 
 
 class ArticlesService(BaseService):
@@ -129,8 +141,11 @@ class ArticlesService(BaseService):
         artifact_id: str | None = None
         try:
             # Step 1: Prepare artifact
+            # Derive file extension from content format
+            ext = _CONTENT_FORMAT_EXTENSIONS.get(content_format, ".txt")
+
             prepare_req = ArtifactPrepareRequest(
-                file_name=f"{title}.html",
+                file_name=f"{title}{ext}",
                 file_type=content_format,
                 configuration_set="article_media",
             )
@@ -151,17 +166,14 @@ class ArticlesService(BaseService):
             return self.create(article_req)
 
         except Exception as e:
-            # Rollback: Delete artifact if it was created
+            # Note: Orphaned artifact cleanup is not possible with current DevRev API
+            # The API does not provide artifact deletion, only version deletion
+            # This may result in orphaned artifacts if article creation fails
             if artifact_id:
-                try:
-                    from devrev.models.artifacts import ArtifactVersionsDeleteRequest
-
-                    # Attempt to clean up the artifact
-                    # Note: This may not work if artifact doesn't support deletion
-                    # but we try for best effort cleanup
-                    pass  # DevRev API doesn't have artifact delete, only version delete
-                except Exception:
-                    pass  # Best effort cleanup
+                logging.warning(
+                    f"Orphaned artifact {artifact_id} may remain due to failed article creation. "
+                    "Manual cleanup may be required."
+                )
 
             # Re-raise the original error
             raise DevRevError(f"Failed to create article with content: {e}") from e
@@ -201,16 +213,17 @@ class ArticlesService(BaseService):
 
         # Step 2: Extract content artifact ID
         # Articles store artifact reference in resource.content_artifact
-        if not hasattr(article, "resource") or not article.resource:  # type: ignore[attr-defined]
-            raise DevRevError(f"Article {id} has no resource field")
+        if not article.resource:
+            raise DevRevError(f"Article {id} has no resource configuration")
 
-        resource = article.resource  # type: ignore[attr-defined]
-        if not isinstance(resource, dict):
+        if not isinstance(article.resource, dict):
             raise DevRevError(f"Article {id} resource is not a dict")
 
-        content_artifact_id = resource.get("content_artifact")
+        content_artifact_id = article.resource.get("content_artifact")
         if not content_artifact_id:
-            raise DevRevError(f"Article {id} has no content_artifact")
+            raise DevRevError(
+                f"Article {id} has no content artifact reference in resource configuration"
+            )
 
         # Step 3: Download content
         try:
@@ -218,8 +231,6 @@ class ArticlesService(BaseService):
             content = content_bytes.decode("utf-8")
 
             # Get artifact metadata for format and version
-            from devrev.models.artifacts import ArtifactGetRequest
-
             artifact = self._parent_client.artifacts.get(
                 ArtifactGetRequest(id=content_artifact_id)
             )
@@ -239,7 +250,6 @@ class ArticlesService(BaseService):
         self,
         id: str,
         content: str,
-        content_format: str | None = None,
     ) -> Article:
         """Update article content by creating a new artifact version.
 
@@ -249,10 +259,12 @@ class ArticlesService(BaseService):
         3. Uploads new content
         4. Article automatically references new version
 
+        Note: The content format is inherited from the original artifact
+        and cannot be changed when updating content.
+
         Args:
             id: Article ID
             content: New article body content
-            content_format: Optional new content MIME type
 
         Returns:
             Updated article
@@ -264,8 +276,7 @@ class ArticlesService(BaseService):
         Example:
             >>> article = client.articles.update_content(
             ...     "ART-123",
-            ...     "<html>Updated content...</html>",
-            ...     content_format="text/html"
+            ...     "<html>Updated content...</html>"
             ... )
         """
         if not self._parent_client:
@@ -278,16 +289,16 @@ class ArticlesService(BaseService):
         article = self.get(ArticlesGetRequest(id=id))
 
         if not article.resource or not isinstance(article.resource, dict):
-            raise DevRevError(f"Article {id} has no resource field")
+            raise DevRevError(f"Article {id} has no resource configuration")
 
         content_artifact_id = article.resource.get("content_artifact")
         if not content_artifact_id:
-            raise DevRevError(f"Article {id} has no content_artifact")
+            raise DevRevError(
+                f"Article {id} has no content artifact reference in resource configuration"
+            )
 
         try:
             # Step 2: Prepare new version
-            from devrev.models.artifacts import ArtifactVersionsPrepareRequest
-
             version_req = ArtifactVersionsPrepareRequest(id=content_artifact_id)
             version_resp = self._parent_client.artifacts.prepare_version(version_req)
 
@@ -470,8 +481,11 @@ class AsyncArticlesService(AsyncBaseService):
         artifact_id: str | None = None
         try:
             # Step 1: Prepare artifact
+            # Derive file extension from content format
+            ext = _CONTENT_FORMAT_EXTENSIONS.get(content_format, ".txt")
+
             prepare_req = ArtifactPrepareRequest(
-                file_name=f"{title}.html",
+                file_name=f"{title}{ext}",
                 file_type=content_format,
                 configuration_set="article_media",
             )
@@ -492,6 +506,15 @@ class AsyncArticlesService(AsyncBaseService):
             return await self.create(article_req)
 
         except Exception as e:
+            # Note: Orphaned artifact cleanup is not possible with current DevRev API
+            # The API does not provide artifact deletion, only version deletion
+            # This may result in orphaned artifacts if article creation fails
+            if artifact_id:
+                logging.warning(
+                    f"Orphaned artifact {artifact_id} may remain due to failed article creation. "
+                    "Manual cleanup may be required."
+                )
+
             # Re-raise the original error
             raise DevRevError(f"Failed to create article with content: {e}") from e
 
@@ -525,11 +548,13 @@ class AsyncArticlesService(AsyncBaseService):
 
         # Step 2: Extract content artifact ID
         if not article.resource or not isinstance(article.resource, dict):
-            raise DevRevError(f"Article {id} has no resource field")
+            raise DevRevError(f"Article {id} has no resource configuration")
 
         content_artifact_id = article.resource.get("content_artifact")
         if not content_artifact_id:
-            raise DevRevError(f"Article {id} has no content_artifact")
+            raise DevRevError(
+                f"Article {id} has no content artifact reference in resource configuration"
+            )
 
         # Step 3: Download content
         try:
@@ -558,7 +583,6 @@ class AsyncArticlesService(AsyncBaseService):
         self,
         id: str,
         content: str,
-        content_format: str | None = None,
     ) -> Article:
         """Update article content by creating a new artifact version (async).
 
@@ -568,10 +592,12 @@ class AsyncArticlesService(AsyncBaseService):
         3. Uploads new content
         4. Article automatically references new version
 
+        Note: The content format is inherited from the original artifact
+        and cannot be changed when updating content.
+
         Args:
             id: Article ID
             content: New article body content
-            content_format: Optional new content MIME type
 
         Returns:
             Updated article
@@ -590,16 +616,16 @@ class AsyncArticlesService(AsyncBaseService):
         article = await self.get(ArticlesGetRequest(id=id))
 
         if not article.resource or not isinstance(article.resource, dict):
-            raise DevRevError(f"Article {id} has no resource field")
+            raise DevRevError(f"Article {id} has no resource configuration")
 
         content_artifact_id = article.resource.get("content_artifact")
         if not content_artifact_id:
-            raise DevRevError(f"Article {id} has no content_artifact")
+            raise DevRevError(
+                f"Article {id} has no content artifact reference in resource configuration"
+            )
 
         try:
             # Step 2: Prepare new version
-            from devrev.models.artifacts import ArtifactVersionsPrepareRequest
-
             version_req = ArtifactVersionsPrepareRequest(id=content_artifact_id)
             version_resp = await self._parent_client.artifacts.prepare_version(version_req)
 

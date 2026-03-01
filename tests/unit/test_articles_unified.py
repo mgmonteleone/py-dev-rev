@@ -477,7 +477,7 @@ class TestGetWithContent:
         }
         mock_http_client.post.return_value = mock_response
 
-        with pytest.raises(DevRevError, match="has no resource field"):
+        with pytest.raises(DevRevError, match="has no resource configuration"):
             articles_service.get_with_content("article-456")
 
     def test_get_with_content_missing_resource(
@@ -498,7 +498,7 @@ class TestGetWithContent:
         }
         mock_http_client.post.return_value = mock_response
 
-        with pytest.raises(DevRevError, match="has no resource field"):
+        with pytest.raises(DevRevError, match="has no resource configuration"):
             articles_service.get_with_content("article-789")
 
     def test_get_with_content_artifact_not_found(
@@ -627,7 +627,6 @@ class TestUpdateContent:
         result = articles_service.update_content(
             "article-123",
             "# New markdown content",
-            content_format="text/markdown",
         )
 
         assert result is not None
@@ -645,7 +644,7 @@ class TestUpdateContent:
         }
         mock_http_client.post.return_value = mock_response
 
-        with pytest.raises(DevRevError, match="has no resource field"):
+        with pytest.raises(DevRevError, match="has no resource configuration"):
             articles_service.update_content("article-456", "New content")
 
     def test_update_content_no_parent_client(
@@ -1113,7 +1112,7 @@ class TestGetWithContentAsync:
         }
         mock_async_http_client.post.return_value = mock_response
 
-        with pytest.raises(DevRevError, match="has no resource field"):
+        with pytest.raises(DevRevError, match="has no resource configuration"):
             await async_articles_service.get_with_content("article-456")
 
     @pytest.mark.asyncio
@@ -1135,7 +1134,7 @@ class TestGetWithContentAsync:
         }
         mock_async_http_client.post.return_value = mock_response
 
-        with pytest.raises(DevRevError, match="has no resource field"):
+        with pytest.raises(DevRevError, match="has no resource configuration"):
             await async_articles_service.get_with_content("article-789")
 
     @pytest.mark.asyncio
@@ -1257,7 +1256,6 @@ class TestUpdateContentAsync:
         result = await async_articles_service.update_content(
             "article-123",
             "# Markdown",
-            content_format="text/markdown",
         )
 
         assert result is not None
@@ -1276,7 +1274,7 @@ class TestUpdateContentAsync:
         }
         mock_async_http_client.post.return_value = mock_response
 
-        with pytest.raises(DevRevError, match="has no resource field"):
+        with pytest.raises(DevRevError, match="has no resource configuration"):
             await async_articles_service.update_content("article-456", "Content")
 
     @pytest.mark.asyncio
