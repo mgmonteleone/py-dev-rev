@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import builtins
 import logging
 from collections.abc import Sequence
-from typing import List
 
 from devrev.exceptions import DevRevError
 from devrev.models.articles import (
@@ -19,9 +19,9 @@ from devrev.models.articles import (
     ArticlesGetResponse,
     ArticlesListRequest,
     ArticlesListResponse,
+    ArticleStatus,
     ArticlesUpdateRequest,
     ArticlesUpdateResponse,
-    ArticleStatus,
     ArticleWithContent,
 )
 from devrev.models.artifacts import (
@@ -97,7 +97,7 @@ class ArticlesService(BaseService):
         title: str,
         content: str,
         *,
-        owned_by: List[str],
+        owned_by: builtins.list[str],
         description: str | None = None,
         status: ArticleStatus | None = None,
         content_format: str = "text/plain",
@@ -445,7 +445,7 @@ class AsyncArticlesService(AsyncBaseService):
         title: str,
         content: str,
         *,
-        owned_by: List[str],
+        owned_by: builtins.list[str],
         description: str | None = None,
         status: ArticleStatus | None = None,
         content_format: str = "text/plain",

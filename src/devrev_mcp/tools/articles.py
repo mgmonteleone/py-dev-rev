@@ -12,12 +12,10 @@ from mcp.server.fastmcp import Context
 
 from devrev.exceptions import DevRevError
 from devrev.models.articles import (
-    ArticlesCreateRequest,
     ArticlesDeleteRequest,
     ArticlesGetRequest,
     ArticlesListRequest,
     ArticleStatus,
-    ArticlesUpdateRequest,
 )
 from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
