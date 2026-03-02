@@ -101,7 +101,6 @@ class TestArticlesGetTool:
             await devrev_articles_get(mock_ctx, id="nonexistent")
 
 
-@pytest.mark.xfail(reason="MCP tools not yet updated for unified article API (Phase 3)")
 class TestArticlesCreateTool:
     """Tests for devrev_articles_create tool."""
 
@@ -109,18 +108,18 @@ class TestArticlesCreateTool:
     async def test_create_minimal(self, mock_ctx, mock_client):
         """Test creating an article with minimal fields."""
         mock_article = _make_mock_article(title="New Article", description="New content")
-        mock_client.articles.create.return_value = mock_article
+        mock_client.articles.create_with_content.return_value = mock_article
 
         result = await devrev_articles_create(
             mock_ctx,
             title="New Article",
-            description="New content",
+            content="New content",
             owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
         )
 
         assert result["title"] == "New Article"
         assert result["description"] == "New content"
-        mock_client.articles.create.assert_called_once()
+        mock_client.articles.create_with_content.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_create_with_status(self, mock_ctx, mock_client):
@@ -130,12 +129,12 @@ class TestArticlesCreateTool:
             description="Draft content",
             status="draft",
         )
-        mock_client.articles.create.return_value = mock_article
+        mock_client.articles.create_with_content.return_value = mock_article
 
         result = await devrev_articles_create(
             mock_ctx,
             title="Draft Article",
-            description="Draft content",
+            content="Draft content",
             owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
             status="draft",
         )
@@ -145,18 +144,17 @@ class TestArticlesCreateTool:
     @pytest.mark.asyncio
     async def test_create_validation_error(self, mock_ctx, mock_client):
         """Test creating an article with validation error."""
-        mock_client.articles.create.side_effect = ValidationError("Title required")
+        mock_client.articles.create_with_content.side_effect = ValidationError("Title required")
 
         with pytest.raises(RuntimeError, match="Title required"):
             await devrev_articles_create(
                 mock_ctx,
                 title="",
-                description="Content",
+                content="Content",
                 owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
             )
 
 
-@pytest.mark.xfail(reason="MCP tools not yet updated for unified article API (Phase 3)")
 class TestArticlesUpdateTool:
     """Tests for devrev_articles_update tool."""
 
@@ -168,7 +166,7 @@ class TestArticlesUpdateTool:
             title="Updated Title",
             status="published",
         )
-        mock_client.articles.update.return_value = mock_article
+        mock_client.articles.update_with_content.return_value = mock_article
 
         result = await devrev_articles_update(
             mock_ctx,
@@ -183,7 +181,7 @@ class TestArticlesUpdateTool:
     @pytest.mark.asyncio
     async def test_update_error(self, mock_ctx, mock_client):
         """Test updating an article with error."""
-        mock_client.articles.update.side_effect = NotFoundError("Article not found")
+        mock_client.articles.update_with_content.side_effect = NotFoundError("Article not found")
 
         with pytest.raises(RuntimeError, match="Article not found"):
             await devrev_articles_update(mock_ctx, id="nonexistent", title="New")
