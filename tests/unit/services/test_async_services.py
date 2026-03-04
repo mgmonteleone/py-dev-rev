@@ -124,8 +124,8 @@ class TestAsyncArticlesService:
         service = AsyncArticlesService(mock_async_http_client)
         result = await service.list()
 
-        assert len(result) == 1
-        assert isinstance(result[0], Article)
+        assert len(result.articles) == 1
+        assert isinstance(result.articles[0], Article)
 
 
 class TestAsyncTagsService:

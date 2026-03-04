@@ -22,6 +22,7 @@ from devrev.models.articles import (
     ArticleStatus,
     ArticlesUpdateRequest,
     ArticlesUpdateResponse,
+    ArticleType,
     ArticleWithContent,
 )
 from devrev.models.artifacts import (
@@ -52,12 +53,48 @@ class ArticlesService(BaseService):
         response = self._post("/articles.get", request, ArticlesGetResponse)
         return response.article
 
-    def list(self, request: ArticlesListRequest | None = None) -> Sequence[Article]:
-        """List articles."""
+    def list(
+        self,
+        request: ArticlesListRequest | None = None,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+        status: Sequence[ArticleStatus] | None = None,
+        article_type: Sequence[ArticleType] | None = None,
+        applies_to_parts: Sequence[str] | None = None,
+        authored_by: Sequence[str] | None = None,
+        owned_by: Sequence[str] | None = None,
+    ) -> ArticlesListResponse:
+        """List articles with optional filtering and pagination.
+
+        Can be called with a pre-built ``ArticlesListRequest`` or with
+        keyword arguments for convenience.  When *request* is provided the
+        keyword arguments are ignored.
+
+        Args:
+            request: Pre-built list request (keyword args ignored when set)
+            cursor: Pagination cursor from a previous response
+            limit: Maximum number of results (1-100)
+            status: Filter by article status (e.g. draft, published)
+            article_type: Filter by article type
+            applies_to_parts: Filter by part IDs
+            authored_by: Filter by author user IDs
+            owned_by: Filter by owner user IDs
+
+        Returns:
+            Paginated response containing articles and next_cursor
+        """
         if request is None:
-            request = ArticlesListRequest()
-        response = self._post("/articles.list", request, ArticlesListResponse)
-        return response.articles
+            request = ArticlesListRequest(
+                cursor=cursor,
+                limit=limit,
+                status=list(status) if status else None,
+                article_type=list(article_type) if article_type else None,
+                applies_to_parts=list(applies_to_parts) if applies_to_parts else None,
+                authored_by=list(authored_by) if authored_by else None,
+                owned_by=list(owned_by) if owned_by else None,
+            )
+        return self._post("/articles.list", request, ArticlesListResponse)
 
     def update(self, request: ArticlesUpdateRequest) -> Article:
         """Update an article."""
@@ -400,12 +437,48 @@ class AsyncArticlesService(AsyncBaseService):
         response = await self._post("/articles.get", request, ArticlesGetResponse)
         return response.article
 
-    async def list(self, request: ArticlesListRequest | None = None) -> Sequence[Article]:
-        """List articles."""
+    async def list(
+        self,
+        request: ArticlesListRequest | None = None,
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+        status: Sequence[ArticleStatus] | None = None,
+        article_type: Sequence[ArticleType] | None = None,
+        applies_to_parts: Sequence[str] | None = None,
+        authored_by: Sequence[str] | None = None,
+        owned_by: Sequence[str] | None = None,
+    ) -> ArticlesListResponse:
+        """List articles with optional filtering and pagination.
+
+        Can be called with a pre-built ``ArticlesListRequest`` or with
+        keyword arguments for convenience.  When *request* is provided the
+        keyword arguments are ignored.
+
+        Args:
+            request: Pre-built list request (keyword args ignored when set)
+            cursor: Pagination cursor from a previous response
+            limit: Maximum number of results (1-100)
+            status: Filter by article status (e.g. draft, published)
+            article_type: Filter by article type
+            applies_to_parts: Filter by part IDs
+            authored_by: Filter by author user IDs
+            owned_by: Filter by owner user IDs
+
+        Returns:
+            Paginated response containing articles and next_cursor
+        """
         if request is None:
-            request = ArticlesListRequest()
-        response = await self._post("/articles.list", request, ArticlesListResponse)
-        return response.articles
+            request = ArticlesListRequest(
+                cursor=cursor,
+                limit=limit,
+                status=list(status) if status else None,
+                article_type=list(article_type) if article_type else None,
+                applies_to_parts=list(applies_to_parts) if applies_to_parts else None,
+                authored_by=list(authored_by) if authored_by else None,
+                owned_by=list(owned_by) if owned_by else None,
+            )
+        return await self._post("/articles.list", request, ArticlesListResponse)
 
     async def update(self, request: ArticlesUpdateRequest) -> Article:
         """Update an article."""

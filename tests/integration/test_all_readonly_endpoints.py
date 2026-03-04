@@ -313,7 +313,8 @@ class TestArticlesReadOnly:
         """Test articles.list endpoint."""
         try:
             result = client.articles.list()
-            assert isinstance(result, list)
+            assert hasattr(result, "articles")
+            assert isinstance(result.articles, list)
         except Exception as e:
             logger.error(f"articles.list failed: {e}")
             tracker.add(
