@@ -17,6 +17,7 @@ import pytest
 
 from devrev import DevRevClient
 from devrev.exceptions import DevRevError
+from devrev.models.articles import ArticlesListResponse
 
 # Skip all integration tests if DEVREV_API_TOKEN is not set
 pytestmark = [
@@ -313,7 +314,7 @@ class TestArticlesReadOnly:
         """Test articles.list endpoint."""
         try:
             result = client.articles.list()
-            assert hasattr(result, "articles")
+            assert isinstance(result, ArticlesListResponse)
             assert isinstance(result.articles, list)
         except Exception as e:
             logger.error(f"articles.list failed: {e}")

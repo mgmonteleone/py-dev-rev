@@ -20,15 +20,36 @@ Manage knowledge base articles in DevRev.
 
 ```python
 from devrev import DevRevClient
-from devrev.models.articles import ArticlesListRequest
+from devrev.models.articles import ArticlesListRequest, ArticleStatus
 
 client = DevRevClient()
 
-# Using a request object
-request = ArticlesListRequest(limit=20)
-articles = client.articles.list(request)
-for article in articles:
+# Simple usage with keyword args
+response = client.articles.list(limit=20)
+for article in response.articles:
     print(f"{article.title}")
+
+# Filter by status
+response = client.articles.list(status=[ArticleStatus.DRAFT])
+for article in response.articles:
+    print(f"Draft: {article.title}")
+
+# Using a request object
+request = ArticlesListRequest(limit=20, status=[ArticleStatus.PUBLISHED])
+response = client.articles.list(request)
+for article in response.articles:
+    print(f"{article.title}")
+
+# Paginate through all results using next_cursor
+cursor = None
+all_articles = []
+while True:
+    response = client.articles.list(cursor=cursor, limit=100)
+    all_articles.extend(response.articles)
+    cursor = response.next_cursor
+    if not cursor:
+        break
+print(f"Total articles: {len(all_articles)}")
 ```
 
 ### Get Article
