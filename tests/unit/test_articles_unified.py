@@ -159,9 +159,7 @@ class TestCreateWithContent:
         mock_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         # Execute
@@ -191,9 +189,7 @@ class TestCreateWithContent:
         mock_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         result = articles_service.create_with_content(
@@ -221,9 +217,7 @@ class TestCreateWithContent:
         mock_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         result = articles_service.create_with_content(
@@ -250,9 +244,7 @@ class TestCreateWithContent:
         mock_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         result = articles_service.create_with_content(
@@ -278,9 +270,7 @@ class TestCreateWithContent:
         mock_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         result = articles_service.create_with_content(
@@ -373,6 +363,7 @@ class TestGetWithContent:
         mock_http_client: MagicMock,
     ) -> None:
         """Test successful retrieval of article with content."""
+
         # Need to handle multiple post calls
         def post_side_effect(endpoint, *args, **kwargs):
             if "articles.get" in endpoint:
@@ -407,6 +398,7 @@ class TestGetWithContent:
         mock_http_client: MagicMock,
     ) -> None:
         """Test HTML content decoding."""
+
         def post_side_effect(endpoint, *args, **kwargs):
             if "articles.get" in endpoint:
                 response = MagicMock()
@@ -419,7 +411,9 @@ class TestGetWithContent:
             return MagicMock()
 
         mock_http_client.post.side_effect = post_side_effect
-        mock_parent_client.artifacts.download.return_value = b"<html><body>HTML content</body></html>"
+        mock_parent_client.artifacts.download.return_value = (
+            b"<html><body>HTML content</body></html>"
+        )
         mock_parent_client.artifacts.get.return_value = mock_artifact
 
         result = articles_service.get_with_content("article-123")
@@ -491,9 +485,7 @@ class TestGetWithContent:
         )
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": article_no_resource.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": article_no_resource.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         with pytest.raises(DevRevError, match="has no resource configuration"):
@@ -508,9 +500,7 @@ class TestGetWithContent:
     ) -> None:
         """Test error handling when artifact download fails."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         mock_parent_client.artifacts.download.side_effect = Exception("Artifact not found")
@@ -670,9 +660,7 @@ class TestUpdateWithContent:
     ) -> None:
         """Test updating only metadata (title/description)."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         result = articles_service.update_with_content(
@@ -761,9 +749,7 @@ class TestUpdateWithContent:
     ) -> None:
         """Test handling when no changes are provided (no-op)."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         result = articles_service.update_with_content("article-123")
@@ -779,9 +765,7 @@ class TestUpdateWithContent:
     ) -> None:
         """Test updating only status."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_http_client.post.return_value = mock_response
 
         result = articles_service.update_with_content(
@@ -822,9 +806,7 @@ class TestCreateWithContentAsync:
         mock_async_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.create_with_content(
@@ -850,9 +832,7 @@ class TestCreateWithContentAsync:
         mock_async_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.create_with_content(
@@ -878,9 +858,7 @@ class TestCreateWithContentAsync:
         mock_async_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.create_with_content(
@@ -906,9 +884,7 @@ class TestCreateWithContentAsync:
         mock_async_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.create_with_content(
@@ -933,9 +909,7 @@ class TestCreateWithContentAsync:
         mock_async_parent_client.artifacts.upload.return_value = None
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.create_with_content(
@@ -1011,6 +985,7 @@ class TestGetWithContentAsync:
         mock_async_http_client: MagicMock,
     ) -> None:
         """Test async retrieval with content."""
+
         async def post_side_effect(endpoint, *args, **kwargs):
             if "articles.get" in endpoint:
                 response = MagicMock()
@@ -1044,6 +1019,7 @@ class TestGetWithContentAsync:
         mock_async_http_client: MagicMock,
     ) -> None:
         """Test async HTML content retrieval."""
+
         async def post_side_effect(endpoint, *args, **kwargs):
             if "articles.get" in endpoint:
                 response = MagicMock()
@@ -1127,9 +1103,7 @@ class TestGetWithContentAsync:
         )
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         with pytest.raises(DevRevError, match="has no resource configuration"):
@@ -1145,9 +1119,7 @@ class TestGetWithContentAsync:
     ) -> None:
         """Test async error when artifact not found."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         mock_async_parent_client.artifacts.download.side_effect = Exception("Not found")
@@ -1297,9 +1269,7 @@ class TestUpdateWithContentAsync:
     ) -> None:
         """Test async metadata-only update."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.update_with_content(
@@ -1383,9 +1353,7 @@ class TestUpdateWithContentAsync:
     ) -> None:
         """Test async no-op update."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.update_with_content("article-123")
@@ -1401,9 +1369,7 @@ class TestUpdateWithContentAsync:
     ) -> None:
         """Test async status-only update."""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "article": mock_article.model_dump(mode="json")
-        }
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
         mock_async_http_client.post.return_value = mock_response
 
         result = await async_articles_service.update_with_content(

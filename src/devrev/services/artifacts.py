@@ -191,9 +191,7 @@ class ArtifactsService(BaseService):
             >>> response = client.artifacts.prepare_version(request)
             >>> # Upload new version using response.url and response.form_data
         """
-        return self._post(
-            "/artifacts.versions.prepare", request, ArtifactVersionsPrepareResponse
-        )
+        return self._post("/artifacts.versions.prepare", request, ArtifactVersionsPrepareResponse)
 
     def delete_version(self, request: ArtifactVersionsDeleteRequest) -> None:
         """Permanently delete a version of an artifact.
