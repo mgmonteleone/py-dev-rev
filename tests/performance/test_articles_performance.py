@@ -16,10 +16,8 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from devrev.models.articles import Article, ArticleStatus, ArticlesCreateResponse, ArticlesGetResponse
 from devrev.models.artifacts import (
     Artifact,
-    ArtifactGetResponse,
     ArtifactPrepareResponse,
     ArtifactVersionsPrepareResponse,
 )

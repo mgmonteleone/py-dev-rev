@@ -1,21 +1,17 @@
 """Unit tests for unified article methods in ArticlesService."""
 
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from devrev.exceptions import DevRevError
 from devrev.models.articles import (
     Article,
-    ArticlesGetRequest,
-    ArticlesGetResponse,
     ArticleStatus,
     ArticleWithContent,
 )
 from devrev.models.artifacts import (
     Artifact,
-    ArtifactGetRequest,
-    ArtifactGetResponse,
     ArtifactPrepareResponse,
     ArtifactVersionsPrepareResponse,
 )
