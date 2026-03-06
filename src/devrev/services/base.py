@@ -30,9 +30,7 @@ class BaseService:
         parent_client: Optional reference to parent DevRevClient for cross-service access
     """
 
-    def __init__(
-        self, http_client: HTTPClient, parent_client: DevRevClient | None = None
-    ) -> None:
+    def __init__(self, http_client: HTTPClient, parent_client: DevRevClient | None = None) -> None:
         """Initialize the service.
 
         Args:

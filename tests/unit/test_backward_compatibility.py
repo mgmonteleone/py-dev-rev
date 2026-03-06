@@ -13,9 +13,8 @@ from devrev.models.articles import (
     Article,
     ArticlesCreateRequest,
     ArticlesGetRequest,
-    ArticlesListRequest,
-    ArticlesUpdateRequest,
     ArticleStatus,
+    ArticlesUpdateRequest,
 )
 from devrev.services.articles import ArticlesService
 from devrev.services.base import BaseService

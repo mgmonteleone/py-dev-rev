@@ -72,9 +72,7 @@ class ArtifactGetResponse(DevRevResponseModel):
 class ArtifactListRequest(DevRevBaseModel):
     """Request to list artifacts."""
 
-    parent_id: str | None = Field(
-        default=None, description="Filter artifacts by parent object ID"
-    )
+    parent_id: str | None = Field(default=None, description="Filter artifacts by parent object ID")
 
 
 class ArtifactListResponse(PaginatedResponse):

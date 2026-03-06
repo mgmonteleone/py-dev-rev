@@ -121,10 +121,11 @@ class TestGetEndpoints:
         """Test articles.get endpoint."""
         # Get a valid ID from list
         list_result = client.articles.list()
-        if not list_result or len(list_result) == 0:
+        articles = list_result.articles if hasattr(list_result, "articles") else list_result
+        if not articles:
             pytest.skip("No articles available for testing")
 
-        article_id = list_result[0].id
+        article_id = articles[0].id
 
         # Test get
         request = ArticlesGetRequest(id=article_id)

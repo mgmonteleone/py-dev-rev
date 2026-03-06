@@ -16,10 +16,8 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from devrev.models.articles import Article, ArticleStatus, ArticlesCreateResponse, ArticlesGetResponse
 from devrev.models.artifacts import (
     Artifact,
-    ArtifactGetResponse,
     ArtifactPrepareResponse,
     ArtifactVersionsPrepareResponse,
 )
@@ -398,6 +396,7 @@ def test_benchmark_unified_vs_manual(
         mock_http_client.post.return_value = http_response
 
         from devrev.models.articles import ArticlesCreateRequest
+
         articles_service.create(
             ArticlesCreateRequest(
                 title="Manual Test",
@@ -432,8 +431,8 @@ def test_benchmark_unified_vs_manual(
 
     # Verify performance target
     assert overhead < 0.2, (
-        f"Unified overhead is {overhead*1000:.0f}ms, target: <200ms "
-        f"(manual: {manual_mean*1000:.0f}ms, unified: {unified_mean*1000:.0f}ms)"
+        f"Unified overhead is {overhead * 1000:.0f}ms, target: <200ms "
+        f"(manual: {manual_mean * 1000:.0f}ms, unified: {unified_mean * 1000:.0f}ms)"
     )
 
 
@@ -473,4 +472,6 @@ def test_benchmark_bulk_operations(
     # Verify performance target (mean is in seconds)
     stats = benchmark.stats.stats
     mean_seconds = stats.mean
-    assert mean_seconds < 20.0, f"Bulk creation (10 articles) took {mean_seconds:.4f}s, target: <20s"
+    assert mean_seconds < 20.0, (
+        f"Bulk creation (10 articles) took {mean_seconds:.4f}s, target: <20s"
+    )

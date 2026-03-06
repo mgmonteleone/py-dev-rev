@@ -232,9 +232,7 @@ class ArticlesService(BaseService):
             content = content_bytes.decode("utf-8")
 
             # Get artifact metadata for format and version
-            artifact = self._parent_client.artifacts.get(
-                ArtifactGetRequest(id=content_artifact_id)
-            )
+            artifact = self._parent_client.artifacts.get(ArtifactGetRequest(id=content_artifact_id))
 
             return ArticleWithContent(
                 article=article,
@@ -243,9 +241,7 @@ class ArticlesService(BaseService):
                 content_version=artifact.version,
             )
         except Exception as e:
-            raise DevRevError(
-                f"Failed to download content for article {id}: {e}"
-            ) from e
+            raise DevRevError(f"Failed to download content for article {id}: {e}") from e
 
     def update_content(
         self,
@@ -576,9 +572,7 @@ class AsyncArticlesService(AsyncBaseService):
                 content_version=artifact.version,
             )
         except Exception as e:
-            raise DevRevError(
-                f"Failed to download content for article {id}: {e}"
-            ) from e
+            raise DevRevError(f"Failed to download content for article {id}: {e}") from e
 
     async def update_content(
         self,
