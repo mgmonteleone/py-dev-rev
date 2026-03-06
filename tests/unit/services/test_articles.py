@@ -272,5 +272,3 @@ class TestArticlesService:
         assert call_data["status"] == ["published"]
         assert call_data["owned_by"] == ["don:identity:user:456"]
         assert call_data["limit"] == 25
-
-
