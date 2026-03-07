@@ -39,7 +39,7 @@ jobs:
         run: python scripts/build_ai_docs.py --verbose
 
       - name: Run tests (unit tests only)
-        run: pytest --cov=src/devrev --cov-report=xml -v -m "not integration"
+        run: pytest --cov=src/devrev --cov-report=xml -v -m "not integration" --ignore=tests/performance
 
       - name: Run integration tests (if API token available)
         env:

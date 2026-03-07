@@ -5,13 +5,18 @@ from unittest.mock import MagicMock
 
 from devrev.models.articles import (
     Article,
+    ArticleAccessLevel,
     ArticlesCreateRequest,
     ArticlesDeleteRequest,
     ArticlesGetRequest,
     ArticlesListRequest,
     ArticleStatus,
     ArticlesUpdateRequest,
+    ArticlesUpdateRequestOwnedBy,
+    ArticlesUpdateRequestTags,
+    ArticleType,
 )
+from devrev.models.base import SetTagWithValue
 from devrev.services.articles import ArticlesService
 
 from .conftest import create_mock_response
@@ -71,9 +76,9 @@ class TestArticlesService:
         service = ArticlesService(mock_http_client)
         result = service.list()
 
-        assert len(result) == 1
-        assert isinstance(result[0], Article)
-        assert result[0].id == "don:core:article:123"
+        assert len(result.articles) == 1
+        assert isinstance(result.articles[0], Article)
+        assert result.articles[0].id == "don:core:article:123"
         mock_http_client.post.assert_called_once()
 
     def test_list_articles_with_request(
@@ -90,7 +95,7 @@ class TestArticlesService:
         request = ArticlesListRequest(limit=50, cursor="next-cursor")
         result = service.list(request)
 
-        assert len(result) == 1
+        assert len(result.articles) == 1
         mock_http_client.post.assert_called_once()
 
     def test_update_article(
@@ -137,5 +142,133 @@ class TestArticlesService:
         service = ArticlesService(mock_http_client)
         result = service.list()
 
-        assert len(result) == 0
+        assert len(result.articles) == 0
         mock_http_client.post.assert_called_once()
+
+    def test_create_article_with_full_params(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test creating an article with all supported parameters."""
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        service = ArticlesService(mock_http_client)
+        request = ArticlesCreateRequest(
+            title="Full Article",
+            status=ArticleStatus.DRAFT,
+            owned_by=["don:identity:user:456"],
+            description="A fully specified article",
+            resource={"content_artifact": "don:core:artifact:789"},
+        )
+        result = service.create(request)
+
+        assert isinstance(result, Article)
+        mock_http_client.post.assert_called_once()
+
+    def test_update_article_with_full_params(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test updating an article with all supported parameters."""
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        service = ArticlesService(mock_http_client)
+        request = ArticlesUpdateRequest(
+            id="don:core:article:123",
+            title="Updated Title",
+            status=ArticleStatus.PUBLISHED,
+            access_level=ArticleAccessLevel.EXTERNAL,
+            owned_by=ArticlesUpdateRequestOwnedBy(set=["don:identity:user:456"]),
+            tags=ArticlesUpdateRequestTags(set=[SetTagWithValue(id="don:core:tag:123")]),
+            language="fr",
+            description="Updated description",
+        )
+        result = service.update(request)
+
+        assert isinstance(result, Article)
+        mock_http_client.post.assert_called_once()
+
+    def test_list_articles_with_filters(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test listing articles with filter parameters."""
+        mock_http_client.post.return_value = create_mock_response(
+            {"articles": [sample_article_data]}
+        )
+
+        service = ArticlesService(mock_http_client)
+        request = ArticlesListRequest(
+            limit=25,
+            article_type=[ArticleType.ARTICLE],
+            authored_by=["don:identity:user:789"],
+            owned_by=["don:identity:user:456"],
+            tags=["don:core:tag:123"],
+        )
+        result = service.list(request)
+
+        assert len(result.articles) == 1
+        assert isinstance(result.articles[0], Article)
+        mock_http_client.post.assert_called_once()
+
+    def test_list_articles_with_status_filter(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test listing articles filtered by status."""
+        mock_http_client.post.return_value = create_mock_response(
+            {"articles": [sample_article_data]}
+        )
+
+        service = ArticlesService(mock_http_client)
+        result = service.list(status=[ArticleStatus.DRAFT])
+
+        assert len(result.articles) == 1
+        # Verify status was sent in request payload
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        assert call_data["status"] == ["draft"]
+        mock_http_client.post.assert_called_once()
+
+    def test_list_articles_with_pagination_cursor(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test listing articles returns next_cursor for pagination."""
+        mock_http_client.post.return_value = create_mock_response(
+            {"articles": [sample_article_data], "next_cursor": "abc123"}
+        )
+
+        service = ArticlesService(mock_http_client)
+        result = service.list(limit=10)
+
+        assert len(result.articles) == 1
+        assert result.next_cursor == "abc123"
+        mock_http_client.post.assert_called_once()
+
+    def test_list_articles_with_keyword_args(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test listing articles using keyword arguments."""
+        mock_http_client.post.return_value = create_mock_response(
+            {"articles": [sample_article_data]}
+        )
+
+        service = ArticlesService(mock_http_client)
+        result = service.list(
+            limit=25,
+            status=[ArticleStatus.PUBLISHED],
+            owned_by=["don:identity:user:456"],
+        )
+
+        assert len(result.articles) == 1
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        assert call_data["status"] == ["published"]
+        assert call_data["owned_by"] == ["don:identity:user:456"]
+        assert call_data["limit"] == 25

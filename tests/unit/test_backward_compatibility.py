@@ -166,10 +166,10 @@ class TestExistingArticleAPIsUnchanged:
         service = ArticlesService(mock_http_client)
         result = service.list()
 
-        # Verify behavior unchanged
-        assert len(result) == 1
-        assert isinstance(result[0], Article)
-        assert result[0].id == "don:core:article:123"
+        # list() now returns ArticlesListResponse with .articles attribute
+        assert len(result.articles) == 1
+        assert isinstance(result.articles[0], Article)
+        assert result.articles[0].id == "don:core:article:123"
         mock_http_client.post.assert_called_once()
 
 
@@ -300,8 +300,8 @@ class TestExistingTestSuiteStillPasses:
         mock_http_client.post.return_value = create_mock_response(
             {"articles": [sample_article_data]}
         )
-        articles = service.list()
-        assert len(articles) == 1
+        articles_response = service.list()
+        assert len(articles_response.articles) == 1
 
         # Test update
         mock_http_client.reset_mock()

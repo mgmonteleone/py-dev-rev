@@ -9,9 +9,11 @@ from typing import Any
 from pydantic import Field
 
 from devrev.models.base import (
+    CustomSchemaSpec,
     DevRevBaseModel,
     DevRevResponseModel,
     PaginatedResponse,
+    SetTagWithValue,
     UserSummary,
 )
 
@@ -22,6 +24,39 @@ class ArticleStatus(StrEnum):
     DRAFT = "draft"
     PUBLISHED = "published"
     ARCHIVED = "archived"
+    REVIEW_NEEDED = "review_needed"
+
+
+class ArticleAccessLevel(StrEnum):
+    """Article access level enumeration."""
+
+    EXTERNAL = "external"
+    INTERNAL = "internal"
+    PRIVATE = "private"
+    PUBLIC = "public"
+    RESTRICTED = "restricted"
+
+
+class ArticleType(StrEnum):
+    """Article type enumeration."""
+
+    ARTICLE = "article"
+    CONTENT_BLOCK = "content_block"
+    PAGE = "page"
+
+
+class ArticleContentFormat(StrEnum):
+    """Article content format enumeration."""
+
+    DRDFV2 = "drdfv2"
+    RT = "rt"
+
+
+class CursorMode(StrEnum):
+    """Cursor pagination direction."""
+
+    AFTER = "after"
+    BEFORE = "before"
 
 
 class Article(DevRevResponseModel):
@@ -67,6 +102,13 @@ class ArticleWithContent(DevRevResponseModel):
     content_version: str | None = Field(default=None, description="Artifact version")
 
 
+class SetSharedWithMembership(DevRevBaseModel):
+    """Shared-with membership for articles."""
+
+    member: str = Field(..., description="Member ID")
+    role: str | None = Field(default=None, description="Role")
+
+
 class ArticlesCreateRequest(DevRevBaseModel):
     """Request to create an article."""
 
@@ -91,11 +133,65 @@ class ArticlesDeleteRequest(DevRevBaseModel):
     id: str = Field(..., description="Article ID to delete")
 
 
+class ArticlesListRequestSharedWith(DevRevBaseModel):
+    """Shared-with filter for listing articles."""
+
+    member: str | None = Field(default=None, description="Member ID filter")
+    role: str | None = Field(default=None, description="Role filter")
+
+
 class ArticlesListRequest(DevRevBaseModel):
     """Request to list articles."""
 
     cursor: str | None = Field(default=None, description="Pagination cursor")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results")
+    applies_to_parts: list[str] | None = Field(default=None, description="Filter by part IDs")
+    article_type: list[ArticleType] | None = Field(
+        default=None, description="Filter by article types"
+    )
+    authored_by: list[str] | None = Field(default=None, description="Filter by author user IDs")
+    brands: list[str] | None = Field(default=None, description="Filter by brand IDs")
+    created_by: list[str] | None = Field(default=None, description="Filter by creator user IDs")
+    mode: CursorMode | None = Field(default=None, description="Cursor pagination direction")
+    modified_by: list[str] | None = Field(default=None, description="Filter by modifier user IDs")
+    owned_by: list[str] | None = Field(default=None, description="Filter by owner user IDs")
+    parent: list[str] | None = Field(default=None, description="Filter by parent article IDs")
+    scope: list[int] | None = Field(default=None, description="Filter by scope values")
+    shared_with: ArticlesListRequestSharedWith | None = Field(
+        default=None, description="Filter by shared-with membership"
+    )
+    status: list[ArticleStatus] | None = Field(default=None, description="Filter by article status")
+    tags: list[str] | None = Field(default=None, description="Filter by tag IDs")
+
+
+class ArticlesUpdateRequestOwnedBy(DevRevBaseModel):
+    """Owned-by update for articles."""
+
+    set: list[str] | None = Field(default=None, description="Set owner IDs")
+
+
+class ArticlesUpdateRequestAuthoredBy(DevRevBaseModel):
+    """Authored-by update for articles."""
+
+    set: list[str] | None = Field(default=None, description="Set author IDs")
+
+
+class ArticlesUpdateRequestAliases(DevRevBaseModel):
+    """Aliases update for articles."""
+
+    set: list[str] | None = Field(default=None, description="Set aliases")
+
+
+class ArticlesUpdateRequestAppliesToParts(DevRevBaseModel):
+    """Applies-to-parts update for articles."""
+
+    set: list[str] | None = Field(default=None, description="Set part IDs")
+
+
+class ArticlesUpdateRequestTags(DevRevBaseModel):
+    """Tags update for articles."""
+
+    set: list[SetTagWithValue] | None = Field(default=None, description="Set tags")
 
 
 class ArticlesUpdateRequest(DevRevBaseModel):
@@ -105,6 +201,30 @@ class ArticlesUpdateRequest(DevRevBaseModel):
     title: str | None = Field(default=None, description="New title")
     description: str | None = Field(default=None, description="New description/body")
     status: ArticleStatus | None = Field(default=None, description="New status")
+    access_level: ArticleAccessLevel | None = Field(default=None, description="New access level")
+    aliases: ArticlesUpdateRequestAliases | None = Field(default=None, description="New aliases")
+    applies_to_parts: ArticlesUpdateRequestAppliesToParts | None = Field(
+        default=None, description="New applies-to-parts"
+    )
+    authored_by: ArticlesUpdateRequestAuthoredBy | None = Field(
+        default=None, description="New authored-by"
+    )
+    brand: str | None = Field(default=None, description="New brand ID")
+    content_format: ArticleContentFormat | None = Field(
+        default=None, description="New content format"
+    )
+    custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
+    custom_schema_spec: CustomSchemaSpec | None = Field(
+        default=None, description="Custom schema spec"
+    )
+    language: str | None = Field(default=None, description="New language code")
+    notify: bool | None = Field(default=None, description="Send notifications")
+    owned_by: ArticlesUpdateRequestOwnedBy | None = Field(default=None, description="New owned-by")
+    parent: str | None = Field(default=None, description="New parent article ID")
+    published_version: str | None = Field(default=None, description="Published version")
+    release_notes: str | None = Field(default=None, description="New release notes")
+    tags: ArticlesUpdateRequestTags | None = Field(default=None, description="New tags")
+    url: str | None = Field(default=None, description="Article URL")
 
 
 class ArticlesCreateResponse(DevRevResponseModel):
