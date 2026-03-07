@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.1] - 2026-03-06
+
+### Fixed
+
+- **CI/CD** — Installed the `mcp` extra in the integration workflow so MCP dependencies are available during integration runs.
+- **Articles integration test** — Updated the articles integration test to match the current response shape.
+
+## [2.8.0] - 2026-03-01
+
 ### Added
 
 - **Unified Article Management** (#161) — Simplified article and artifact workflows:

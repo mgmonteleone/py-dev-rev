@@ -15,7 +15,10 @@ from devrev.models.artifacts import (
     ArtifactPrepareResponse,
     ArtifactVersionsPrepareResponse,
 )
-from devrev.services.articles import ArticlesService, AsyncArticlesService
+from devrev.services.articles import (
+    ArticlesService,
+    AsyncArticlesService,
+)
 
 # ============================================================================
 # Fixtures
