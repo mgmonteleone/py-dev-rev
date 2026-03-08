@@ -59,6 +59,41 @@ class CursorMode(StrEnum):
     BEFORE = "before"
 
 
+class ArticleScope(DevRevResponseModel):
+    """Scope/visibility level of an article.
+
+    Values observed from the API:
+    - ``{"id": 1, "label": "internal", "ordinal": 1}``
+    - ``{"id": 2, "label": "external", "ordinal": 2}``
+    """
+
+    id: int = Field(..., description="Scope numeric ID (1=internal, 2=external)")
+    label: str | None = Field(default=None, description="Human-readable label")
+    ordinal: int | None = Field(default=None, description="Sort ordinal")
+
+
+class ArticleTagSummary(DevRevResponseModel):
+    """Tag summary as returned within an article's ``tags`` array."""
+
+    id: str = Field(..., description="Tag DON ID")
+    name: str | None = Field(default=None, description="Tag name")
+    display_id: str | None = Field(default=None, description="Tag display ID")
+
+
+class ArticleTagWithValue(DevRevResponseModel):
+    """Tag entry on an article, wrapping the tag summary with an optional value."""
+
+    tag: ArticleTagSummary = Field(..., description="Tag details")
+    value: str | None = Field(default=None, description="Optional tag value")
+
+
+class ArticleParentSummary(DevRevResponseModel):
+    """Summary of a parent directory (collection) for an article."""
+
+    id: str = Field(..., description="Directory DON ID")
+    display_id: str | None = Field(default=None, description="Display ID")
+
+
 class Article(DevRevResponseModel):
     """DevRev Article model.
 
@@ -71,6 +106,7 @@ class Article(DevRevResponseModel):
     title: str = Field(..., description="Article title")
     description: str | None = Field(default=None, description="Article description/body")
     status: ArticleStatus | None = Field(default=None, description="Article status")
+    article_type: str | None = Field(default=None, description="Article type (article, page, etc.)")
     authored_by: list[UserSummary] | None = Field(
         default=None, description="Authors of the article (API returns array, not single object)"
     )
@@ -80,6 +116,19 @@ class Article(DevRevResponseModel):
     resource: dict[str, Any] | None = Field(
         default=None, description="Resource configuration including artifact references"
     )
+    applies_to_parts: list[dict[str, Any]] | None = Field(
+        default=None, description="Parts this article applies to"
+    )
+    scope: ArticleScope | None = Field(
+        default=None, description="Visibility scope (internal/external)"
+    )
+    tags: list[ArticleTagWithValue] | None = Field(
+        default=None, description="Tags applied to the article"
+    )
+    parent: ArticleParentSummary | None = Field(
+        default=None, description="Parent directory/collection"
+    )
+    language: str | None = Field(default=None, description="Language code (e.g., 'en')")
 
 
 class ArticleSummary(DevRevResponseModel):
@@ -110,7 +159,11 @@ class SetSharedWithMembership(DevRevBaseModel):
 
 
 class ArticlesCreateRequest(DevRevBaseModel):
-    """Request to create an article."""
+    """Request to create an article.
+
+    Supports associating the article with parts, a parent collection (directory),
+    scope (internal/external), and tags at creation time.
+    """
 
     title: str = Field(..., description="Article title")
     description: str | None = Field(default=None, description="Article description/body")
@@ -118,6 +171,17 @@ class ArticlesCreateRequest(DevRevBaseModel):
     owned_by: list[str] = Field(..., description="List of dev user IDs who own the article")
     resource: dict[str, Any] = Field(
         default_factory=dict, description="Resource configuration for the article"
+    )
+    applies_to_parts: list[str] | None = Field(
+        default=None, description="List of part IDs this article applies to"
+    )
+    scope: int | None = Field(default=None, description="Visibility scope: 1=internal, 2=external")
+    tags: list[SetTagWithValue] | None = Field(
+        default=None, description="Tags to apply (list of {'id': 'tag_id', 'value': ...})"
+    )
+    parent: str | None = Field(default=None, description="Parent directory/collection DON ID")
+    article_type: str | None = Field(
+        default=None, description="Article type: 'article' (default), 'page', 'content_block'"
     )
 
 
@@ -223,6 +287,14 @@ class ArticlesUpdateRequest(DevRevBaseModel):
     parent: str | None = Field(default=None, description="New parent article ID")
     published_version: str | None = Field(default=None, description="Published version")
     release_notes: str | None = Field(default=None, description="New release notes")
+    artifacts: dict[str, Any] | None = Field(
+        default=None,
+        description="Artifacts update using set wrapper, e.g. {'set': ['artifact_id']}",
+    )
+    resource: dict[str, Any] | None = Field(
+        default=None,
+        description="Resource configuration (read-only on updates, use artifacts instead)",
+    )
     tags: ArticlesUpdateRequestTags | None = Field(default=None, description="New tags")
     url: str | None = Field(default=None, description="Article URL")
 

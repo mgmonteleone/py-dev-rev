@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import Field
 
@@ -13,7 +14,10 @@ class Artifact(DevRevResponseModel):
     """DevRev Artifact model."""
 
     id: str = Field(..., description="Artifact ID")
-    created_by: str | None = Field(default=None, description="Creator user ID")
+    created_by: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Creator - may be a user ID string or a user object dict",
+    )
     created_date: datetime | None = Field(default=None, description="Creation timestamp")
     file_name: str | None = Field(default=None, description="Original file name")
     file_type: str | None = Field(default=None, description="MIME type of the file")

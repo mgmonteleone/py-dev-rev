@@ -13,7 +13,6 @@ from devrev.models.articles import (
 from devrev.models.artifacts import (
     Artifact,
     ArtifactPrepareResponse,
-    ArtifactVersionsPrepareResponse,
 )
 from devrev.services.articles import (
     ArticlesService,
@@ -106,13 +105,25 @@ def mock_artifact_prepare_response() -> ArtifactPrepareResponse:
 
 @pytest.fixture
 def mock_article() -> Article:
-    """Mock article with content artifact reference."""
+    """Mock article with content artifact reference (API response format)."""
     return Article(
         id="article-123",
         title="Test Article",
         description="Test description",
         owned_by=[{"id": "user-123"}],
-        resource={"content_artifact": "artifact-123"},
+        resource={
+            "artifacts": [
+                {
+                    "id": "artifact-123",
+                    "display_id": "artifact-123",
+                    "file": {
+                        "name": "Test Article.html",
+                        "size": 100,
+                        "type": "text/html",
+                    },
+                }
+            ]
+        },
     )
 
 
@@ -200,9 +211,10 @@ class TestCreateWithContent:
         )
 
         assert result is not None
-        # Verify content format was used
+        # All content is converted to devrev/rt for inline rendering
         prepare_call = mock_parent_client.artifacts.prepare.call_args
-        assert prepare_call[0][0].file_type == "text/html"
+        assert prepare_call[0][0].file_type == "devrev/rt"
+        assert prepare_call[0][0].file_name == "Article"
 
     def test_create_with_content_markdown(
         self,
@@ -229,7 +241,7 @@ class TestCreateWithContent:
 
         assert result is not None
         prepare_call = mock_parent_client.artifacts.prepare.call_args
-        assert prepare_call[0][0].file_type == "text/markdown"
+        assert prepare_call[0][0].file_type == "devrev/rt"
 
     def test_create_with_content_plain_text(
         self,
@@ -255,7 +267,7 @@ class TestCreateWithContent:
 
         assert result is not None
         prepare_call = mock_parent_client.artifacts.prepare.call_args
-        assert prepare_call[0][0].file_type == "text/plain"
+        assert prepare_call[0][0].file_type == "devrev/rt"
 
     def test_create_with_content_with_metadata(
         self,
@@ -425,31 +437,34 @@ class TestGetWithContent:
         self,
         articles_service: ArticlesService,
         mock_parent_client: MagicMock,
-        mock_article: Article,
         mock_http_client: MagicMock,
     ) -> None:
         """Test markdown content retrieval."""
-        markdown_artifact = Artifact(
-            id="artifact-123",
-            file_name="test.md",
-            file_type="text/markdown",
-            version="1",
+        markdown_article = Article(
+            id="article-123",
+            title="Test Article",
+            description="Test description",
+            owned_by=[{"id": "user-123"}],
+            resource={
+                "artifacts": [
+                    {
+                        "id": "artifact-123",
+                        "display_id": "artifact-123",
+                        "file": {"name": "test.md", "size": 28, "type": "text/markdown"},
+                    }
+                ]
+            },
         )
 
         def post_side_effect(endpoint, *args, **kwargs):
             if "articles.get" in endpoint:
                 response = MagicMock()
-                response.json.return_value = {"article": mock_article.model_dump(mode="json")}
-                return response
-            elif "artifacts.get" in endpoint:
-                response = MagicMock()
-                response.json.return_value = {"artifact": markdown_artifact.model_dump(mode="json")}
+                response.json.return_value = {"article": markdown_article.model_dump(mode="json")}
                 return response
             return MagicMock()
 
         mock_http_client.post.side_effect = post_side_effect
         mock_parent_client.artifacts.download.return_value = b"# Heading\n\nMarkdown content"
-        mock_parent_client.artifacts.get.return_value = markdown_artifact
 
         result = articles_service.get_with_content("article-123")
 
@@ -530,17 +545,12 @@ class TestUpdateContent:
         articles_service: ArticlesService,
         mock_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_http_client: MagicMock,
     ) -> None:
         """Test successful content update."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_parent_client.artifacts.upload.return_value = None
+        mock_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -555,25 +565,20 @@ class TestUpdateContent:
         )
 
         assert result.id == "article-123"
-        mock_parent_client.artifacts.prepare_version.assert_called_once()
+        mock_parent_client.artifacts.prepare.assert_called_once()
         mock_parent_client.artifacts.upload.assert_called_once()
 
-    def test_update_content_new_version(
+    def test_update_content_new_artifact(
         self,
         articles_service: ArticlesService,
         mock_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_http_client: MagicMock,
     ) -> None:
-        """Test that new artifact version is created."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_parent_client.artifacts.upload.return_value = None
+        """Test that a new artifact is created and article updated."""
+        mock_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -584,26 +589,23 @@ class TestUpdateContent:
 
         articles_service.update_content("article-123", "New content")
 
-        # Verify version preparation was called with artifact ID
-        prepare_call = mock_parent_client.artifacts.prepare_version.call_args
-        assert prepare_call[0][0].id == "artifact-123"
+        # Verify artifact preparation was called
+        mock_parent_client.artifacts.prepare.assert_called_once()
+        prepare_call = mock_parent_client.artifacts.prepare.call_args
+        assert prepare_call[0][0].file_type == "devrev/rt"
+        assert prepare_call[0][0].file_name == "Article"
 
     def test_update_content_format_change(
         self,
         articles_service: ArticlesService,
         mock_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_http_client: MagicMock,
     ) -> None:
-        """Test updating content format."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_parent_client.artifacts.upload.return_value = None
+        """Test updating content with explicit format override."""
+        mock_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -615,6 +617,7 @@ class TestUpdateContent:
         result = articles_service.update_content(
             "article-123",
             "# New markdown content",
+            content_format="text/markdown",
         )
 
         assert result is not None
@@ -679,17 +682,12 @@ class TestUpdateWithContent:
         articles_service: ArticlesService,
         mock_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_http_client: MagicMock,
     ) -> None:
         """Test updating only content."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_parent_client.artifacts.upload.return_value = None
+        mock_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -704,24 +702,19 @@ class TestUpdateWithContent:
         )
 
         assert result.id == "article-123"
-        mock_parent_client.artifacts.prepare_version.assert_called_once()
+        mock_parent_client.artifacts.prepare.assert_called_once()
 
     def test_update_with_content_both(
         self,
         articles_service: ArticlesService,
         mock_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_http_client: MagicMock,
     ) -> None:
         """Test updating both metadata and content."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_parent_client.artifacts.upload.return_value = None
+        mock_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -739,7 +732,7 @@ class TestUpdateWithContent:
 
         assert result.id == "article-123"
         # Both content update and metadata update should be called
-        mock_parent_client.artifacts.prepare_version.assert_called_once()
+        mock_parent_client.artifacts.prepare.assert_called_once()
 
     def test_update_with_content_no_changes(
         self,
@@ -1043,30 +1036,34 @@ class TestGetWithContentAsync:
         self,
         async_articles_service: AsyncArticlesService,
         mock_async_parent_client: MagicMock,
-        mock_article: Article,
         mock_async_http_client: MagicMock,
     ) -> None:
         """Test async markdown content retrieval."""
-        markdown_artifact = Artifact(
-            id="artifact-123",
-            file_name="test.md",
-            file_type="text/markdown",
-            version="1",
+        markdown_article = Article(
+            id="article-123",
+            title="Test Article",
+            description="Test description",
+            owned_by=[{"id": "user-123"}],
+            resource={
+                "artifacts": [
+                    {
+                        "id": "artifact-123",
+                        "display_id": "artifact-123",
+                        "file": {"name": "test.md", "size": 10, "type": "text/markdown"},
+                    }
+                ]
+            },
         )
 
         async def post_side_effect(endpoint, *args, **kwargs):
             if "articles.get" in endpoint:
                 response = MagicMock()
-                response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+                response.json.return_value = {"article": markdown_article.model_dump(mode="json")}
                 return response
             return MagicMock()
 
         mock_async_http_client.post.side_effect = post_side_effect
         mock_async_parent_client.artifacts.download.return_value = b"# Markdown"
-
-        # Create AsyncMock that returns the artifact
-        async_get_mock = AsyncMock(return_value=markdown_artifact)
-        mock_async_parent_client.artifacts.get = async_get_mock
 
         result = await async_articles_service.get_with_content("article-123")
 
@@ -1146,17 +1143,12 @@ class TestUpdateContentAsync:
         async_articles_service: AsyncArticlesService,
         mock_async_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_async_http_client: MagicMock,
     ) -> None:
         """Test async content update."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_async_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_async_parent_client.artifacts.upload.return_value = None
+        mock_async_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_async_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         async def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -1170,22 +1162,17 @@ class TestUpdateContentAsync:
         assert result.id == "article-123"
 
     @pytest.mark.asyncio
-    async def test_async_update_content_new_version(
+    async def test_async_update_content_new_artifact(
         self,
         async_articles_service: AsyncArticlesService,
         mock_async_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_async_http_client: MagicMock,
     ) -> None:
-        """Test async new version creation."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_async_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_async_parent_client.artifacts.upload.return_value = None
+        """Test async new artifact creation."""
+        mock_async_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_async_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         async def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -1196,7 +1183,7 @@ class TestUpdateContentAsync:
 
         await async_articles_service.update_content("article-123", "New")
 
-        mock_async_parent_client.artifacts.prepare_version.assert_called_once()
+        mock_async_parent_client.artifacts.prepare.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_async_update_content_format_change(
@@ -1204,17 +1191,12 @@ class TestUpdateContentAsync:
         async_articles_service: AsyncArticlesService,
         mock_async_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_async_http_client: MagicMock,
     ) -> None:
         """Test async content format change."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_async_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_async_parent_client.artifacts.upload.return_value = None
+        mock_async_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_async_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         async def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -1226,6 +1208,7 @@ class TestUpdateContentAsync:
         result = await async_articles_service.update_content(
             "article-123",
             "# Markdown",
+            content_format="text/markdown",
         )
 
         assert result is not None
@@ -1285,17 +1268,12 @@ class TestUpdateWithContentAsync:
         async_articles_service: AsyncArticlesService,
         mock_async_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_async_http_client: MagicMock,
     ) -> None:
         """Test async content-only update."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_async_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_async_parent_client.artifacts.upload.return_value = None
+        mock_async_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_async_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         async def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()
@@ -1317,17 +1295,12 @@ class TestUpdateWithContentAsync:
         async_articles_service: AsyncArticlesService,
         mock_async_parent_client: MagicMock,
         mock_article: Article,
+        mock_artifact_prepare_response: ArtifactPrepareResponse,
         mock_async_http_client: MagicMock,
     ) -> None:
         """Test async update of both metadata and content."""
-        version_response = ArtifactVersionsPrepareResponse(
-            id="artifact-123",
-            url="https://s3.example.com/upload",
-            form_data=[],
-        )
-
-        mock_async_parent_client.artifacts.prepare_version.return_value = version_response
-        mock_async_parent_client.artifacts.upload.return_value = None
+        mock_async_parent_client.artifacts.prepare.return_value = mock_artifact_prepare_response
+        mock_async_parent_client.artifacts.upload.return_value = "new-artifact-id"
 
         async def post_side_effect(endpoint, *args, **kwargs):
             response = MagicMock()

@@ -26,18 +26,74 @@ from devrev.models.articles import (
     ArticleWithContent,
 )
 from devrev.models.artifacts import (
-    ArtifactGetRequest,
     ArtifactPrepareRequest,
-    ArtifactVersionsPrepareRequest,
 )
+from devrev.models.base import SetTagWithValue
 from devrev.services.base import AsyncBaseService, BaseService
+from devrev.utils.content_converter import html_to_devrev_rt
 
 # Content format to file extension mapping
-_CONTENT_FORMAT_EXTENSIONS = {
+_CONTENT_FORMAT_EXTENSIONS: dict[str, str] = {
     "text/html": ".html",
     "text/markdown": ".md",
     "text/plain": ".txt",
+    "devrev/rt": "",  # DevRev rich text uses no extension (file name "Article")
 }
+
+
+def _extract_content_artifact_id(resource: dict[str, object]) -> str | None:
+    """Extract the content artifact ID from an article's resource dict.
+
+    The DevRev API uses two formats for storing artifact references:
+    - Request format: ``{"content_artifact": "<artifact_id>"}``
+    - Response format: ``{"artifacts": [{"id": "<artifact_id>", "file": {...}}]}``
+
+    This helper handles both formats for robustness.
+
+    Args:
+        resource: The article's ``resource`` dict
+
+    Returns:
+        The content artifact ID, or ``None`` if not found
+    """
+    # Try response format first (most common when reading from API)
+    artifacts = resource.get("artifacts")
+    if isinstance(artifacts, list) and len(artifacts) > 0:
+        first = artifacts[0]
+        if isinstance(first, dict):
+            art_id = first.get("id")
+            if isinstance(art_id, str):
+                return art_id
+
+    # Fallback to request format (e.g., freshly created but not yet re-fetched)
+    content_artifact = resource.get("content_artifact")
+    if isinstance(content_artifact, str):
+        return content_artifact
+
+    return None
+
+
+def _extract_content_format(resource: dict[str, object]) -> str:
+    """Extract the content format (MIME type) from an article's resource dict.
+
+    The format is stored in ``resource.artifacts[0].file.type`` in API responses.
+
+    Args:
+        resource: The article's ``resource`` dict
+
+    Returns:
+        The content format string, or ``"text/plain"`` if not found
+    """
+    artifacts = resource.get("artifacts")
+    if isinstance(artifacts, list) and len(artifacts) > 0:
+        first = artifacts[0]
+        if isinstance(first, dict):
+            file_info = first.get("file")
+            if isinstance(file_info, dict):
+                file_type = file_info.get("type")
+                if isinstance(file_type, str):
+                    return file_type
+    return "text/plain"
 
 
 class ArticlesService(BaseService):
@@ -138,6 +194,11 @@ class ArticlesService(BaseService):
         description: str | None = None,
         status: ArticleStatus | None = None,
         content_format: str = "text/plain",
+        applies_to_parts: builtins.list[str] | None = None,
+        scope: int | None = None,
+        tags: builtins.list[SetTagWithValue] | None = None,
+        parent: str | None = None,
+        article_type: str | None = None,
     ) -> Article:
         """Create an article with content in a single operation.
 
@@ -155,6 +216,11 @@ class ArticlesService(BaseService):
             description: Optional short metadata description (NOT the article content)
             status: Optional article status (draft, published, archived)
             content_format: Content MIME type (default: text/plain)
+            applies_to_parts: Optional list of part IDs to associate with
+            scope: Optional visibility scope (1=internal, 2=external)
+            tags: Optional tags (list of SetTagWithValue)
+            parent: Optional parent directory/collection DON ID
+            article_type: Optional article type ('article', 'page', 'content_block')
 
         Returns:
             Created article
@@ -167,7 +233,9 @@ class ArticlesService(BaseService):
             ...     title="User Guide",
             ...     content="<html>...</html>",
             ...     owned_by=["DEVU-123"],
-            ...     content_format="text/html"
+            ...     content_format="text/html",
+            ...     applies_to_parts=["don:core:...:feature/30"],
+            ...     scope=2,  # external
             ... )
         """
         if not self._parent_client:
@@ -178,20 +246,26 @@ class ArticlesService(BaseService):
 
         artifact_id: str | None = None
         try:
-            # Step 1: Prepare artifact
-            # Derive file extension from content format
-            ext = _CONTENT_FORMAT_EXTENSIONS.get(content_format, ".txt")
+            # Convert content to devrev/rt (ProseMirror JSON) so it renders
+            # inline in the DevRev UI.  If content_format is already devrev/rt
+            # (or the content is valid devrev/rt JSON), the converter is a no-op.
+            if content_format != "devrev/rt":
+                upload_content = html_to_devrev_rt(content)
+                upload_format = "devrev/rt"
+            else:
+                upload_content = content
+                upload_format = "devrev/rt"
 
+            # Step 1: Prepare artifact
             prepare_req = ArtifactPrepareRequest(
-                file_name=f"{title}{ext}",
-                file_type=content_format,
-                configuration_set="article_media",
+                file_name="Article",
+                file_type=upload_format,
             )
             prepare_resp = self._parent_client.artifacts.prepare(prepare_req)
             artifact_id = prepare_resp.id
 
             # Step 2: Upload content
-            self._parent_client.artifacts.upload(prepare_resp, content)
+            self._parent_client.artifacts.upload(prepare_resp, upload_content)
 
             # Step 3: Create article with artifact reference
             article_req = ArticlesCreateRequest(
@@ -200,6 +274,11 @@ class ArticlesService(BaseService):
                 status=status,
                 owned_by=owned_by,
                 resource={"content_artifact": artifact_id},
+                applies_to_parts=applies_to_parts,
+                scope=scope,
+                tags=tags,
+                parent=parent,
+                article_type=article_type,
             )
             return self.create(article_req)
 
@@ -250,14 +329,10 @@ class ArticlesService(BaseService):
         article = self.get(ArticlesGetRequest(id=id))
 
         # Step 2: Extract content artifact ID
-        # Articles store artifact reference in resource.content_artifact
-        if not article.resource:
+        if not article.resource or not isinstance(article.resource, dict):
             raise DevRevError(f"Article {id} has no resource configuration")
 
-        if not isinstance(article.resource, dict):
-            raise DevRevError(f"Article {id} resource is not a dict")
-
-        content_artifact_id = article.resource.get("content_artifact")
+        content_artifact_id = _extract_content_artifact_id(article.resource)
         if not content_artifact_id:
             raise DevRevError(
                 f"Article {id} has no content artifact reference in resource configuration"
@@ -268,14 +343,14 @@ class ArticlesService(BaseService):
             content_bytes = self._parent_client.artifacts.download(content_artifact_id)
             content = content_bytes.decode("utf-8")
 
-            # Get artifact metadata for format and version
-            artifact = self._parent_client.artifacts.get(ArtifactGetRequest(id=content_artifact_id))
+            # Get content format from resource metadata (more reliable than artifact.get)
+            content_format = _extract_content_format(article.resource)
 
             return ArticleWithContent(
                 article=article,
                 content=content,
-                content_format=artifact.file_type or "text/plain",
-                content_version=artifact.version,
+                content_format=content_format,
+                content_version=None,
             )
         except Exception as e:
             raise DevRevError(f"Failed to download content for article {id}: {e}") from e
@@ -284,21 +359,21 @@ class ArticlesService(BaseService):
         self,
         id: str,
         content: str,
+        *,
+        content_format: str | None = None,
     ) -> Article:
-        """Update article content by creating a new artifact version.
+        """Update article content by creating a new artifact and updating the article.
 
-        This is a high-level method that:
-        1. Gets current article to find artifact ID
-        2. Prepares new artifact version
-        3. Uploads new content
-        4. Article automatically references new version
-
-        Note: The content format is inherited from the original artifact
-        and cannot be changed when updating content.
+        This method:
+        1. Gets the current article to determine the content format
+        2. Prepares and uploads a new artifact with the updated content
+        3. Updates the article to reference the new artifact
 
         Args:
             id: Article ID
             content: New article body content
+            content_format: Optional content format override. If not provided,
+                the format is inherited from the current article's artifact.
 
         Returns:
             Updated article
@@ -319,29 +394,37 @@ class ArticlesService(BaseService):
                 "Ensure client is properly initialized."
             )
 
-        # Step 1: Get article to find current artifact ID
+        # Step 1: Get article to determine content format
         article = self.get(ArticlesGetRequest(id=id))
 
         if not article.resource or not isinstance(article.resource, dict):
             raise DevRevError(f"Article {id} has no resource configuration")
 
-        content_artifact_id = article.resource.get("content_artifact")
-        if not content_artifact_id:
-            raise DevRevError(
-                f"Article {id} has no content artifact reference in resource configuration"
-            )
+        # content_format is accepted for backward compatibility but all content
+        # is now converted to devrev/rt for inline rendering in the DevRev UI.
+        _ = content_format
+
+        upload_content = html_to_devrev_rt(content)
 
         try:
-            # Step 2: Prepare new version
-            version_req = ArtifactVersionsPrepareRequest(id=content_artifact_id)
-            version_resp = self._parent_client.artifacts.prepare_version(version_req)
+            # Step 2: Prepare a new artifact
+            prepare_req = ArtifactPrepareRequest(
+                file_name="Article",
+                file_type="devrev/rt",
+            )
+            prepare_resp = self._parent_client.artifacts.prepare(prepare_req)
 
             # Step 3: Upload new content
-            self._parent_client.artifacts.upload(version_resp, content)
+            self._parent_client.artifacts.upload(prepare_resp, upload_content)
 
-            # Article automatically references the new version
-            # Return the updated article
-            return self.get(ArticlesGetRequest(id=id))
+            # Step 4: Update article to reference the new artifact.
+            # The update endpoint uses ``artifacts`` with a ``set`` wrapper,
+            # *not* the ``resource`` dict (which is read-only on updates).
+            update_req = ArticlesUpdateRequest(
+                id=id,
+                artifacts={"set": [prepare_resp.id]},
+            )
+            return self.update(update_req)
 
         except Exception as e:
             raise DevRevError(f"Failed to update content for article {id}: {e}") from e
@@ -518,6 +601,11 @@ class AsyncArticlesService(AsyncBaseService):
         description: str | None = None,
         status: ArticleStatus | None = None,
         content_format: str = "text/plain",
+        applies_to_parts: builtins.list[str] | None = None,
+        scope: int | None = None,
+        tags: builtins.list[SetTagWithValue] | None = None,
+        parent: str | None = None,
+        article_type: str | None = None,
     ) -> Article:
         """Create an article with content in a single operation (async).
 
@@ -535,6 +623,11 @@ class AsyncArticlesService(AsyncBaseService):
             description: Optional short metadata description (NOT the article content)
             status: Optional article status (draft, published, archived)
             content_format: Content MIME type (default: text/plain)
+            applies_to_parts: Optional list of part IDs to associate with
+            scope: Optional visibility scope (1=internal, 2=external)
+            tags: Optional tags (list of SetTagWithValue)
+            parent: Optional parent directory/collection DON ID
+            article_type: Optional article type ('article', 'page', 'content_block')
 
         Returns:
             Created article
@@ -550,20 +643,25 @@ class AsyncArticlesService(AsyncBaseService):
 
         artifact_id: str | None = None
         try:
-            # Step 1: Prepare artifact
-            # Derive file extension from content format
-            ext = _CONTENT_FORMAT_EXTENSIONS.get(content_format, ".txt")
+            # Convert content to devrev/rt (ProseMirror JSON) so it renders
+            # inline in the DevRev UI.
+            if content_format != "devrev/rt":
+                upload_content = html_to_devrev_rt(content)
+                upload_format = "devrev/rt"
+            else:
+                upload_content = content
+                upload_format = "devrev/rt"
 
+            # Step 1: Prepare artifact
             prepare_req = ArtifactPrepareRequest(
-                file_name=f"{title}{ext}",
-                file_type=content_format,
-                configuration_set="article_media",
+                file_name="Article",
+                file_type=upload_format,
             )
             prepare_resp = await self._parent_client.artifacts.prepare(prepare_req)
             artifact_id = prepare_resp.id
 
             # Step 2: Upload content
-            await self._parent_client.artifacts.upload(prepare_resp, content)
+            await self._parent_client.artifacts.upload(prepare_resp, upload_content)
 
             # Step 3: Create article with artifact reference
             article_req = ArticlesCreateRequest(
@@ -572,6 +670,11 @@ class AsyncArticlesService(AsyncBaseService):
                 status=status,
                 owned_by=owned_by,
                 resource={"content_artifact": artifact_id},
+                applies_to_parts=applies_to_parts,
+                scope=scope,
+                tags=tags,
+                parent=parent,
+                article_type=article_type,
             )
             return await self.create(article_req)
 
@@ -620,7 +723,7 @@ class AsyncArticlesService(AsyncBaseService):
         if not article.resource or not isinstance(article.resource, dict):
             raise DevRevError(f"Article {id} has no resource configuration")
 
-        content_artifact_id = article.resource.get("content_artifact")
+        content_artifact_id = _extract_content_artifact_id(article.resource)
         if not content_artifact_id:
             raise DevRevError(
                 f"Article {id} has no content artifact reference in resource configuration"
@@ -631,18 +734,14 @@ class AsyncArticlesService(AsyncBaseService):
             content_bytes = await self._parent_client.artifacts.download(content_artifact_id)
             content = content_bytes.decode("utf-8")
 
-            # Get artifact metadata for format and version
-            from devrev.models.artifacts import ArtifactGetRequest
-
-            artifact = await self._parent_client.artifacts.get(
-                ArtifactGetRequest(id=content_artifact_id)
-            )
+            # Get content format from resource metadata (more reliable than artifact.get)
+            content_format = _extract_content_format(article.resource)
 
             return ArticleWithContent(
                 article=article,
                 content=content,
-                content_format=artifact.file_type or "text/plain",
-                content_version=artifact.version,
+                content_format=content_format,
+                content_version=None,
             )
         except Exception as e:
             raise DevRevError(f"Failed to download content for article {id}: {e}") from e
@@ -651,21 +750,21 @@ class AsyncArticlesService(AsyncBaseService):
         self,
         id: str,
         content: str,
+        *,
+        content_format: str | None = None,
     ) -> Article:
-        """Update article content by creating a new artifact version (async).
+        """Update article content by creating a new artifact and updating the article (async).
 
-        This is a high-level method that:
-        1. Gets current article to find artifact ID
-        2. Prepares new artifact version
-        3. Uploads new content
-        4. Article automatically references new version
-
-        Note: The content format is inherited from the original artifact
-        and cannot be changed when updating content.
+        This method:
+        1. Gets the current article to determine the content format
+        2. Prepares and uploads a new artifact with the updated content
+        3. Updates the article to reference the new artifact
 
         Args:
             id: Article ID
             content: New article body content
+            content_format: Optional content format override. If not provided,
+                the format is inherited from the current article's artifact.
 
         Returns:
             Updated article
@@ -680,29 +779,37 @@ class AsyncArticlesService(AsyncBaseService):
                 "Ensure client is properly initialized."
             )
 
-        # Step 1: Get article to find current artifact ID
+        # Step 1: Get article to determine content format
         article = await self.get(ArticlesGetRequest(id=id))
 
         if not article.resource or not isinstance(article.resource, dict):
             raise DevRevError(f"Article {id} has no resource configuration")
 
-        content_artifact_id = article.resource.get("content_artifact")
-        if not content_artifact_id:
-            raise DevRevError(
-                f"Article {id} has no content artifact reference in resource configuration"
-            )
+        # content_format is accepted for backward compatibility but all content
+        # is now converted to devrev/rt for inline rendering in the DevRev UI.
+        _ = content_format
+
+        upload_content = html_to_devrev_rt(content)
 
         try:
-            # Step 2: Prepare new version
-            version_req = ArtifactVersionsPrepareRequest(id=content_artifact_id)
-            version_resp = await self._parent_client.artifacts.prepare_version(version_req)
+            # Step 2: Prepare a new artifact
+            prepare_req = ArtifactPrepareRequest(
+                file_name="Article",
+                file_type="devrev/rt",
+            )
+            prepare_resp = await self._parent_client.artifacts.prepare(prepare_req)
 
             # Step 3: Upload new content
-            await self._parent_client.artifacts.upload(version_resp, content)
+            await self._parent_client.artifacts.upload(prepare_resp, upload_content)
 
-            # Article automatically references the new version
-            # Return the updated article
-            return await self.get(ArticlesGetRequest(id=id))
+            # Step 4: Update article to reference the new artifact.
+            # The update endpoint uses ``artifacts`` with a ``set`` wrapper,
+            # *not* the ``resource`` dict (which is read-only on updates).
+            update_req = ArticlesUpdateRequest(
+                id=id,
+                artifacts={"set": [prepare_resp.id]},
+            )
+            return await self.update(update_req)
 
         except Exception as e:
             raise DevRevError(f"Failed to update content for article {id}: {e}") from e
