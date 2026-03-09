@@ -56,6 +56,7 @@ Tools are the primary way AI assistants interact with DevRev. Each tool maps to 
 - **Unified Content Management**: Create and update articles with automatic artifact handling
 - **Optional Content Loading**: Use `include_content=true` in `get` to fetch article body
 - **Clear Parameters**: `content` for article body, `description` for metadata summary
+- **Part Association**: Use `applies_to_parts` to natively associate articles with products, capabilities, features, or enhancements
 
 ### Conversations
 

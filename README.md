@@ -442,6 +442,7 @@ article = client.articles.create_with_content(
     owned_by=["don:identity:dvrv-us-1:devo/1:devu/1"],
     description="Quick start guide for new users",  # Optional metadata
     status=ArticleStatus.PUBLISHED,
+    applies_to_parts=["don:core:dvrv-us-1:devo/1:part/123"],  # Optional: associate with parts
 )
 
 # Get article with content
@@ -461,6 +462,12 @@ client.articles.update_with_content(
     title="Updated Getting Started Guide",
     content="<h1>New Content</h1>",
     status=ArticleStatus.ARCHIVED,
+)
+
+# Update with part associations
+client.articles.update_with_content(
+    id=article.id,
+    applies_to_parts=["don:core:dvrv-us-1:devo/1:part/123", "don:core:dvrv-us-1:devo/1:part/456"],
 )
 
 # List published articles (metadata only)

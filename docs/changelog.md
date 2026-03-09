@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Article Part Association** (#171) — Added `applies_to_parts` parameter to MCP `articles_create` and `articles_update` tools, and SDK `update_with_content` method for native article-to-part association
+
 ## [2.8.1] - 2026-03-06
 
 ### Fixed
