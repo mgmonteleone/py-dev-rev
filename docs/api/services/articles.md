@@ -93,6 +93,7 @@ article = client.articles.create_with_content(
     description="Short summary for search/listing",  # Optional metadata
     status=ArticleStatus.PUBLISHED,  # Optional: draft, published, archived
     content_format="text/html",  # Optional: default is text/html
+    applies_to_parts=["don:core:dvrv-us-1:devo/1:part/123"],  # Optional: associate with parts
 )
 print(f"Created article with content: {article.id}")
 ```
@@ -180,6 +181,12 @@ updated_article = client.articles.update_with_content(
 updated_article = client.articles.update_with_content(
     id="don:core:dvrv-us-1:devo/1:article/123",
     content="<h1>New Content</h1>",
+)
+
+# Update with part associations
+updated_article = client.articles.update_with_content(
+    id="don:core:dvrv-us-1:devo/1:article/123",
+    applies_to_parts=["don:core:dvrv-us-1:devo/1:part/123", "don:core:dvrv-us-1:devo/1:part/456"],
 )
 ```
 

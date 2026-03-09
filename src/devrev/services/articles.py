@@ -21,6 +21,7 @@ from devrev.models.articles import (
     ArticlesListResponse,
     ArticleStatus,
     ArticlesUpdateRequest,
+    ArticlesUpdateRequestAppliesToParts,
     ArticlesUpdateResponse,
     ArticleType,
     ArticleWithContent,
@@ -437,6 +438,7 @@ class ArticlesService(BaseService):
         content: str | None = None,
         description: str | None = None,
         status: ArticleStatus | None = None,
+        applies_to_parts: builtins.list[str] | None = None,
     ) -> Article:
         """Update article metadata and/or content.
 
@@ -451,6 +453,7 @@ class ArticlesService(BaseService):
             content: Optional new article body content
             description: Optional new metadata description
             status: Optional new status
+            applies_to_parts: Optional list of part IDs to associate with
 
         Returns:
             Updated article
@@ -478,6 +481,12 @@ class ArticlesService(BaseService):
             ...     title="New Title",
             ...     content="<html>New content...</html>"
             ... )
+            >>>
+            >>> # Update applies_to_parts
+            >>> article = client.articles.update_with_content(
+            ...     "ART-123",
+            ...     applies_to_parts=["don:core:...:capability/6"]
+            ... )
         """
         if not self._parent_client:
             raise DevRevError(
@@ -489,13 +498,25 @@ class ArticlesService(BaseService):
         if content is not None:
             self.update_content(id, content)
 
+        # Build applies_to_parts wrapper if provided
+        applies_to_parts_req = None
+        if applies_to_parts is not None:
+            applies_to_parts_req = ArticlesUpdateRequestAppliesToParts(set=applies_to_parts)
+
         # Update metadata if any metadata fields provided
-        if title is not None or description is not None or status is not None:
+        has_metadata = (
+            title is not None
+            or description is not None
+            or status is not None
+            or applies_to_parts is not None
+        )
+        if has_metadata:
             update_req = ArticlesUpdateRequest(
                 id=id,
                 title=title,
                 description=description,
                 status=status,
+                applies_to_parts=applies_to_parts_req,
             )
             return self.update(update_req)
 
@@ -822,6 +843,7 @@ class AsyncArticlesService(AsyncBaseService):
         content: str | None = None,
         description: str | None = None,
         status: ArticleStatus | None = None,
+        applies_to_parts: builtins.list[str] | None = None,
     ) -> Article:
         """Update article metadata and/or content (async).
 
@@ -836,6 +858,7 @@ class AsyncArticlesService(AsyncBaseService):
             content: Optional new article body content
             description: Optional new metadata description
             status: Optional new status
+            applies_to_parts: Optional list of part IDs to associate with
 
         Returns:
             Updated article
@@ -853,13 +876,25 @@ class AsyncArticlesService(AsyncBaseService):
         if content is not None:
             await self.update_content(id, content)
 
+        # Build applies_to_parts wrapper if provided
+        applies_to_parts_req = None
+        if applies_to_parts is not None:
+            applies_to_parts_req = ArticlesUpdateRequestAppliesToParts(set=applies_to_parts)
+
         # Update metadata if any metadata fields provided
-        if title is not None or description is not None or status is not None:
+        has_metadata = (
+            title is not None
+            or description is not None
+            or status is not None
+            or applies_to_parts is not None
+        )
+        if has_metadata:
             update_req = ArticlesUpdateRequest(
                 id=id,
                 title=title,
                 description=description,
                 status=status,
+                applies_to_parts=applies_to_parts_req,
             )
             return await self.update(update_req)
 

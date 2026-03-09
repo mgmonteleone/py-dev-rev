@@ -102,6 +102,7 @@ if _config.enable_destructive_tools:
         description: str | None = None,
         status: str | None = None,
         content_format: str = "text/html",
+        applies_to_parts: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a new article with content.
 
@@ -113,6 +114,8 @@ if _config.enable_destructive_tools:
             description: Optional short metadata description (NOT the article body).
             status: Optional article status (draft, published, archived).
             content_format: Content MIME type (default: text/html).
+            applies_to_parts: Optional list of part IDs (products, capabilities,
+                features, enhancements) to associate the article with.
 
         Returns:
             Dictionary containing the created article details.
@@ -139,6 +142,7 @@ if _config.enable_destructive_tools:
                 description=description,
                 status=article_status,
                 content_format=content_format,
+                applies_to_parts=applies_to_parts,
             )
             return serialize_model(article)
         except DevRevError as e:
@@ -152,6 +156,7 @@ if _config.enable_destructive_tools:
         content: str | None = None,
         description: str | None = None,
         status: str | None = None,
+        applies_to_parts: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update an existing article in DevRev.
 
@@ -162,6 +167,9 @@ if _config.enable_destructive_tools:
             content: Optional new article body content.
             description: Optional new metadata description (NOT the article body).
             status: Optional new status (draft, published, archived).
+            applies_to_parts: Optional list of part IDs (products, capabilities,
+                features, enhancements) to associate the article with.
+                Pass an empty list to remove all associations.
 
         Returns:
             Dictionary containing the updated article details.
@@ -187,6 +195,7 @@ if _config.enable_destructive_tools:
                 content=content,
                 description=description,
                 status=article_status,
+                applies_to_parts=applies_to_parts,
             )
             return serialize_model(article)
         except DevRevError as e:
