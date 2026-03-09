@@ -41,7 +41,8 @@ async def devrev_articles_list(
         limit: Maximum number of articles to return.
 
     Returns:
-        Dictionary containing count and list of articles.
+        Dictionary containing count, list of articles, and optional next_cursor
+        for pagination.
 
     Raises:
         RuntimeError: If the DevRev API call fails.

@@ -88,6 +88,10 @@ class TestArticlesListTool:
         assert result["count"] == 1
         assert result["next_cursor"] == "cursor-123"
         mock_client.articles.list.assert_called_once()
+        call_args = mock_client.articles.list.call_args
+        request = call_args[0][0]
+        assert request.cursor == "prev-cursor"
+        assert request.limit == 10
 
     @pytest.mark.asyncio
     async def test_list_error(self, mock_ctx, mock_client):
