@@ -110,7 +110,9 @@ def mock_client():
     client.articles.list = AsyncMock()
     client.articles.get = AsyncMock()
     client.articles.create = AsyncMock()
+    client.articles.create_with_content = AsyncMock()
     client.articles.update = AsyncMock()
+    client.articles.update_with_content = AsyncMock()
     client.articles.delete = AsyncMock()
     client.articles.count = AsyncMock()
 

@@ -776,6 +776,86 @@ class TestUpdateWithContent:
         with pytest.raises(DevRevError, match="update_with_content requires parent client"):
             articles_service_no_parent.update_with_content("article-123", title="New")
 
+    def test_update_with_content_applies_to_parts_only(
+        self,
+        articles_service: ArticlesService,
+        mock_article: Article,
+        mock_http_client: MagicMock,
+    ) -> None:
+        """Test updating only applies_to_parts."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_http_client.post.return_value = mock_response
+
+        result = articles_service.update_with_content(
+            "article-123",
+            applies_to_parts=["don:core:dvrv-us-1:devo/1:product/1"],
+        )
+
+        assert result.id == "article-123"
+        # Verify update was called with applies_to_parts wrapped in set
+        post_call = mock_http_client.post.call_args
+        assert "articles.update" in post_call[0][0]
+        data = post_call[1]["data"]
+        assert "applies_to_parts" in data
+        assert data["applies_to_parts"]["set"] == ["don:core:dvrv-us-1:devo/1:product/1"]
+
+    def test_update_with_content_applies_to_parts_with_metadata(
+        self,
+        articles_service: ArticlesService,
+        mock_article: Article,
+        mock_http_client: MagicMock,
+    ) -> None:
+        """Test updating applies_to_parts along with other metadata."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_http_client.post.return_value = mock_response
+
+        result = articles_service.update_with_content(
+            "article-123",
+            title="New Title",
+            description="New description",
+            applies_to_parts=[
+                "don:core:dvrv-us-1:devo/1:capability/2",
+                "don:core:dvrv-us-1:devo/1:feature/3",
+            ],
+        )
+
+        assert result.id == "article-123"
+        # Verify all metadata was passed including applies_to_parts
+        post_call = mock_http_client.post.call_args
+        data = post_call[1]["data"]
+        assert data["title"] == "New Title"
+        assert data["description"] == "New description"
+        assert "applies_to_parts" in data
+        assert data["applies_to_parts"]["set"] == [
+            "don:core:dvrv-us-1:devo/1:capability/2",
+            "don:core:dvrv-us-1:devo/1:feature/3",
+        ]
+
+    def test_update_with_content_applies_to_parts_empty_list(
+        self,
+        articles_service: ArticlesService,
+        mock_article: Article,
+        mock_http_client: MagicMock,
+    ) -> None:
+        """Test updating with empty applies_to_parts list to remove all associations."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_http_client.post.return_value = mock_response
+
+        result = articles_service.update_with_content(
+            "article-123",
+            applies_to_parts=[],
+        )
+
+        assert result.id == "article-123"
+        # Verify empty list is passed to clear associations
+        post_call = mock_http_client.post.call_args
+        data = post_call[1]["data"]
+        assert "applies_to_parts" in data
+        assert data["applies_to_parts"]["set"] == []
+
 
 # ============================================================================
 # Async Tests
@@ -1363,3 +1443,86 @@ class TestUpdateWithContentAsync:
                 "article-123",
                 title="New",
             )
+
+    @pytest.mark.asyncio
+    async def test_async_update_with_content_applies_to_parts_only(
+        self,
+        async_articles_service: AsyncArticlesService,
+        mock_article: Article,
+        mock_async_http_client: MagicMock,
+    ) -> None:
+        """Test async updating only applies_to_parts."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_async_http_client.post.return_value = mock_response
+
+        result = await async_articles_service.update_with_content(
+            "article-123",
+            applies_to_parts=["don:core:dvrv-us-1:devo/1:product/1"],
+        )
+
+        assert result.id == "article-123"
+        # Verify update was called with applies_to_parts wrapped in set
+        post_call = mock_async_http_client.post.call_args
+        assert "articles.update" in post_call[0][0]
+        data = post_call[1]["data"]
+        assert "applies_to_parts" in data
+        assert data["applies_to_parts"]["set"] == ["don:core:dvrv-us-1:devo/1:product/1"]
+
+    @pytest.mark.asyncio
+    async def test_async_update_with_content_applies_to_parts_with_metadata(
+        self,
+        async_articles_service: AsyncArticlesService,
+        mock_article: Article,
+        mock_async_http_client: MagicMock,
+    ) -> None:
+        """Test async updating applies_to_parts along with other metadata."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_async_http_client.post.return_value = mock_response
+
+        result = await async_articles_service.update_with_content(
+            "article-123",
+            title="New Title",
+            description="New description",
+            applies_to_parts=[
+                "don:core:dvrv-us-1:devo/1:capability/2",
+                "don:core:dvrv-us-1:devo/1:feature/3",
+            ],
+        )
+
+        assert result.id == "article-123"
+        # Verify all metadata was passed including applies_to_parts
+        post_call = mock_async_http_client.post.call_args
+        data = post_call[1]["data"]
+        assert data["title"] == "New Title"
+        assert data["description"] == "New description"
+        assert "applies_to_parts" in data
+        assert data["applies_to_parts"]["set"] == [
+            "don:core:dvrv-us-1:devo/1:capability/2",
+            "don:core:dvrv-us-1:devo/1:feature/3",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_async_update_with_content_applies_to_parts_empty_list(
+        self,
+        async_articles_service: AsyncArticlesService,
+        mock_article: Article,
+        mock_async_http_client: MagicMock,
+    ) -> None:
+        """Test async updating with empty applies_to_parts list to remove all associations."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_async_http_client.post.return_value = mock_response
+
+        result = await async_articles_service.update_with_content(
+            "article-123",
+            applies_to_parts=[],
+        )
+
+        assert result.id == "article-123"
+        # Verify empty list is passed to clear associations
+        post_call = mock_async_http_client.post.call_args
+        data = post_call[1]["data"]
+        assert "applies_to_parts" in data
+        assert data["applies_to_parts"]["set"] == []

@@ -154,6 +154,34 @@ class TestArticlesCreateTool:
                 owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
             )
 
+    @pytest.mark.asyncio
+    async def test_create_with_applies_to_parts(self, mock_ctx, mock_client):
+        """Test creating an article with applies_to_parts."""
+        mock_article = _make_mock_article(
+            title="Article with Parts",
+            description="Content with parts",
+        )
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        result = await devrev_articles_create(
+            mock_ctx,
+            title="Article with Parts",
+            content="Content with parts",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            applies_to_parts=[
+                "don:core:dvrv-us-1:devo/1:product/1",
+                "don:core:dvrv-us-1:devo/1:capability/2",
+            ],
+        )
+
+        assert result["title"] == "Article with Parts"
+        # Verify applies_to_parts was passed to SDK
+        call_args = mock_client.articles.create_with_content.call_args
+        assert call_args[1]["applies_to_parts"] == [
+            "don:core:dvrv-us-1:devo/1:product/1",
+            "don:core:dvrv-us-1:devo/1:capability/2",
+        ]
+
 
 class TestArticlesUpdateTool:
     """Tests for devrev_articles_update tool."""
@@ -185,6 +213,28 @@ class TestArticlesUpdateTool:
 
         with pytest.raises(RuntimeError, match="Article not found"):
             await devrev_articles_update(mock_ctx, id="nonexistent", title="New")
+
+    @pytest.mark.asyncio
+    async def test_update_with_applies_to_parts(self, mock_ctx, mock_client):
+        """Test updating an article with applies_to_parts."""
+        mock_article = _make_mock_article(
+            id="article-1",
+            title="Updated Article",
+            status="published",
+        )
+        mock_client.articles.update_with_content.return_value = mock_article
+
+        result = await devrev_articles_update(
+            mock_ctx,
+            id="article-1",
+            title="Updated Article",
+            applies_to_parts=["don:core:dvrv-us-1:devo/1:feature/3"],
+        )
+
+        assert result["title"] == "Updated Article"
+        # Verify applies_to_parts was passed to SDK
+        call_args = mock_client.articles.update_with_content.call_args
+        assert call_args[1]["applies_to_parts"] == ["don:core:dvrv-us-1:devo/1:feature/3"]
 
 
 class TestArticlesDeleteTool:
