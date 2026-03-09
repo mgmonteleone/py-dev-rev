@@ -57,6 +57,8 @@ Tools are the primary way AI assistants interact with DevRev. Each tool maps to 
 - **Optional Content Loading**: Use `include_content=true` in `get` to fetch article body
 - **Clear Parameters**: `content` for article body, `description` for metadata summary
 - **Part Association**: Use `applies_to_parts` to natively associate articles with products, capabilities, features, or enhancements
+- **Visibility Control**: Use `scope` (1=internal, 2=external) on create or `access_level` (internal, external, private, public) on update
+- **Tagging**: Apply tags using the `tags` parameter (list of tag IDs)
 
 ### Conversations
 

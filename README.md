@@ -470,6 +470,16 @@ client.articles.update_with_content(
     applies_to_parts=["don:core:dvrv-us-1:devo/1:part/123", "don:core:dvrv-us-1:devo/1:part/456"],
 )
 
+# Update access level and tags
+from devrev.models.articles import ArticleAccessLevel
+from devrev.models.base import SetTagWithValue
+
+client.articles.update_with_content(
+    id=article.id,
+    access_level=ArticleAccessLevel.INTERNAL,  # internal, external, private, public
+    tags=[SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/123")],
+)
+
 # List published articles (metadata only)
 published = client.articles.list(limit=20)
 for article in published:

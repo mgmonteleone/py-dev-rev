@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Article Scope and Tags** (#173) — Added visibility and tagging parameters to MCP article tools:
+  - `devrev_articles_create`: Added `scope` (1=internal, 2=external) and `tags` (list of tag IDs) parameters
+  - `devrev_articles_update`: Added `access_level` (internal, external, private, public) and `tags` parameters
+  - SDK `update_with_content`: Added `access_level` and `tags` parameters for both sync and async methods
+
 ## [2.9.0] - 2026-03-09
 
 ### Added

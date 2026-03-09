@@ -182,6 +182,53 @@ class TestArticlesCreateTool:
             "don:core:dvrv-us-1:devo/1:capability/2",
         ]
 
+    @pytest.mark.asyncio
+    async def test_create_with_scope(self, mock_ctx, mock_client):
+        """Test creating an article with scope (internal)."""
+        mock_article = _make_mock_article(
+            title="Internal Article",
+            description="Internal content",
+        )
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        result = await devrev_articles_create(
+            mock_ctx,
+            title="Internal Article",
+            content="Internal content",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            scope=1,  # 1 = internal
+        )
+
+        assert result["title"] == "Internal Article"
+        # Verify scope was passed to SDK
+        call_args = mock_client.articles.create_with_content.call_args
+        assert call_args[1]["scope"] == 1
+
+    @pytest.mark.asyncio
+    async def test_create_with_tags(self, mock_ctx, mock_client):
+        """Test creating an article with tags."""
+        mock_article = _make_mock_article(
+            title="Tagged Article",
+            description="Content with tags",
+        )
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        result = await devrev_articles_create(
+            mock_ctx,
+            title="Tagged Article",
+            content="Content with tags",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            tags=["don:core:dvrv-us-1:devo/1:tag/1", "don:core:dvrv-us-1:devo/1:tag/2"],
+        )
+
+        assert result["title"] == "Tagged Article"
+        # Verify tags were converted to SetTagWithValue and passed to SDK
+        call_args = mock_client.articles.create_with_content.call_args
+        tags_arg = call_args[1]["tags"]
+        assert len(tags_arg) == 2
+        assert tags_arg[0].id == "don:core:dvrv-us-1:devo/1:tag/1"
+        assert tags_arg[1].id == "don:core:dvrv-us-1:devo/1:tag/2"
+
 
 class TestArticlesUpdateTool:
     """Tests for devrev_articles_update tool."""
@@ -235,6 +282,62 @@ class TestArticlesUpdateTool:
         # Verify applies_to_parts was passed to SDK
         call_args = mock_client.articles.update_with_content.call_args
         assert call_args[1]["applies_to_parts"] == ["don:core:dvrv-us-1:devo/1:feature/3"]
+
+    @pytest.mark.asyncio
+    async def test_update_with_access_level(self, mock_ctx, mock_client):
+        """Test updating an article with access_level."""
+        from devrev.models.articles import ArticleAccessLevel
+
+        mock_article = _make_mock_article(
+            id="article-1",
+            title="Internal Article",
+            status="published",
+        )
+        mock_client.articles.update_with_content.return_value = mock_article
+
+        result = await devrev_articles_update(
+            mock_ctx,
+            id="article-1",
+            access_level="internal",
+        )
+
+        assert result["title"] == "Internal Article"
+        # Verify access_level was converted to enum and passed to SDK
+        call_args = mock_client.articles.update_with_content.call_args
+        assert call_args[1]["access_level"] == ArticleAccessLevel.INTERNAL
+
+    @pytest.mark.asyncio
+    async def test_update_with_tags(self, mock_ctx, mock_client):
+        """Test updating an article with tags."""
+        mock_article = _make_mock_article(
+            id="article-1",
+            title="Tagged Article",
+            status="published",
+        )
+        mock_client.articles.update_with_content.return_value = mock_article
+
+        result = await devrev_articles_update(
+            mock_ctx,
+            id="article-1",
+            tags=["don:core:dvrv-us-1:devo/1:tag/1"],
+        )
+
+        assert result["title"] == "Tagged Article"
+        # Verify tags were converted to SetTagWithValue and passed to SDK
+        call_args = mock_client.articles.update_with_content.call_args
+        tags_arg = call_args[1]["tags"]
+        assert len(tags_arg) == 1
+        assert tags_arg[0].id == "don:core:dvrv-us-1:devo/1:tag/1"
+
+    @pytest.mark.asyncio
+    async def test_update_with_invalid_access_level(self, mock_ctx, mock_client):
+        """Test updating an article with invalid access_level raises error."""
+        with pytest.raises(RuntimeError, match="Invalid access level"):
+            await devrev_articles_update(
+                mock_ctx,
+                id="article-1",
+                access_level="invalid_level",
+            )
 
 
 class TestArticlesDeleteTool:
