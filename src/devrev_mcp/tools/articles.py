@@ -142,7 +142,9 @@ if _config.enable_destructive_tools:
                     ) from e
 
             # Convert tag IDs to SetTagWithValue objects
-            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
+            tags_list = (
+                [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
+            )
 
             article = await app.get_client().articles.create_with_content(
                 title=title,
@@ -219,7 +221,9 @@ if _config.enable_destructive_tools:
                     ) from e
 
             # Convert tag IDs to SetTagWithValue objects
-            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
+            tags_list = (
+                [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
+            )
 
             article = await app.get_client().articles.update_with_content(
                 id=id,
