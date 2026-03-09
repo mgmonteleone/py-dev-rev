@@ -12,11 +12,13 @@ from mcp.server.fastmcp import Context
 
 from devrev.exceptions import DevRevError
 from devrev.models.articles import (
+    ArticleAccessLevel,
     ArticlesDeleteRequest,
     ArticlesGetRequest,
     ArticlesListRequest,
     ArticleStatus,
 )
+from devrev.models.base import SetTagWithValue
 from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
@@ -103,6 +105,8 @@ if _config.enable_destructive_tools:
         status: str | None = None,
         content_format: str = "text/html",
         applies_to_parts: list[str] | None = None,
+        scope: int | None = None,
+        tags: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a new article with content.
 
@@ -116,6 +120,8 @@ if _config.enable_destructive_tools:
             content_format: Content MIME type (default: text/html).
             applies_to_parts: Optional list of part IDs (products, capabilities,
                 features, enhancements) to associate the article with.
+            scope: Optional visibility scope (1=internal, 2=external).
+            tags: Optional list of tag IDs to apply to the article.
 
         Returns:
             Dictionary containing the created article details.
@@ -135,6 +141,9 @@ if _config.enable_destructive_tools:
                         f"Valid statuses: {', '.join(s.name for s in ArticleStatus)}"
                     ) from e
 
+            # Convert tag IDs to SetTagWithValue objects
+            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
+
             article = await app.get_client().articles.create_with_content(
                 title=title,
                 content=content,
@@ -143,6 +152,8 @@ if _config.enable_destructive_tools:
                 status=article_status,
                 content_format=content_format,
                 applies_to_parts=applies_to_parts,
+                scope=scope,
+                tags=tags_list,
             )
             return serialize_model(article)
         except DevRevError as e:
@@ -157,6 +168,8 @@ if _config.enable_destructive_tools:
         description: str | None = None,
         status: str | None = None,
         applies_to_parts: list[str] | None = None,
+        access_level: str | None = None,
+        tags: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update an existing article in DevRev.
 
@@ -170,6 +183,11 @@ if _config.enable_destructive_tools:
             applies_to_parts: Optional list of part IDs (products, capabilities,
                 features, enhancements) to associate the article with.
                 Pass an empty list to remove all associations.
+            access_level: Optional access level (internal, external, private, public).
+                Note: For updates, use ``access_level`` (string enum). For creation,
+                use the ``scope`` parameter (integer: 1=internal, 2=external).
+            tags: Optional list of tag IDs to apply to the article.
+                Pass an empty list to remove all tags.
 
         Returns:
             Dictionary containing the updated article details.
@@ -189,6 +207,20 @@ if _config.enable_destructive_tools:
                         f"Valid statuses: {', '.join(s.name for s in ArticleStatus)}"
                     ) from e
 
+            # Convert access_level string to ArticleAccessLevel enum
+            article_access_level = None
+            if access_level:
+                try:
+                    article_access_level = ArticleAccessLevel[access_level.upper()]
+                except KeyError as e:
+                    raise RuntimeError(
+                        f"Invalid access level: {e.args[0]}. "
+                        f"Valid levels: {', '.join(a.name for a in ArticleAccessLevel)}"
+                    ) from e
+
+            # Convert tag IDs to SetTagWithValue objects
+            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
+
             article = await app.get_client().articles.update_with_content(
                 id=id,
                 title=title,
@@ -196,6 +228,8 @@ if _config.enable_destructive_tools:
                 description=description,
                 status=article_status,
                 applies_to_parts=applies_to_parts,
+                access_level=article_access_level,
+                tags=tags_list,
             )
             return serialize_model(article)
         except DevRevError as e:

@@ -856,6 +856,87 @@ class TestUpdateWithContent:
         assert "applies_to_parts" in data
         assert data["applies_to_parts"]["set"] == []
 
+    def test_update_with_content_access_level_only(
+        self,
+        articles_service: ArticlesService,
+        mock_article: Article,
+        mock_http_client: MagicMock,
+    ) -> None:
+        """Test updating only access_level."""
+        from devrev.models.articles import ArticleAccessLevel
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_http_client.post.return_value = mock_response
+
+        result = articles_service.update_with_content(
+            "article-123",
+            access_level=ArticleAccessLevel.INTERNAL,
+        )
+
+        assert result.id == "article-123"
+        # Verify update was called with access_level
+        post_call = mock_http_client.post.call_args
+        assert "articles.update" in post_call[0][0]
+        data = post_call[1]["data"]
+        assert data["access_level"] == "internal"
+
+    def test_update_with_content_tags_only(
+        self,
+        articles_service: ArticlesService,
+        mock_article: Article,
+        mock_http_client: MagicMock,
+    ) -> None:
+        """Test updating only tags."""
+        from devrev.models.base import SetTagWithValue
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_http_client.post.return_value = mock_response
+
+        result = articles_service.update_with_content(
+            "article-123",
+            tags=[SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/1")],
+        )
+
+        assert result.id == "article-123"
+        # Verify update was called with tags wrapped in set
+        post_call = mock_http_client.post.call_args
+        assert "articles.update" in post_call[0][0]
+        data = post_call[1]["data"]
+        assert "tags" in data
+        assert data["tags"]["set"] == [{"id": "don:core:dvrv-us-1:devo/1:tag/1"}]
+
+    def test_update_with_content_access_level_and_tags(
+        self,
+        articles_service: ArticlesService,
+        mock_article: Article,
+        mock_http_client: MagicMock,
+    ) -> None:
+        """Test updating access_level and tags together."""
+        from devrev.models.articles import ArticleAccessLevel
+        from devrev.models.base import SetTagWithValue
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_http_client.post.return_value = mock_response
+
+        result = articles_service.update_with_content(
+            "article-123",
+            access_level=ArticleAccessLevel.EXTERNAL,
+            tags=[
+                SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/1"),
+                SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/2"),
+            ],
+        )
+
+        assert result.id == "article-123"
+        post_call = mock_http_client.post.call_args
+        data = post_call[1]["data"]
+        assert data["access_level"] == "external"
+        assert "tags" in data
+        assert len(data["tags"]["set"]) == 2
+
 
 # ============================================================================
 # Async Tests
@@ -1526,3 +1607,85 @@ class TestUpdateWithContentAsync:
         data = post_call[1]["data"]
         assert "applies_to_parts" in data
         assert data["applies_to_parts"]["set"] == []
+
+    @pytest.mark.asyncio
+    async def test_async_update_with_content_access_level_only(
+        self,
+        async_articles_service: AsyncArticlesService,
+        mock_article: Article,
+        mock_async_http_client: MagicMock,
+    ) -> None:
+        """Test async updating only access_level."""
+        from devrev.models.articles import ArticleAccessLevel
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_async_http_client.post.return_value = mock_response
+
+        result = await async_articles_service.update_with_content(
+            "article-123",
+            access_level=ArticleAccessLevel.INTERNAL,
+        )
+
+        assert result.id == "article-123"
+        post_call = mock_async_http_client.post.call_args
+        assert "articles.update" in post_call[0][0]
+        data = post_call[1]["data"]
+        assert data["access_level"] == "internal"
+
+    @pytest.mark.asyncio
+    async def test_async_update_with_content_tags_only(
+        self,
+        async_articles_service: AsyncArticlesService,
+        mock_article: Article,
+        mock_async_http_client: MagicMock,
+    ) -> None:
+        """Test async updating only tags."""
+        from devrev.models.base import SetTagWithValue
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_async_http_client.post.return_value = mock_response
+
+        result = await async_articles_service.update_with_content(
+            "article-123",
+            tags=[SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/1")],
+        )
+
+        assert result.id == "article-123"
+        post_call = mock_async_http_client.post.call_args
+        assert "articles.update" in post_call[0][0]
+        data = post_call[1]["data"]
+        assert "tags" in data
+        assert data["tags"]["set"] == [{"id": "don:core:dvrv-us-1:devo/1:tag/1"}]
+
+    @pytest.mark.asyncio
+    async def test_async_update_with_content_access_level_and_tags(
+        self,
+        async_articles_service: AsyncArticlesService,
+        mock_article: Article,
+        mock_async_http_client: MagicMock,
+    ) -> None:
+        """Test async updating access_level and tags together."""
+        from devrev.models.articles import ArticleAccessLevel
+        from devrev.models.base import SetTagWithValue
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"article": mock_article.model_dump(mode="json")}
+        mock_async_http_client.post.return_value = mock_response
+
+        result = await async_articles_service.update_with_content(
+            "article-123",
+            access_level=ArticleAccessLevel.EXTERNAL,
+            tags=[
+                SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/1"),
+                SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/2"),
+            ],
+        )
+
+        assert result.id == "article-123"
+        post_call = mock_async_http_client.post.call_args
+        data = post_call[1]["data"]
+        assert data["access_level"] == "external"
+        assert "tags" in data
+        assert len(data["tags"]["set"]) == 2

@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from devrev.exceptions import DevRevError
 from devrev.models.articles import (
     Article,
+    ArticleAccessLevel,
     ArticlesCountRequest,
     ArticlesCountResponse,
     ArticlesCreateRequest,
@@ -22,6 +23,7 @@ from devrev.models.articles import (
     ArticleStatus,
     ArticlesUpdateRequest,
     ArticlesUpdateRequestAppliesToParts,
+    ArticlesUpdateRequestTags,
     ArticlesUpdateResponse,
     ArticleType,
     ArticleWithContent,
@@ -439,6 +441,8 @@ class ArticlesService(BaseService):
         description: str | None = None,
         status: ArticleStatus | None = None,
         applies_to_parts: builtins.list[str] | None = None,
+        access_level: ArticleAccessLevel | None = None,
+        tags: builtins.list[SetTagWithValue] | None = None,
     ) -> Article:
         """Update article metadata and/or content.
 
@@ -454,6 +458,8 @@ class ArticlesService(BaseService):
             description: Optional new metadata description
             status: Optional new status
             applies_to_parts: Optional list of part IDs to associate with
+            access_level: Optional access level (internal, external, private, public)
+            tags: Optional list of tags to apply (list of SetTagWithValue objects)
 
         Returns:
             Updated article
@@ -487,6 +493,12 @@ class ArticlesService(BaseService):
             ...     "ART-123",
             ...     applies_to_parts=["don:core:...:capability/6"]
             ... )
+            >>>
+            >>> # Update access level to internal
+            >>> article = client.articles.update_with_content(
+            ...     "ART-123",
+            ...     access_level=ArticleAccessLevel.INTERNAL
+            ... )
         """
         if not self._parent_client:
             raise DevRevError(
@@ -503,12 +515,19 @@ class ArticlesService(BaseService):
         if applies_to_parts is not None:
             applies_to_parts_req = ArticlesUpdateRequestAppliesToParts(set=applies_to_parts)
 
+        # Build tags wrapper if provided
+        tags_req = None
+        if tags is not None:
+            tags_req = ArticlesUpdateRequestTags(set=tags)
+
         # Update metadata if any metadata fields provided
         has_metadata = (
             title is not None
             or description is not None
             or status is not None
             or applies_to_parts is not None
+            or access_level is not None
+            or tags is not None
         )
         if has_metadata:
             update_req = ArticlesUpdateRequest(
@@ -517,6 +536,8 @@ class ArticlesService(BaseService):
                 description=description,
                 status=status,
                 applies_to_parts=applies_to_parts_req,
+                access_level=access_level,
+                tags=tags_req,
             )
             return self.update(update_req)
 
@@ -844,6 +865,8 @@ class AsyncArticlesService(AsyncBaseService):
         description: str | None = None,
         status: ArticleStatus | None = None,
         applies_to_parts: builtins.list[str] | None = None,
+        access_level: ArticleAccessLevel | None = None,
+        tags: builtins.list[SetTagWithValue] | None = None,
     ) -> Article:
         """Update article metadata and/or content (async).
 
@@ -859,6 +882,8 @@ class AsyncArticlesService(AsyncBaseService):
             description: Optional new metadata description
             status: Optional new status
             applies_to_parts: Optional list of part IDs to associate with
+            access_level: Optional access level (internal, external, private, public)
+            tags: Optional list of tags to apply (list of SetTagWithValue objects)
 
         Returns:
             Updated article
@@ -881,12 +906,19 @@ class AsyncArticlesService(AsyncBaseService):
         if applies_to_parts is not None:
             applies_to_parts_req = ArticlesUpdateRequestAppliesToParts(set=applies_to_parts)
 
+        # Build tags wrapper if provided
+        tags_req = None
+        if tags is not None:
+            tags_req = ArticlesUpdateRequestTags(set=tags)
+
         # Update metadata if any metadata fields provided
         has_metadata = (
             title is not None
             or description is not None
             or status is not None
             or applies_to_parts is not None
+            or access_level is not None
+            or tags is not None
         )
         if has_metadata:
             update_req = ArticlesUpdateRequest(
@@ -895,6 +927,8 @@ class AsyncArticlesService(AsyncBaseService):
                 description=description,
                 status=status,
                 applies_to_parts=applies_to_parts_req,
+                access_level=access_level,
+                tags=tags_req,
             )
             return await self.update(update_req)
 

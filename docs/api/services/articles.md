@@ -94,6 +94,8 @@ article = client.articles.create_with_content(
     status=ArticleStatus.PUBLISHED,  # Optional: draft, published, archived
     content_format="text/html",  # Optional: default is text/html
     applies_to_parts=["don:core:dvrv-us-1:devo/1:part/123"],  # Optional: associate with parts
+    scope=1,  # Optional: 1=internal, 2=external (API default is external)
+    tags=[SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/123")],  # Optional: apply tags
 )
 print(f"Created article with content: {article.id}")
 ```
@@ -187,6 +189,16 @@ updated_article = client.articles.update_with_content(
 updated_article = client.articles.update_with_content(
     id="don:core:dvrv-us-1:devo/1:article/123",
     applies_to_parts=["don:core:dvrv-us-1:devo/1:part/123", "don:core:dvrv-us-1:devo/1:part/456"],
+)
+
+# Update access level and tags
+from devrev.models.articles import ArticleAccessLevel
+from devrev.models.base import SetTagWithValue
+
+updated_article = client.articles.update_with_content(
+    id="don:core:dvrv-us-1:devo/1:article/123",
+    access_level=ArticleAccessLevel.INTERNAL,  # Change to internal visibility
+    tags=[SetTagWithValue(id="don:core:dvrv-us-1:devo/1:tag/123")],  # Apply tags
 )
 ```
 
