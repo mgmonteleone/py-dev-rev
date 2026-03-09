@@ -142,7 +142,7 @@ if _config.enable_destructive_tools:
                     ) from e
 
             # Convert tag IDs to SetTagWithValue objects
-            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags else None
+            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
 
             article = await app.get_client().articles.create_with_content(
                 title=title,
@@ -184,6 +184,8 @@ if _config.enable_destructive_tools:
                 features, enhancements) to associate the article with.
                 Pass an empty list to remove all associations.
             access_level: Optional access level (internal, external, private, public).
+                Note: For updates, use ``access_level`` (string enum). For creation,
+                use the ``scope`` parameter (integer: 1=internal, 2=external).
             tags: Optional list of tag IDs to apply to the article.
                 Pass an empty list to remove all tags.
 
@@ -217,7 +219,7 @@ if _config.enable_destructive_tools:
                     ) from e
 
             # Convert tag IDs to SetTagWithValue objects
-            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags else None
+            tags_list = [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
 
             article = await app.get_client().articles.update_with_content(
                 id=id,

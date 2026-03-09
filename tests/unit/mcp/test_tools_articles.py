@@ -339,6 +339,53 @@ class TestArticlesUpdateTool:
                 access_level="invalid_level",
             )
 
+    @pytest.mark.asyncio
+    async def test_update_with_empty_tags_removes_all(self, mock_ctx, mock_client):
+        """Test updating with empty tags list removes all tags."""
+        mock_article = _make_mock_article(
+            id="article-1",
+            title="No Tags Article",
+            status="published",
+        )
+        mock_client.articles.update_with_content.return_value = mock_article
+
+        result = await devrev_articles_update(
+            mock_ctx,
+            id="article-1",
+            tags=[],
+        )
+
+        assert result["title"] == "No Tags Article"
+        # Verify empty list is passed (not None) to clear tags
+        call_args = mock_client.articles.update_with_content.call_args
+        tags_arg = call_args[1]["tags"]
+        assert tags_arg is not None
+        assert tags_arg == []
+
+    @pytest.mark.asyncio
+    async def test_create_with_empty_tags(self, mock_ctx, mock_client):
+        """Test creating with empty tags list passes empty list (not None)."""
+        mock_article = _make_mock_article(
+            title="No Tags Article",
+            description="Content without tags",
+        )
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        result = await devrev_articles_create(
+            mock_ctx,
+            title="No Tags Article",
+            content="Content without tags",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            tags=[],
+        )
+
+        assert result["title"] == "No Tags Article"
+        # Verify empty list is passed (not None)
+        call_args = mock_client.articles.create_with_content.call_args
+        tags_arg = call_args[1]["tags"]
+        assert tags_arg is not None
+        assert tags_arg == []
+
 
 class TestArticlesDeleteTool:
     """Tests for devrev_articles_delete tool."""
