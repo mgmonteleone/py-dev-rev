@@ -44,12 +44,16 @@ class TestArticlesListTool:
     @pytest.mark.asyncio
     async def test_list_empty(self, mock_ctx, mock_client):
         """Test listing articles when none exist."""
-        mock_client.articles.list.return_value = []
+        response = MagicMock()
+        response.articles = []
+        response.next_cursor = None
+        mock_client.articles.list.return_value = response
 
         result = await devrev_articles_list(mock_ctx)
 
         assert result["count"] == 0
         assert result["articles"] == []
+        assert "next_cursor" not in result
         mock_client.articles.list.assert_called_once()
 
     @pytest.mark.asyncio
@@ -59,7 +63,10 @@ class TestArticlesListTool:
             _make_mock_article(id="article-1", title="Article 1"),
             _make_mock_article(id="article-2", title="Article 2"),
         ]
-        mock_client.articles.list.return_value = mock_articles
+        response = MagicMock()
+        response.articles = mock_articles
+        response.next_cursor = None
+        mock_client.articles.list.return_value = response
 
         result = await devrev_articles_list(mock_ctx, limit=10)
 
@@ -67,6 +74,24 @@ class TestArticlesListTool:
         assert len(result["articles"]) == 2
         assert result["articles"][0]["id"] == "article-1"
         assert result["articles"][1]["id"] == "article-2"
+
+    @pytest.mark.asyncio
+    async def test_list_with_pagination(self, mock_ctx, mock_client):
+        """Test listing articles returns pagination cursor."""
+        response = MagicMock()
+        response.articles = [_make_mock_article(id="article-1", title="Article 1")]
+        response.next_cursor = "cursor-123"
+        mock_client.articles.list.return_value = response
+
+        result = await devrev_articles_list(mock_ctx, cursor="prev-cursor", limit=10)
+
+        assert result["count"] == 1
+        assert result["next_cursor"] == "cursor-123"
+        mock_client.articles.list.assert_called_once()
+        call_args = mock_client.articles.list.call_args
+        request = call_args[0][0]
+        assert request.cursor == "prev-cursor"
+        assert request.limit == 10
 
     @pytest.mark.asyncio
     async def test_list_error(self, mock_ctx, mock_client):

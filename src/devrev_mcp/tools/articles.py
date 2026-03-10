@@ -22,7 +22,7 @@ from devrev.models.base import SetTagWithValue
 from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
-from devrev_mcp.utils.pagination import clamp_page_size
+from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,8 @@ async def devrev_articles_list(
         limit: Maximum number of articles to return.
 
     Returns:
-        Dictionary containing count and list of articles.
+        Dictionary containing count, list of articles, and optional next_cursor
+        for pagination.
 
     Raises:
         RuntimeError: If the DevRev API call fails.
@@ -54,9 +55,9 @@ async def devrev_articles_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        articles = await app.get_client().articles.list(request)
-        items = serialize_models(list(articles))
-        return {"count": len(items), "articles": items}
+        response = await app.get_client().articles.list(request)
+        items = serialize_models(response.articles)
+        return paginated_response(items, next_cursor=response.next_cursor, total_label="articles")
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
 
