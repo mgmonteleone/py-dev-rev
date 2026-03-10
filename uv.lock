@@ -483,7 +483,7 @@ wheels = [
 
 [[package]]
 name = "devrev-python-sdk"
-version = "2.10.0"
+version = "2.10.1"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },

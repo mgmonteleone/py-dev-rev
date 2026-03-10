@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.1] - 2026-03-10
+
+### Fixed
+
+- **MCP articles_list bug** (#170) — Fixed `'tuple' object has no attribute 'model_dump'` error in `devrev_articles_list` MCP tool by correctly accessing `response.articles` instead of calling `list()` on the Pydantic response model. Added `paginated_response()` helper for consistent pagination handling.
+- **CI formatting** (#175) — Resolved formatting check failures in `scripts/debug_articles.py`.
+
+### Maintenance
+
+- **Dependency updates** (#177) — Consolidated Dependabot updates:
+  - `actions/download-artifact` v7 → v8
+  - `codecov/codecov-action` v3 → v5
+  - `google-github-actions/auth` v2 → v3
+  - `authlib` 1.6.6 → 1.6.9 (security fix: removes "none" algorithm from default JWT instance)
+
 ## [2.10.0] - 2026-03-09
 
 ### Added
