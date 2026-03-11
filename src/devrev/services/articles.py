@@ -23,10 +23,12 @@ from devrev.models.articles import (
     ArticleStatus,
     ArticlesUpdateRequest,
     ArticlesUpdateRequestAppliesToParts,
+    ArticlesUpdateRequestSharedWith,
     ArticlesUpdateRequestTags,
     ArticlesUpdateResponse,
     ArticleType,
     ArticleWithContent,
+    SetSharedWithMembership,
 )
 from devrev.models.artifacts import (
     ArtifactPrepareRequest,
@@ -205,6 +207,7 @@ class ArticlesService(BaseService):
         article_type: str | None = None,
         language: str | None = None,
         authored_by: builtins.list[str] | None = None,
+        shared_with: builtins.list[SetSharedWithMembership] | None = None,
     ) -> Article:
         """Create an article with content in a single operation.
 
@@ -230,6 +233,7 @@ class ArticlesService(BaseService):
             article_type: Optional article type ('article', 'page', 'content_block')
             language: Optional language code (e.g., 'en')
             authored_by: Optional list of user IDs who author the article
+            shared_with: Optional list of shared-with memberships
 
         Returns:
             Created article
@@ -292,6 +296,7 @@ class ArticlesService(BaseService):
                 article_type=article_type,
                 language=language,
                 authored_by=authored_by,
+                shared_with=shared_with,
             )
             return self.create(article_req)
 
@@ -454,6 +459,7 @@ class ArticlesService(BaseService):
         access_level: ArticleAccessLevel | None = None,
         tags: builtins.list[SetTagWithValue] | None = None,
         language: str | None = None,
+        shared_with: builtins.list[SetSharedWithMembership] | None = None,
     ) -> Article:
         """Update article metadata and/or content.
 
@@ -472,6 +478,7 @@ class ArticlesService(BaseService):
             access_level: Optional access level (internal, external, private, public)
             tags: Optional list of tags to apply (list of SetTagWithValue objects)
             language: Optional language code (e.g., 'en')
+            shared_with: Optional list of shared-with memberships
 
         Returns:
             Updated article
@@ -532,6 +539,11 @@ class ArticlesService(BaseService):
         if tags is not None:
             tags_req = ArticlesUpdateRequestTags(set=tags)
 
+        # Build shared_with wrapper if provided
+        shared_with_req = None
+        if shared_with is not None:
+            shared_with_req = ArticlesUpdateRequestSharedWith(set=shared_with)
+
         # Update metadata if any metadata fields provided
         has_metadata = (
             title is not None
@@ -541,6 +553,7 @@ class ArticlesService(BaseService):
             or access_level is not None
             or tags is not None
             or language is not None
+            or shared_with is not None
         )
         if has_metadata:
             update_req = ArticlesUpdateRequest(
@@ -552,6 +565,7 @@ class ArticlesService(BaseService):
                 access_level=access_level,
                 tags=tags_req,
                 language=language,
+                shared_with=shared_with_req,
             )
             return self.update(update_req)
 
@@ -665,6 +679,7 @@ class AsyncArticlesService(AsyncBaseService):
         article_type: str | None = None,
         language: str | None = None,
         authored_by: builtins.list[str] | None = None,
+        shared_with: builtins.list[SetSharedWithMembership] | None = None,
     ) -> Article:
         """Create an article with content in a single operation (async).
 
@@ -690,6 +705,7 @@ class AsyncArticlesService(AsyncBaseService):
             article_type: Optional article type ('article', 'page', 'content_block')
             language: Optional language code (e.g., 'en')
             authored_by: Optional list of user IDs who author the article
+            shared_with: Optional list of shared-with memberships
 
         Returns:
             Created article
@@ -740,6 +756,7 @@ class AsyncArticlesService(AsyncBaseService):
                 article_type=article_type,
                 language=language,
                 authored_by=authored_by,
+                shared_with=shared_with,
             )
             return await self.create(article_req)
 
@@ -891,6 +908,7 @@ class AsyncArticlesService(AsyncBaseService):
         access_level: ArticleAccessLevel | None = None,
         tags: builtins.list[SetTagWithValue] | None = None,
         language: str | None = None,
+        shared_with: builtins.list[SetSharedWithMembership] | None = None,
     ) -> Article:
         """Update article metadata and/or content (async).
 
@@ -909,6 +927,7 @@ class AsyncArticlesService(AsyncBaseService):
             access_level: Optional access level (internal, external, private, public)
             tags: Optional list of tags to apply (list of SetTagWithValue objects)
             language: Optional language code (e.g., 'en')
+            shared_with: Optional list of shared-with memberships
 
         Returns:
             Updated article
@@ -936,6 +955,11 @@ class AsyncArticlesService(AsyncBaseService):
         if tags is not None:
             tags_req = ArticlesUpdateRequestTags(set=tags)
 
+        # Build shared_with wrapper if provided
+        shared_with_req = None
+        if shared_with is not None:
+            shared_with_req = ArticlesUpdateRequestSharedWith(set=shared_with)
+
         # Update metadata if any metadata fields provided
         has_metadata = (
             title is not None
@@ -945,6 +969,7 @@ class AsyncArticlesService(AsyncBaseService):
             or access_level is not None
             or tags is not None
             or language is not None
+            or shared_with is not None
         )
         if has_metadata:
             update_req = ArticlesUpdateRequest(
@@ -956,6 +981,7 @@ class AsyncArticlesService(AsyncBaseService):
                 access_level=access_level,
                 tags=tags_req,
                 language=language,
+                shared_with=shared_with_req,
             )
             return await self.update(update_req)
 

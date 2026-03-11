@@ -17,6 +17,7 @@ from devrev.models.articles import (
     ArticlesGetRequest,
     ArticlesListRequest,
     ArticleStatus,
+    SetSharedWithMembership,
 )
 from devrev.models.base import SetTagWithValue
 from devrev_mcp.server import _config, mcp
@@ -111,6 +112,7 @@ if _config.enable_destructive_tools:
         tags: list[str] | None = None,
         language: str | None = None,
         authored_by: list[str] | None = None,
+        shared_with: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
         """Create a new article with content.
 
@@ -129,6 +131,8 @@ if _config.enable_destructive_tools:
             tags: Optional list of tag IDs to apply to the article.
             language: Optional language code (e.g., 'en').
             authored_by: Optional list of user IDs who author the article.
+            shared_with: Optional list of shared-with memberships. Each entry is
+                a dict with 'member' (required user/group ID) and optional 'role'.
 
         Returns:
             Dictionary containing the created article details.
@@ -164,6 +168,13 @@ if _config.enable_destructive_tools:
                 [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
             )
 
+            # Convert shared_with dicts to SetSharedWithMembership objects
+            shared_with_list = (
+                [SetSharedWithMembership(**entry) for entry in shared_with]
+                if shared_with is not None
+                else None
+            )
+
             article = await app.get_client().articles.create_with_content(
                 title=title,
                 content=content,
@@ -177,6 +188,7 @@ if _config.enable_destructive_tools:
                 tags=tags_list,
                 language=language,
                 authored_by=authored_by,
+                shared_with=shared_with_list,
             )
             return serialize_model(article)
         except DevRevError as e:
@@ -194,6 +206,7 @@ if _config.enable_destructive_tools:
         access_level: str | None = None,
         tags: list[str] | None = None,
         language: str | None = None,
+        shared_with: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
         """Update an existing article in DevRev.
 
@@ -213,6 +226,8 @@ if _config.enable_destructive_tools:
             tags: Optional list of tag IDs to apply to the article.
                 Pass an empty list to remove all tags.
             language: Optional language code (e.g., 'en').
+            shared_with: Optional list of shared-with memberships. Each entry is
+                a dict with 'member' (required user/group ID) and optional 'role'.
 
         Returns:
             Dictionary containing the updated article details.
@@ -248,6 +263,13 @@ if _config.enable_destructive_tools:
                 [SetTagWithValue(id=tag_id) for tag_id in tags] if tags is not None else None
             )
 
+            # Convert shared_with dicts to SetSharedWithMembership objects
+            shared_with_list = (
+                [SetSharedWithMembership(**entry) for entry in shared_with]
+                if shared_with is not None
+                else None
+            )
+
             article = await app.get_client().articles.update_with_content(
                 id=id,
                 title=title,
@@ -258,6 +280,7 @@ if _config.enable_destructive_tools:
                 access_level=article_access_level,
                 tags=tags_list,
                 language=language,
+                shared_with=shared_with_list,
             )
             return serialize_model(article)
         except DevRevError as e:

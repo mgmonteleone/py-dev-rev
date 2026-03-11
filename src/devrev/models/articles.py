@@ -328,6 +328,14 @@ class ArticlesUpdateRequestTags(DevRevBaseModel):
     set: list[SetTagWithValue] | None = Field(default=None, description="Set tags")
 
 
+class ArticlesUpdateRequestSharedWith(DevRevBaseModel):
+    """Shared-with update for articles."""
+
+    set: list[SetSharedWithMembership] | None = Field(
+        default=None, description="Set shared-with memberships"
+    )
+
+
 class ArticlesUpdateRequest(DevRevBaseModel):
     """Request to update an article."""
 
@@ -364,6 +372,9 @@ class ArticlesUpdateRequest(DevRevBaseModel):
     resource: dict[str, Any] | None = Field(
         default=None,
         description="Resource configuration (read-only on updates, use artifacts instead)",
+    )
+    shared_with: ArticlesUpdateRequestSharedWith | None = Field(
+        default=None, description="New shared-with memberships"
     )
     tags: ArticlesUpdateRequestTags | None = Field(default=None, description="New tags")
     url: str | None = Field(default=None, description="Article URL")
