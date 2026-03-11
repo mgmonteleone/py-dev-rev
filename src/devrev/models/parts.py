@@ -53,11 +53,26 @@ class PartSummary(DevRevResponseModel):
 
 
 class PartsCreateRequest(DevRevBaseModel):
-    """Request to create a part."""
+    """Request to create a part.
+
+    For non-product parts (capability, feature, enhancement), the parent_part
+    parameter is required to specify the parent part in the hierarchy.
+    """
 
     name: str = Field(..., description="Part name")
     type: PartType = Field(..., description="Part type")
     description: str | None = Field(default=None, description="Description")
+    owned_by: list[str] | None = Field(
+        default=None,
+        description="List of owner user IDs (e.g., ['DEVU-4'] or full DON IDs)",
+    )
+    parent_part: list[str] | None = Field(
+        default=None,
+        description="Parent part ID (required for capability/feature/enhancement). "
+        "Array with at most 1 element.",
+        max_length=1,
+    )
+    tags: list[str] | None = Field(default=None, description="List of tag IDs")
 
 
 class PartsGetRequest(DevRevBaseModel):

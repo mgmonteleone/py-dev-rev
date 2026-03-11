@@ -156,6 +156,85 @@ class TestPartsCreateTool:
         call_args = mock_client.parts.create.call_args[0][0]
         assert call_args.type == PartType.FEATURE
 
+    @pytest.mark.asyncio
+    async def test_create_with_owned_by(self, mock_ctx, mock_client):
+        """Test creating a part with owned_by parameter."""
+        mock_part = _make_mock_part(id="PROD-100", name="Owned Product")
+        mock_client.parts.create.return_value = mock_part
+
+        result = await devrev_parts_create(
+            mock_ctx,
+            name="Owned Product",
+            type="product",
+            owned_by=["DEVU-4", "don:identity:dvrv-us-1:devo/1:devu/5"],
+        )
+
+        assert result["id"] == "PROD-100"
+        call_args = mock_client.parts.create.call_args[0][0]
+        assert call_args.owned_by == ["DEVU-4", "don:identity:dvrv-us-1:devo/1:devu/5"]
+
+    @pytest.mark.asyncio
+    async def test_create_with_parent_part(self, mock_ctx, mock_client):
+        """Test creating a feature with parent_part parameter."""
+        mock_part = _make_mock_part(id="FEAT-200", name="Child Feature", type="feature")
+        mock_client.parts.create.return_value = mock_part
+
+        result = await devrev_parts_create(
+            mock_ctx,
+            name="Child Feature",
+            type="feature",
+            parent_part=["don:core:dvrv-us-1:devo/1:part/1"],
+            owned_by=["DEVU-4"],
+        )
+
+        assert result["id"] == "FEAT-200"
+        call_args = mock_client.parts.create.call_args[0][0]
+        assert call_args.parent_part == ["don:core:dvrv-us-1:devo/1:part/1"]
+        assert call_args.type == PartType.FEATURE
+
+    @pytest.mark.asyncio
+    async def test_create_with_tags(self, mock_ctx, mock_client):
+        """Test creating a part with tags parameter."""
+        mock_part = _make_mock_part(id="CAP-300", name="Tagged Capability", type="capability")
+        mock_client.parts.create.return_value = mock_part
+
+        result = await devrev_parts_create(
+            mock_ctx,
+            name="Tagged Capability",
+            type="capability",
+            parent_part=["don:core:dvrv-us-1:devo/1:part/1"],
+            tags=["tag-1", "tag-2"],
+        )
+
+        assert result["id"] == "CAP-300"
+        call_args = mock_client.parts.create.call_args[0][0]
+        assert call_args.tags == ["tag-1", "tag-2"]
+
+    @pytest.mark.asyncio
+    async def test_create_with_all_optional_params(self, mock_ctx, mock_client):
+        """Test creating a part with all optional parameters."""
+        mock_part = _make_mock_part(id="ENH-400", name="Full Enhancement", type="enhancement")
+        mock_client.parts.create.return_value = mock_part
+
+        result = await devrev_parts_create(
+            mock_ctx,
+            name="Full Enhancement",
+            type="enhancement",
+            description="A complete enhancement",
+            owned_by=["DEVU-1"],
+            parent_part=["FEAT-100"],
+            tags=["enhancement-tag"],
+        )
+
+        assert result["id"] == "ENH-400"
+        call_args = mock_client.parts.create.call_args[0][0]
+        assert call_args.name == "Full Enhancement"
+        assert call_args.type == PartType.ENHANCEMENT
+        assert call_args.description == "A complete enhancement"
+        assert call_args.owned_by == ["DEVU-1"]
+        assert call_args.parent_part == ["FEAT-100"]
+        assert call_args.tags == ["enhancement-tag"]
+
 
 class TestPartsUpdateTool:
     """Tests for devrev_parts_update tool."""
