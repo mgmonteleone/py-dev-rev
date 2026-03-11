@@ -1,7 +1,7 @@
 ---
 name: foreman
 description: Orchestrates feature development from GitHub issue to PR creation
-model: claude-opus-4-5
+model: claude-opus-4-6
 color: indigo
 ---
 

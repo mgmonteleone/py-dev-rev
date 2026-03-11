@@ -1,7 +1,7 @@
 ---
 description: Prepare and create a semantic versioned release with automated changelog
 argument-hint: "[patch|minor|major]"
-model: claude-opus-4-5
+model: claude-opus-4-6
 ---
 
 # Release Prepare Command

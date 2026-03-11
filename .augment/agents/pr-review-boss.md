@@ -1,7 +1,7 @@
 ---
 name: pr-review-boss
 description: Orchestrates the complete PR review lifecycle with parallel sub-agents
-model: claude-opus-4-5
+model: claude-opus-4-6
 color: purple
 ---
 
