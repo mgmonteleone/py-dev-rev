@@ -87,6 +87,9 @@ if _config.enable_destructive_tools:
         name: str,
         type: str,
         description: str | None = None,
+        owned_by: list[str] | None = None,
+        parent_part: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a new DevRev part.
 
@@ -94,6 +97,10 @@ if _config.enable_destructive_tools:
             name: The name of the part.
             type: The type of part (PRODUCT, CAPABILITY, FEATURE, ENHANCEMENT).
             description: Optional description of the part.
+            owned_by: List of owner user IDs (e.g., ["DEVU-4"] or full DON IDs).
+            parent_part: Parent part ID (required for capability/feature/enhancement).
+                Array with at most 1 element.
+            tags: List of tag IDs to associate with the part.
 
         Returns:
             Dictionary containing the created part details.
@@ -114,6 +121,9 @@ if _config.enable_destructive_tools:
                 name=name,
                 type=part_type,
                 description=description,
+                owned_by=owned_by,
+                parent_part=parent_part,
+                tags=tags,
             )
             part = await app.get_client().parts.create(request)
             return serialize_model(part)
