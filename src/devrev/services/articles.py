@@ -196,12 +196,15 @@ class ArticlesService(BaseService):
         owned_by: builtins.list[str],
         description: str | None = None,
         status: ArticleStatus | None = None,
+        access_level: ArticleAccessLevel | None = None,
         content_format: str = "text/plain",
         applies_to_parts: builtins.list[str] | None = None,
         scope: int | None = None,
         tags: builtins.list[SetTagWithValue] | None = None,
         parent: str | None = None,
         article_type: str | None = None,
+        language: str | None = None,
+        authored_by: builtins.list[str] | None = None,
     ) -> Article:
         """Create an article with content in a single operation.
 
@@ -218,12 +221,15 @@ class ArticlesService(BaseService):
             owned_by: List of dev user IDs who own the article
             description: Optional short metadata description (NOT the article content)
             status: Optional article status (draft, published, archived)
+            access_level: Optional access level (external, internal, private, public, restricted)
             content_format: Content MIME type (default: text/plain)
             applies_to_parts: Optional list of part IDs to associate with
             scope: Optional visibility scope (1=internal, 2=external)
             tags: Optional tags (list of SetTagWithValue)
             parent: Optional parent directory/collection DON ID
             article_type: Optional article type ('article', 'page', 'content_block')
+            language: Optional language code (e.g., 'en')
+            authored_by: Optional list of user IDs who author the article
 
         Returns:
             Created article
@@ -239,6 +245,7 @@ class ArticlesService(BaseService):
             ...     content_format="text/html",
             ...     applies_to_parts=["don:core:...:feature/30"],
             ...     scope=2,  # external
+            ...     access_level=ArticleAccessLevel.EXTERNAL,
             ... )
         """
         if not self._parent_client:
@@ -275,6 +282,7 @@ class ArticlesService(BaseService):
                 title=title,
                 description=description,
                 status=status,
+                access_level=access_level,
                 owned_by=owned_by,
                 resource={"content_artifact": artifact_id},
                 applies_to_parts=applies_to_parts,
@@ -282,6 +290,8 @@ class ArticlesService(BaseService):
                 tags=tags,
                 parent=parent,
                 article_type=article_type,
+                language=language,
+                authored_by=authored_by,
             )
             return self.create(article_req)
 
@@ -443,6 +453,7 @@ class ArticlesService(BaseService):
         applies_to_parts: builtins.list[str] | None = None,
         access_level: ArticleAccessLevel | None = None,
         tags: builtins.list[SetTagWithValue] | None = None,
+        language: str | None = None,
     ) -> Article:
         """Update article metadata and/or content.
 
@@ -460,6 +471,7 @@ class ArticlesService(BaseService):
             applies_to_parts: Optional list of part IDs to associate with
             access_level: Optional access level (internal, external, private, public)
             tags: Optional list of tags to apply (list of SetTagWithValue objects)
+            language: Optional language code (e.g., 'en')
 
         Returns:
             Updated article
@@ -528,6 +540,7 @@ class ArticlesService(BaseService):
             or applies_to_parts is not None
             or access_level is not None
             or tags is not None
+            or language is not None
         )
         if has_metadata:
             update_req = ArticlesUpdateRequest(
@@ -538,6 +551,7 @@ class ArticlesService(BaseService):
                 applies_to_parts=applies_to_parts_req,
                 access_level=access_level,
                 tags=tags_req,
+                language=language,
             )
             return self.update(update_req)
 
@@ -642,12 +656,15 @@ class AsyncArticlesService(AsyncBaseService):
         owned_by: builtins.list[str],
         description: str | None = None,
         status: ArticleStatus | None = None,
+        access_level: ArticleAccessLevel | None = None,
         content_format: str = "text/plain",
         applies_to_parts: builtins.list[str] | None = None,
         scope: int | None = None,
         tags: builtins.list[SetTagWithValue] | None = None,
         parent: str | None = None,
         article_type: str | None = None,
+        language: str | None = None,
+        authored_by: builtins.list[str] | None = None,
     ) -> Article:
         """Create an article with content in a single operation (async).
 
@@ -664,12 +681,15 @@ class AsyncArticlesService(AsyncBaseService):
             owned_by: List of dev user IDs who own the article
             description: Optional short metadata description (NOT the article content)
             status: Optional article status (draft, published, archived)
+            access_level: Optional access level (external, internal, private, public, restricted)
             content_format: Content MIME type (default: text/plain)
             applies_to_parts: Optional list of part IDs to associate with
             scope: Optional visibility scope (1=internal, 2=external)
             tags: Optional tags (list of SetTagWithValue)
             parent: Optional parent directory/collection DON ID
             article_type: Optional article type ('article', 'page', 'content_block')
+            language: Optional language code (e.g., 'en')
+            authored_by: Optional list of user IDs who author the article
 
         Returns:
             Created article
@@ -710,6 +730,7 @@ class AsyncArticlesService(AsyncBaseService):
                 title=title,
                 description=description,
                 status=status,
+                access_level=access_level,
                 owned_by=owned_by,
                 resource={"content_artifact": artifact_id},
                 applies_to_parts=applies_to_parts,
@@ -717,6 +738,8 @@ class AsyncArticlesService(AsyncBaseService):
                 tags=tags,
                 parent=parent,
                 article_type=article_type,
+                language=language,
+                authored_by=authored_by,
             )
             return await self.create(article_req)
 
@@ -867,6 +890,7 @@ class AsyncArticlesService(AsyncBaseService):
         applies_to_parts: builtins.list[str] | None = None,
         access_level: ArticleAccessLevel | None = None,
         tags: builtins.list[SetTagWithValue] | None = None,
+        language: str | None = None,
     ) -> Article:
         """Update article metadata and/or content (async).
 
@@ -884,6 +908,7 @@ class AsyncArticlesService(AsyncBaseService):
             applies_to_parts: Optional list of part IDs to associate with
             access_level: Optional access level (internal, external, private, public)
             tags: Optional list of tags to apply (list of SetTagWithValue objects)
+            language: Optional language code (e.g., 'en')
 
         Returns:
             Updated article
@@ -919,6 +944,7 @@ class AsyncArticlesService(AsyncBaseService):
             or applies_to_parts is not None
             or access_level is not None
             or tags is not None
+            or language is not None
         )
         if has_metadata:
             update_req = ArticlesUpdateRequest(
@@ -929,6 +955,7 @@ class AsyncArticlesService(AsyncBaseService):
                 applies_to_parts=applies_to_parts_req,
                 access_level=access_level,
                 tags=tags_req,
+                language=language,
             )
             return await self.update(update_req)
 
