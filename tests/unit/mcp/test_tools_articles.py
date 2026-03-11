@@ -254,6 +254,112 @@ class TestArticlesCreateTool:
         assert tags_arg[0].id == "don:core:dvrv-us-1:devo/1:tag/1"
         assert tags_arg[1].id == "don:core:dvrv-us-1:devo/1:tag/2"
 
+    @pytest.mark.asyncio
+    async def test_create_with_empty_tags(self, mock_ctx, mock_client):
+        """Test creating with empty tags list passes empty list (not None)."""
+        mock_article = _make_mock_article(
+            title="No Tags Article",
+            description="Content without tags",
+        )
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        result = await devrev_articles_create(
+            mock_ctx,
+            title="No Tags Article",
+            content="Content without tags",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            tags=[],
+        )
+
+        assert result["title"] == "No Tags Article"
+        # Verify empty list is passed (not None)
+        call_args = mock_client.articles.create_with_content.call_args
+        tags_arg = call_args[1]["tags"]
+        assert tags_arg is not None
+        assert tags_arg == []
+
+    @pytest.mark.asyncio
+    async def test_create_with_shared_with(self, mock_ctx, mock_client):
+        """Test creating an article with shared_with memberships."""
+        mock_article = _make_mock_article(
+            title="Shared Article",
+            description="Content shared with users",
+        )
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        result = await devrev_articles_create(
+            mock_ctx,
+            title="Shared Article",
+            content="Content shared with users",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            shared_with=[
+                {"member": "don:identity:dvrv-us-1:devo/1:devu/100", "role": "viewer"},
+                {"member": "don:identity:dvrv-us-1:devo/1:devu/200"},
+            ],
+        )
+
+        assert result["title"] == "Shared Article"
+        # Verify shared_with was converted and passed to SDK
+        call_args = mock_client.articles.create_with_content.call_args
+        shared_arg = call_args[1]["shared_with"]
+        assert shared_arg is not None
+        assert len(shared_arg) == 2
+        assert shared_arg[0].member == "don:identity:dvrv-us-1:devo/1:devu/100"
+        assert shared_arg[0].role == "viewer"
+        assert shared_arg[1].member == "don:identity:dvrv-us-1:devo/1:devu/200"
+        assert shared_arg[1].role is None
+
+    @pytest.mark.asyncio
+    async def test_create_without_shared_with(self, mock_ctx, mock_client):
+        """Test creating an article without shared_with passes None."""
+        mock_article = _make_mock_article(title="Normal Article", description="Content")
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        await devrev_articles_create(
+            mock_ctx,
+            title="Normal Article",
+            content="Content",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+        )
+
+        call_args = mock_client.articles.create_with_content.call_args
+        assert call_args[1]["shared_with"] is None
+
+    @pytest.mark.asyncio
+    async def test_create_with_empty_shared_with(self, mock_ctx, mock_client):
+        """Test creating with empty shared_with list passes empty list."""
+        mock_article = _make_mock_article(
+            title="Unshared Article",
+            description="Content",
+        )
+        mock_client.articles.create_with_content.return_value = mock_article
+
+        result = await devrev_articles_create(
+            mock_ctx,
+            title="Unshared Article",
+            content="Content",
+            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+            shared_with=[],
+        )
+
+        assert result["title"] == "Unshared Article"
+        call_args = mock_client.articles.create_with_content.call_args
+        shared_arg = call_args[1]["shared_with"]
+        assert shared_arg is not None
+        assert shared_arg == []
+
+    @pytest.mark.asyncio
+    async def test_create_with_malformed_shared_with(self, mock_ctx, mock_client):
+        """Test creating with malformed shared_with dict raises RuntimeError."""
+        with pytest.raises(RuntimeError, match="shared_with.*member"):
+            await devrev_articles_create(
+                mock_ctx,
+                title="Bad Article",
+                content="Content",
+                owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
+                shared_with=[{"role": "viewer"}],  # missing 'member'
+            )
+
 
 class TestArticlesUpdateTool:
     """Tests for devrev_articles_update tool."""
@@ -388,28 +494,76 @@ class TestArticlesUpdateTool:
         assert tags_arg == []
 
     @pytest.mark.asyncio
-    async def test_create_with_empty_tags(self, mock_ctx, mock_client):
-        """Test creating with empty tags list passes empty list (not None)."""
+    async def test_update_with_shared_with(self, mock_ctx, mock_client):
+        """Test updating an article with shared_with memberships."""
         mock_article = _make_mock_article(
-            title="No Tags Article",
-            description="Content without tags",
+            id="article-1",
+            title="Shared Article",
+            status="published",
         )
-        mock_client.articles.create_with_content.return_value = mock_article
+        mock_client.articles.update_with_content.return_value = mock_article
 
-        result = await devrev_articles_create(
+        result = await devrev_articles_update(
             mock_ctx,
-            title="No Tags Article",
-            content="Content without tags",
-            owned_by=["don:identity:dvrv-us-1:devo/test:devu/1"],
-            tags=[],
+            id="article-1",
+            shared_with=[
+                {"member": "don:identity:dvrv-us-1:devo/1:devu/100", "role": "editor"},
+            ],
         )
 
-        assert result["title"] == "No Tags Article"
-        # Verify empty list is passed (not None)
-        call_args = mock_client.articles.create_with_content.call_args
-        tags_arg = call_args[1]["tags"]
-        assert tags_arg is not None
-        assert tags_arg == []
+        assert result["title"] == "Shared Article"
+        call_args = mock_client.articles.update_with_content.call_args
+        shared_arg = call_args[1]["shared_with"]
+        assert shared_arg is not None
+        assert len(shared_arg) == 1
+        assert shared_arg[0].member == "don:identity:dvrv-us-1:devo/1:devu/100"
+        assert shared_arg[0].role == "editor"
+
+    @pytest.mark.asyncio
+    async def test_update_without_shared_with(self, mock_ctx, mock_client):
+        """Test updating an article without shared_with passes None."""
+        mock_article = _make_mock_article(id="article-1", title="Article")
+        mock_client.articles.update_with_content.return_value = mock_article
+
+        await devrev_articles_update(
+            mock_ctx,
+            id="article-1",
+            title="Article",
+        )
+
+        call_args = mock_client.articles.update_with_content.call_args
+        assert call_args[1]["shared_with"] is None
+
+    @pytest.mark.asyncio
+    async def test_update_with_empty_shared_with(self, mock_ctx, mock_client):
+        """Test updating with empty shared_with list passes empty list."""
+        mock_article = _make_mock_article(
+            id="article-1",
+            title="Unshared Article",
+        )
+        mock_client.articles.update_with_content.return_value = mock_article
+
+        result = await devrev_articles_update(
+            mock_ctx,
+            id="article-1",
+            shared_with=[],
+        )
+
+        assert result["title"] == "Unshared Article"
+        call_args = mock_client.articles.update_with_content.call_args
+        shared_arg = call_args[1]["shared_with"]
+        assert shared_arg is not None
+        assert shared_arg == []
+
+    @pytest.mark.asyncio
+    async def test_update_with_malformed_shared_with(self, mock_ctx, mock_client):
+        """Test updating with malformed shared_with dict raises RuntimeError."""
+        with pytest.raises(RuntimeError, match="shared_with.*member"):
+            await devrev_articles_update(
+                mock_ctx,
+                id="article-1",
+                shared_with=[{"role": "viewer"}],  # missing 'member'
+            )
 
 
 class TestArticlesDeleteTool:

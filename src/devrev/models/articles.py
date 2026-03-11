@@ -328,6 +328,14 @@ class ArticlesUpdateRequestTags(DevRevBaseModel):
     set: list[SetTagWithValue] | None = Field(default=None, description="Set tags")
 
 
+class ArticlesUpdateRequestSharedWith(DevRevBaseModel):
+    """Shared-with update for articles."""
+
+    set: list[SetSharedWithMembership] | None = Field(
+        default=None, description="Set shared-with memberships"
+    )
+
+
 class ArticlesUpdateRequest(DevRevBaseModel):
     """Request to update an article."""
 
@@ -357,6 +365,9 @@ class ArticlesUpdateRequest(DevRevBaseModel):
     parent: str | None = Field(default=None, description="New parent article ID")
     published_version: str | None = Field(default=None, description="Published version")
     release_notes: str | None = Field(default=None, description="New release notes")
+    shared_with: ArticlesUpdateRequestSharedWith | None = Field(
+        default=None, description="New shared-with memberships"
+    )
     artifacts: dict[str, Any] | None = Field(
         default=None,
         description="Artifacts update using set wrapper, e.g. {'set': ['artifact_id']}",

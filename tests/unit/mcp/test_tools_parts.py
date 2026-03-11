@@ -235,6 +235,16 @@ class TestPartsCreateTool:
         assert call_args.parent_part == ["FEAT-100"]
         assert call_args.tags == ["enhancement-tag"]
 
+    @pytest.mark.asyncio
+    async def test_create_with_invalid_type(self, mock_ctx, mock_client):
+        """Test that an invalid type value raises RuntimeError. (#185)"""
+        with pytest.raises(RuntimeError, match="Invalid part type"):
+            await devrev_parts_create(
+                mock_ctx,
+                name="Bad Part",
+                type="invalid",
+            )
+
 
 class TestPartsUpdateTool:
     """Tests for devrev_parts_update tool."""
