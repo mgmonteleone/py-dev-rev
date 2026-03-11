@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.2] - 2026-03-11
+
+### Fixed
+
+- **Parts API missing parameters** (#158) — Added `owned_by`, `parent_part`, and `tags` parameters to `devrev_parts_create` MCP tool for full API compatibility.
+- **Article API missing properties** (#159) — Added missing `access_level`, `authored_by`, `extracted_content`, `owned_by`, `published_at`, `scope`, `shared_with`, `tags`, and `verified_by` fields to article models.
+
+### Maintenance
+
+- **Dependency updates** (#182) — Consolidated Dependabot updates (March 2026):
+  - Multiple dependency version updates via automated security scanning
+- **Documentation** — Updated `llms.txt` and `llms-mcp.txt` version references to 2.10.1.
+
 ## [2.10.1] - 2026-03-10
 
 ### Fixed
