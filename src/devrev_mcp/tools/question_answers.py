@@ -94,13 +94,15 @@ if _config.enable_destructive_tools:
         """
         app = ctx.request_context.lifespan_context
         try:
-            request = QuestionAnswersCreateRequest(
-                question=question,
-                answer=answer,
-                applies_to_parts=applies_to_parts,
-                owned_by=owned_by,
-                status=status or "draft",
-            )
+            kwargs: dict[str, Any] = {
+                "question": question,
+                "answer": answer,
+                "applies_to_parts": applies_to_parts,
+                "owned_by": owned_by,
+            }
+            if status is not None:
+                kwargs["status"] = status
+            request = QuestionAnswersCreateRequest(**kwargs)
             qa = await app.get_client().question_answers.create(request)
             return serialize_model(qa)
         except DevRevError as e:
