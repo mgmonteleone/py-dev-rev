@@ -272,3 +272,86 @@ class TestArticlesService:
         assert call_data["status"] == ["published"]
         assert call_data["owned_by"] == ["don:identity:user:456"]
         assert call_data["limit"] == 25
+
+    def test_create_with_content_language_param(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test that language param is forwarded to the ArticlesCreateRequest."""
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        mock_parent = MagicMock()
+        prepare_resp = MagicMock()
+        prepare_resp.id = "artifact-123"
+        mock_parent.artifacts.prepare.return_value = prepare_resp
+        mock_parent.artifacts.upload.return_value = None
+
+        service = ArticlesService(mock_http_client, parent_client=mock_parent)
+        service.create_with_content(
+            title="Test Article",
+            content="test content",
+            owned_by=["user-1"],
+            content_format="devrev/rt",
+            language="en",
+        )
+
+        mock_http_client.post.assert_called_once()
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        assert call_data["language"] == "en"
+
+    def test_create_with_content_authored_by_param(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test that authored_by param is forwarded to the ArticlesCreateRequest."""
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        mock_parent = MagicMock()
+        prepare_resp = MagicMock()
+        prepare_resp.id = "artifact-123"
+        mock_parent.artifacts.prepare.return_value = prepare_resp
+        mock_parent.artifacts.upload.return_value = None
+
+        service = ArticlesService(mock_http_client, parent_client=mock_parent)
+        service.create_with_content(
+            title="Test Article",
+            content="test content",
+            owned_by=["user-1"],
+            content_format="devrev/rt",
+            authored_by=["author-1"],
+        )
+
+        mock_http_client.post.assert_called_once()
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        assert call_data["authored_by"] == ["author-1"]
+
+    def test_create_with_content_language_and_authored_by(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test that both language and authored_by are forwarded to the ArticlesCreateRequest."""
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        mock_parent = MagicMock()
+        prepare_resp = MagicMock()
+        prepare_resp.id = "artifact-123"
+        mock_parent.artifacts.prepare.return_value = prepare_resp
+        mock_parent.artifacts.upload.return_value = None
+
+        service = ArticlesService(mock_http_client, parent_client=mock_parent)
+        service.create_with_content(
+            title="Test Article",
+            content="test content",
+            owned_by=["user-1"],
+            content_format="devrev/rt",
+            language="fr",
+            authored_by=["author-1", "author-2"],
+        )
+
+        mock_http_client.post.assert_called_once()
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        assert call_data["language"] == "fr"
+        assert call_data["authored_by"] == ["author-1", "author-2"]
