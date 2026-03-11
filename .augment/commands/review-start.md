@@ -1,7 +1,7 @@
 ---
 description: Start monitoring and reviewing PRs using the PR Review Boss agent
 argument-hint: [check-interval-seconds] [duration-minutes]
-model: claude-opus-4-5
+model: claude-opus-4-6
 ---
 
 # PR Review Start Command

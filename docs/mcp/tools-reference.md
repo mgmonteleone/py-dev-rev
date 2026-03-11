@@ -6,7 +6,7 @@ icon: material/tools
 
 Complete reference of all MCP capabilities provided by the DevRev MCP Server.
 
-## Tools (78+)
+## Tools (83+)
 
 Tools are the primary way AI assistants interact with DevRev. Each tool maps to one or more DevRev API endpoints.
 
@@ -139,6 +139,13 @@ Tools are the primary way AI assistants interact with DevRev. Each tool maps to 
 | `devrev_incidents_get` | Get incident details |
 | `devrev_engagements_list` | List customer engagements |
 | `devrev_engagements_get` | Get engagement details |
+| `devrev_question_answers_list` | List question-answer entries |
+| `devrev_question_answers_get` | Get a question-answer by ID |
+| `devrev_question_answers_create` | Create a new Q&A entry ¹ |
+| `devrev_question_answers_update` | Update a Q&A entry ¹ |
+| `devrev_question_answers_delete` | Delete a Q&A entry ¹ |
+
+¹ Also requires `MCP_ENABLE_DESTRUCTIVE_TOOLS=true`
 
 ---
 

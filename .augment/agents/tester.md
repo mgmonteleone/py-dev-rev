@@ -1,7 +1,7 @@
 ---
 name: tester
 description: Analyzes PR changes and creates comprehensive tests
-model: claude-sonnet-4-5
+model: claude-sonnet-4-6
 color: green
 ---
 

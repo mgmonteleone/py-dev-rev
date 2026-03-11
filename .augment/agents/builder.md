@@ -1,7 +1,7 @@
 ---
 name: builder
 description: Implements specific feature components (APIs, services, models, UI)
-model: claude-sonnet-4-5
+model: claude-sonnet-4-6
 color: teal
 ---
 

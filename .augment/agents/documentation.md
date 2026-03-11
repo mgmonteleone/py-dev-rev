@@ -1,7 +1,7 @@
 ---
 name: documentation
 description: Updates project documentation to reflect PR changes
-model: claude-sonnet-4-5
+model: claude-sonnet-4-6
 color: blue
 ---
 

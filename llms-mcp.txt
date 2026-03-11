@@ -163,6 +163,13 @@ devrev-mcp-server
 - `devrev_incidents_list` — List incidents
 - `devrev_incidents_get` — Get incident by ID
 
+### Question Answers (Beta)
+- `devrev_question_answers_list` — List Q&A entries
+- `devrev_question_answers_get` — Get Q&A by ID
+- `devrev_question_answers_create` — Create a new Q&A entry (destructive)
+- `devrev_question_answers_update` — Update a Q&A entry (destructive)
+- `devrev_question_answers_delete` — Delete a Q&A entry (destructive)
+
 ### Search (Beta)
 - `devrev_search` — Hybrid search across DevRev objects
 
@@ -202,8 +209,8 @@ Pre-built workflow prompts for common support operations:
 1. **IDs are DON format**: `don:core:dvrv-us-1:devo/1:ticket/123`
 2. **Pagination**: Cursor-based using `cursor` and `limit` parameters
 3. **Creating tickets**: Requires `type` (ticket/issue), `title`, and `applies_to_part`
-4. **Beta tools**: Require `MCP_ENABLE_BETA_TOOLS=true` (search, recommendations, incidents, engagements)
-5. **Destructive tools**: Require `MCP_ENABLE_DESTRUCTIVE_TOOLS=true` (delete operations)
+4. **Beta tools**: Require `MCP_ENABLE_BETA_TOOLS=true` (search, recommendations, incidents, engagements, question answers)
+5. **Destructive tools**: Require `MCP_ENABLE_DESTRUCTIVE_TOOLS=true` (create/update/delete operations)
 6. **Auth for teams**: Use `MCP_AUTH_MODE=devrev-pat` — each user sends their own DevRev PAT as Bearer token
 7. **Transports**: stdio for local dev, streamable-http for production, sse for legacy
 

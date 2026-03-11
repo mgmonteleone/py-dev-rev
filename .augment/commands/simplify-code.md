@@ -1,7 +1,7 @@
 ---
 description: Simplify and refine code for clarity, consistency, and maintainability
 argument-hint: [file-path-or-scope]
-model: claude-opus-4-5
+model: claude-opus-4-6
 ---
 
 # Simplify Code Command

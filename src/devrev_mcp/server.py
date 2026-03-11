@@ -232,9 +232,9 @@ if _config.transport != "stdio":
 # before any tool modules are imported, otherwise tool registration could
 # interact with an incompletely configured server.
 #
-# All tool modules are always imported. Each module internally guards
+# Core tool modules are always imported. Each module internally guards
 # destructive tools (create/update/delete) using `_config.enable_destructive_tools`.
-# Beta tools check `_config.enable_beta_tools`.
+# Beta tool modules are conditionally imported below when `_config.enable_beta_tools` is enabled.
 from devrev_mcp.tools import accounts as _accounts_tools  # noqa: E402, F401
 from devrev_mcp.tools import articles as _articles_tools  # noqa: E402, F401
 from devrev_mcp.tools import conversations as _conversations_tools  # noqa: E402, F401
@@ -252,6 +252,7 @@ from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
 
 # Beta tools (only if beta tools are enabled)
 if _config.enable_beta_tools:
+    from devrev_mcp.tools import question_answers as _question_answers_tools  # noqa: E402, F401
     from devrev_mcp.tools import recommendations as _recommendations_tools  # noqa: E402, F401
     from devrev_mcp.tools import search as _search_tools  # noqa: E402, F401
 

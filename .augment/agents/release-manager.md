@@ -1,7 +1,7 @@
 ---
 name: release-manager
 description: Automates semantic versioning releases with changelog generation and deployment triggers
-model: claude-opus-4-5
+model: claude-opus-4-6
 color: green
 ---
 
