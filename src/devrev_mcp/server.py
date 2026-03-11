@@ -252,6 +252,7 @@ from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
 
 # Beta tools (only if beta tools are enabled)
 if _config.enable_beta_tools:
+    from devrev_mcp.tools import question_answers as _question_answers_tools  # noqa: E402, F401
     from devrev_mcp.tools import recommendations as _recommendations_tools  # noqa: E402, F401
     from devrev_mcp.tools import search as _search_tools  # noqa: E402, F401
 

@@ -175,6 +175,14 @@ def mock_client():
     client.slas.update = AsyncMock()
     client.slas.transition = AsyncMock()
 
+    # Question Answers service
+    client.question_answers = AsyncMock()
+    client.question_answers.list = AsyncMock()
+    client.question_answers.get = AsyncMock()
+    client.question_answers.create = AsyncMock()
+    client.question_answers.update = AsyncMock()
+    client.question_answers.delete = AsyncMock()
+
     # Close method
     client.close = AsyncMock()
 
