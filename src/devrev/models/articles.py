@@ -94,6 +94,29 @@ class ArticleParentSummary(DevRevResponseModel):
     display_id: str | None = Field(default=None, description="Display ID")
 
 
+class ArtifactSummary(DevRevResponseModel):
+    """Summary of an artifact (used for extracted_content)."""
+
+    id: str = Field(..., description="Artifact DON ID")
+    display_id: str | None = Field(default=None, description="Display ID")
+    file: dict[str, Any] | None = Field(default=None, description="File metadata")
+
+
+class SyncMetadata(DevRevResponseModel):
+    """Sync information for records synced into/from DevRev."""
+
+    external_reference: str | None = Field(default=None, description="External record URL")
+    origin_system: str | None = Field(
+        default=None, description="Where the record was first created"
+    )
+    last_sync_in: dict[str, Any] | None = Field(
+        default=None, description="Information about the sync to DevRev"
+    )
+    last_sync_out: dict[str, Any] | None = Field(
+        default=None, description="Information about the sync from DevRev"
+    )
+
+
 class Article(DevRevResponseModel):
     """DevRev Article model.
 
@@ -106,13 +129,29 @@ class Article(DevRevResponseModel):
     title: str = Field(..., description="Article title")
     description: str | None = Field(default=None, description="Article description/body")
     status: ArticleStatus | None = Field(default=None, description="Article status")
+    access_level: ArticleAccessLevel | None = Field(
+        default=None, description="Access level (external, internal, private, public, restricted)"
+    )
+    aliases: list[str] | None = Field(default=None, description="Aliases of the article")
     article_type: str | None = Field(default=None, description="Article type (article, page, etc.)")
     authored_by: list[UserSummary] | None = Field(
         default=None, description="Authors of the article (API returns array, not single object)"
     )
+    brand: dict[str, Any] | None = Field(
+        default=None, description="Brand associated with the article"
+    )
     owned_by: list[UserSummary] | None = Field(default=None, description="Owners of the article")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")
+    extracted_content: list[ArtifactSummary] | None = Field(
+        default=None, description="Extracted content artifacts"
+    )
+    num_downvotes: int | None = Field(
+        default=None, description="Number of downvotes on the article"
+    )
+    num_upvotes: int | None = Field(default=None, description="Number of upvotes on the article")
+    published_at: datetime | None = Field(default=None, description="Published date of the article")
+    rank: str | None = Field(default=None, description="Rank of the article")
     resource: dict[str, Any] | None = Field(
         default=None, description="Resource configuration including artifact references"
     )
@@ -122,6 +161,9 @@ class Article(DevRevResponseModel):
     scope: ArticleScope | None = Field(
         default=None, description="Visibility scope (internal/external)"
     )
+    sync_metadata: SyncMetadata | None = Field(
+        default=None, description="Sync information for records synced into/from DevRev"
+    )
     tags: list[ArticleTagWithValue] | None = Field(
         default=None, description="Tags applied to the article"
     )
@@ -129,6 +171,7 @@ class Article(DevRevResponseModel):
         default=None, description="Parent directory/collection"
     )
     language: str | None = Field(default=None, description="Language code (e.g., 'en')")
+    url: str | None = Field(default=None, description="URL of the external article")
 
 
 class ArticleSummary(DevRevResponseModel):
@@ -168,6 +211,28 @@ class ArticlesCreateRequest(DevRevBaseModel):
     title: str = Field(..., description="Article title")
     description: str | None = Field(default=None, description="Article description/body")
     status: ArticleStatus | None = Field(default=None, description="Article status")
+    access_level: ArticleAccessLevel | None = Field(
+        default=None, description="Access level (external, internal, private, public, restricted)"
+    )
+    aliases: list[str] | None = Field(default=None, description="Aliases of the article (max 5)")
+    authored_by: list[str] | None = Field(
+        default=None, description="List of user IDs who author the article"
+    )
+    brand: str | None = Field(default=None, description="Brand ID associated with the article")
+    content_format: ArticleContentFormat | None = Field(
+        default=None, description="Content format (drdfv2, rt)"
+    )
+    custom_fields: dict[str, Any] | None = Field(
+        default=None, description="Application-defined custom fields"
+    )
+    custom_schema_spec: CustomSchemaSpec | None = Field(
+        default=None, description="Custom schema spec"
+    )
+    extracted_content: list[str] | None = Field(
+        default=None, description="IDs of extracted content artifacts"
+    )
+    language: str | None = Field(default=None, description="Language of the article")
+    notify: bool | None = Field(default=None, description="Whether to notify users when published")
     owned_by: list[str] = Field(..., description="List of dev user IDs who own the article")
     resource: dict[str, Any] = Field(
         default_factory=dict, description="Resource configuration for the article"
@@ -176,6 +241,9 @@ class ArticlesCreateRequest(DevRevBaseModel):
         default=None, description="List of part IDs this article applies to"
     )
     scope: int | None = Field(default=None, description="Visibility scope: 1=internal, 2=external")
+    shared_with: list[SetSharedWithMembership] | None = Field(
+        default=None, description="Users/groups to share the article with"
+    )
     tags: list[SetTagWithValue] | None = Field(
         default=None, description="Tags to apply (list of {'id': 'tag_id', 'value': ...})"
     )
@@ -183,6 +251,8 @@ class ArticlesCreateRequest(DevRevBaseModel):
     article_type: str | None = Field(
         default=None, description="Article type: 'article' (default), 'page', 'content_block'"
     )
+    published_at: datetime | None = Field(default=None, description="Published date of the article")
+    release_notes: str | None = Field(default=None, description="Release notes for the article")
 
 
 class ArticlesGetRequest(DevRevBaseModel):
