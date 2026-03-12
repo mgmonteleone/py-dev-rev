@@ -430,5 +430,5 @@ class TestArticlesService:
 
         mock_http_client.post.assert_called_once()
         call_data = mock_http_client.post.call_args.kwargs["data"]
-        # shared_with should not be in the payload (or be None/excluded)
-        assert call_data.get("shared_with") is None
+        # shared_with should be truly absent from the payload, not just None
+        assert "shared_with" not in call_data
