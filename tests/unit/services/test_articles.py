@@ -15,6 +15,7 @@ from devrev.models.articles import (
     ArticlesUpdateRequestOwnedBy,
     ArticlesUpdateRequestTags,
     ArticleType,
+    SetSharedWithMembership,
 )
 from devrev.models.base import SetTagWithValue
 from devrev.services.articles import ArticlesService
@@ -355,3 +356,79 @@ class TestArticlesService:
         call_data = mock_http_client.post.call_args.kwargs["data"]
         assert call_data["language"] == "fr"
         assert call_data["authored_by"] == ["author-1", "author-2"]
+
+    def test_update_with_content_shared_with_serialization(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test that shared_with is wrapped in ArticlesUpdateRequestSharedWith for updates.
+
+        The update path wraps shared_with in {"set": [...]} unlike the create path
+        which passes a raw list. This test asserts the serialized payload shape.
+        """
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        mock_parent = MagicMock()
+        service = ArticlesService(mock_http_client, parent_client=mock_parent)
+
+        memberships = [
+            SetSharedWithMembership(member="don:identity:user:100"),
+            SetSharedWithMembership(member="don:identity:user:200", role="editor"),
+        ]
+        service.update_with_content(
+            "don:core:article:123",
+            shared_with=memberships,
+        )
+
+        # update_with_content calls update -> _post, so check the serialized payload
+        mock_http_client.post.assert_called_once()
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        assert "shared_with" in call_data
+        assert "set" in call_data["shared_with"]
+        assert len(call_data["shared_with"]["set"]) == 2
+        assert call_data["shared_with"]["set"][0]["member"] == "don:identity:user:100"
+        assert call_data["shared_with"]["set"][1]["member"] == "don:identity:user:200"
+        assert call_data["shared_with"]["set"][1]["role"] == "editor"
+
+    def test_update_with_content_empty_shared_with_clears_sharing(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test that an empty shared_with list serializes as {"set": []} to clear sharing."""
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        mock_parent = MagicMock()
+        service = ArticlesService(mock_http_client, parent_client=mock_parent)
+
+        service.update_with_content(
+            "don:core:article:123",
+            shared_with=[],
+        )
+
+        mock_http_client.post.assert_called_once()
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        assert "shared_with" in call_data
+        assert call_data["shared_with"] == {"set": []}
+
+    def test_update_with_content_without_shared_with_omits_field(
+        self,
+        mock_http_client: MagicMock,
+        sample_article_data: dict[str, Any],
+    ) -> None:
+        """Test that shared_with is omitted from payload when not provided."""
+        mock_http_client.post.return_value = create_mock_response({"article": sample_article_data})
+
+        mock_parent = MagicMock()
+        service = ArticlesService(mock_http_client, parent_client=mock_parent)
+
+        service.update_with_content(
+            "don:core:article:123",
+            title="Updated Title",
+        )
+
+        mock_http_client.post.assert_called_once()
+        call_data = mock_http_client.post.call_args.kwargs["data"]
+        # shared_with should be truly absent from the payload, not just None
+        assert "shared_with" not in call_data
