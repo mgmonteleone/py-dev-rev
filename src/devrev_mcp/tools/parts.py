@@ -117,6 +117,12 @@ if _config.enable_destructive_tools:
                     f"Invalid part type: {e.args[0]}. "
                     f"Valid types: {', '.join(t.name for t in PartType)}"
                 ) from e
+            # Validate parent_part is provided for non-product parts
+            if part_type != PartType.PRODUCT and not parent_part:
+                raise RuntimeError(
+                    f"parent_part is required when creating a {part_type.name} part. "
+                    "Only PRODUCT parts can be created without a parent."
+                )
             request = PartsCreateRequest(
                 name=name,
                 type=part_type,

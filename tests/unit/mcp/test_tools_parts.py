@@ -150,7 +150,12 @@ class TestPartsCreateTool:
         mock_part = _make_mock_part(id="FEAT-789", name="New Feature", type="feature")
         mock_client.parts.create.return_value = mock_part
 
-        result = await devrev_parts_create(mock_ctx, name="New Feature", type="FEATURE")
+        result = await devrev_parts_create(
+            mock_ctx,
+            name="New Feature",
+            type="FEATURE",
+            parent_part=["don:core:dvrv-us-1:devo/1:part/1"],
+        )
 
         assert result["id"] == "FEAT-789"
         call_args = mock_client.parts.create.call_args[0][0]
@@ -244,6 +249,52 @@ class TestPartsCreateTool:
                 name="Bad Part",
                 type="invalid",
             )
+
+    @pytest.mark.asyncio
+    async def test_create_capability_without_parent_part_raises(self, mock_ctx, mock_client):
+        """Test that creating a CAPABILITY without parent_part raises RuntimeError. (#184)"""
+        with pytest.raises(RuntimeError, match="parent_part is required"):
+            await devrev_parts_create(
+                mock_ctx,
+                name="Orphan Capability",
+                type="capability",
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_feature_without_parent_part_raises(self, mock_ctx, mock_client):
+        """Test that creating a FEATURE without parent_part raises RuntimeError. (#184)"""
+        with pytest.raises(RuntimeError, match="parent_part is required"):
+            await devrev_parts_create(
+                mock_ctx,
+                name="Orphan Feature",
+                type="feature",
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_enhancement_without_parent_part_raises(self, mock_ctx, mock_client):
+        """Test that creating an ENHANCEMENT without parent_part raises RuntimeError. (#184)"""
+        with pytest.raises(RuntimeError, match="parent_part is required"):
+            await devrev_parts_create(
+                mock_ctx,
+                name="Orphan Enhancement",
+                type="enhancement",
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_product_without_parent_part_succeeds(self, mock_ctx, mock_client):
+        """Test that creating a PRODUCT without parent_part succeeds. (#184)"""
+        mock_part = _make_mock_part(id="PROD-999", name="Standalone Product")
+        mock_client.parts.create.return_value = mock_part
+
+        result = await devrev_parts_create(
+            mock_ctx,
+            name="Standalone Product",
+            type="product",
+        )
+
+        assert result["id"] == "PROD-999"
+        call_args = mock_client.parts.create.call_args[0][0]
+        assert call_args.parent_part is None
 
 
 class TestPartsUpdateTool:
