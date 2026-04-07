@@ -46,7 +46,7 @@ class TestSearchService:
         service = SearchService(mock_http_client)
         request = CoreSearchRequest(
             query="type:ticket AND status:open",
-            namespace=SearchNamespace.WORK,
+            namespaces=[SearchNamespace.WORK],
             limit=20,
         )
         result = service.core(request)
@@ -101,7 +101,7 @@ class TestSearchService:
         service = SearchService(mock_http_client)
         request = HybridSearchRequest(
             query="authentication issues",
-            namespace=SearchNamespace.CONVERSATION,
+            namespaces=[SearchNamespace.CONVERSATION],
             semantic_weight=0.7,
             limit=10,
         )

@@ -69,7 +69,7 @@ class TestSearchEndpoints:
     )
     def test_search_core_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.core endpoint with request object."""
-        request = CoreSearchRequest(query="test", namespace=SearchNamespace.WORK, limit=5)
+        request = CoreSearchRequest(query="test", namespaces=[SearchNamespace.WORK], limit=5)
         result = beta_client.search.core(request)
         assert result is not None
         assert hasattr(result, "results")
@@ -96,7 +96,7 @@ class TestSearchEndpoints:
     def test_search_hybrid_with_request(self, beta_client: DevRevClient) -> None:
         """Test search.hybrid endpoint with request object."""
         request = HybridSearchRequest(
-            query="test", namespace=SearchNamespace.WORK, limit=5, semantic_weight=0.5
+            query="test", namespaces=[SearchNamespace.WORK], limit=5, semantic_weight=0.5
         )
         result = beta_client.search.hybrid(request)
         assert result is not None

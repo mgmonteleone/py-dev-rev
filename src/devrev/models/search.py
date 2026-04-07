@@ -93,8 +93,8 @@ class CoreSearchRequest(DevRevBaseModel):
     """Request model for core search."""
 
     query: str = Field(..., description="Search query")
-    namespace: SearchNamespace = Field(
-        ..., description="Namespace to search (e.g. account, work, article)"
+    namespaces: list[SearchNamespace] = Field(
+        ..., description="Namespaces to search in (e.g. ['account'], ['work', 'ticket'])"
     )
     limit: int | None = Field(
         default=None,
@@ -109,8 +109,8 @@ class HybridSearchRequest(DevRevBaseModel):
     """Request model for hybrid search."""
 
     query: str = Field(..., description="Search query")
-    namespace: SearchNamespace = Field(
-        ..., description="Namespace to search (e.g. account, work, article)"
+    namespaces: list[SearchNamespace] = Field(
+        ..., description="Namespaces to search in (e.g. ['account'], ['work', 'ticket'])"
     )
     semantic_weight: float | None = Field(
         default=None, description="Weight for semantic search (0-1)"
