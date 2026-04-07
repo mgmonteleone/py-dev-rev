@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.1] - 2026-04-07
+
+### Fixed
+
+- **Search API Bad Request error** (#204) — Fixed `devrev_search_core_devrev` and `devrev_search_hybrid_devrev` MCP tools returning "Validation error: Bad Request" by changing `CoreSearchRequest` and `HybridSearchRequest` models to send `namespaces` (plural, array) instead of `namespace` (singular, string), matching the DevRev API specification.
+
+### Maintenance
+
+- **Cloud Build machine type** — Updated Cloud Build machine type from `N1_HIGHCPU_8` to `E2_HIGHCPU_8`.
+
 ## [2.10.2] - 2026-03-11
 
 ### Fixed
