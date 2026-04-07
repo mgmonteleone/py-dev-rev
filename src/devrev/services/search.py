@@ -94,7 +94,7 @@ class SearchService(BaseService):
                 )
             request = CoreSearchRequest(
                 query=request_or_query,
-                namespace=namespace,
+                namespaces=[namespace],
                 limit=limit,
                 cursor=cursor,
             )
@@ -180,7 +180,7 @@ class SearchService(BaseService):
                 )
             request = HybridSearchRequest(
                 query=request_or_query,
-                namespace=namespace,
+                namespaces=[namespace],
                 semantic_weight=semantic_weight,
                 limit=limit,
                 cursor=cursor,
@@ -266,7 +266,7 @@ class AsyncSearchService(AsyncBaseService):
                 )
             request = CoreSearchRequest(
                 query=request_or_query,
-                namespace=namespace,
+                namespaces=[namespace],
                 limit=limit,
                 cursor=cursor,
             )
@@ -352,7 +352,7 @@ class AsyncSearchService(AsyncBaseService):
                 )
             request = HybridSearchRequest(
                 query=request_or_query,
-                namespace=namespace,
+                namespaces=[namespace],
                 semantic_weight=semantic_weight,
                 limit=limit,
                 cursor=cursor,

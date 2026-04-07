@@ -90,7 +90,7 @@ from devrev.models.search import CoreSearchRequest, HybridSearchRequest, SearchN
 # Core search with request object
 request = CoreSearchRequest(
     query="type:incident AND severity:sev0",
-    namespace=SearchNamespace.WORK,
+    namespaces=[SearchNamespace.WORK],
     limit=50,
 )
 results = client.search.core(request)
@@ -98,6 +98,7 @@ results = client.search.core(request)
 # Hybrid search with request object
 request = HybridSearchRequest(
     query="database performance issues",
+    namespaces=[SearchNamespace.WORK],
     semantic_weight=0.8,
     limit=20,
 )
