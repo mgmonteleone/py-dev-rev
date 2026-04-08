@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.0] - 2026-04-08
+
+### Added
+
+- **Article content format detection and bidirectional conversion** (#160, PR #205)
+  - `detect_content_format()` — detects `devrev/rt`, `text/markdown`, `text/html`, or `text/plain`
+  - `devrev_rt_to_markdown()` — converts ProseMirror JSON to Markdown
+  - `devrev_rt_to_html()` — converts ProseMirror JSON to HTML with XSS-safe escaping
+  - `OutputFormat` type alias (`Literal["text/markdown", "text/html", "devrev/rt"]`)
+  - Four format constants: `CONTENT_FORMAT_DEVREV_RT`, `CONTENT_FORMAT_MARKDOWN`, `CONTENT_FORMAT_HTML`, `CONTENT_FORMAT_PLAIN`
+  - `get_with_content()` (sync + async) now accepts optional `output_format` parameter for automatic content conversion
+  - MCP tool `devrev_articles_get` accepts `output_format` when `include_content=True`
+  - `_convert_content()` validates output format and raises `ValueError` for invalid values
+  - All HTML output uses `html.escape()` for text and attributes; links include `rel="noopener noreferrer"`
+
 ## [2.12.2] - 2026-04-08
 
 ### Maintenance
