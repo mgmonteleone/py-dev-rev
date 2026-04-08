@@ -20,6 +20,7 @@ from devrev.models.articles import (
     SetSharedWithMembership,
 )
 from devrev.models.base import SetTagWithValue
+from devrev.utils.content_converter import OutputFormat
 from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
@@ -65,7 +66,10 @@ async def devrev_articles_list(
 
 @mcp.tool()
 async def devrev_articles_get(
-    ctx: Context[Any, Any, Any], id: str, include_content: bool = False
+    ctx: Context[Any, Any, Any],
+    id: str,
+    include_content: bool = False,
+    output_format: OutputFormat | None = None,
 ) -> dict[str, Any]:
     """Get a specific article by ID.
 
@@ -73,6 +77,10 @@ async def devrev_articles_get(
         ctx: MCP context containing the DevRev client.
         id: The article ID.
         include_content: If True, fetch and include article body content.
+        output_format: When include_content is True, convert the content to
+            this format before returning.  Accepted values:
+            ``"text/markdown"``, ``"text/html"``, ``"devrev/rt"``.
+            If omitted the raw stored content is returned as-is.
 
     Returns:
         Dictionary containing the article details. When include_content=True,
@@ -84,7 +92,9 @@ async def devrev_articles_get(
     app = ctx.request_context.lifespan_context
     try:
         if include_content:
-            article_with_content = await app.get_client().articles.get_with_content(id)
+            article_with_content = await app.get_client().articles.get_with_content(
+                id, output_format=output_format
+            )
             return serialize_model(article_with_content)
         else:
             request = ArticlesGetRequest(id=id)
