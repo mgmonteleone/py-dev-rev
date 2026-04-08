@@ -556,7 +556,7 @@ def _pm_inline_to_markdown(nodes: list[dict[str, Any]]) -> str:
 
 def _pm_text_node_to_markdown(node: dict[str, Any]) -> str:
     """Convert a ProseMirror text node (with optional marks) to Markdown."""
-    text = node.get("text", "")
+    text: str = str(node.get("text", ""))
     marks: list[dict[str, Any]] = node.get("marks", [])
 
     for mark in marks:
@@ -581,11 +581,11 @@ def _pm_table_to_markdown(rows: list[dict[str, Any]]) -> str:
     """Convert ProseMirror table rows to a Markdown table."""
     md_rows: list[list[str]] = []
     has_header = False
-    for row in rows:
-        if row.get("type") != "tableRow":
+    for pm_row in rows:
+        if pm_row.get("type") != "tableRow":
             continue
         cells: list[str] = []
-        for cell in row.get("content", []):
+        for cell in pm_row.get("content", []):
             ctype = cell.get("type", "")
             if ctype in ("tableHeader", "tableCell"):
                 if ctype == "tableHeader":
@@ -603,15 +603,15 @@ def _pm_table_to_markdown(rows: list[dict[str, Any]]) -> str:
     # Determine column count
     col_count = max(len(r) for r in md_rows) if md_rows else 0
     # Pad rows to equal length
-    for row in md_rows:
-        while len(row) < col_count:
-            row.append("")
+    for md_row in md_rows:
+        while len(md_row) < col_count:
+            md_row.append("")
 
     lines: list[str] = []
-    for i, row in enumerate(md_rows):
-        lines.append("| " + " | ".join(row) + " |")
+    for i, md_row in enumerate(md_rows):
+        lines.append("| " + " | ".join(md_row) + " |")
         if i == 0 and has_header:
-            lines.append("| " + " | ".join("---" for _ in row) + " |")
+            lines.append("| " + " | ".join("---" for _ in md_row) + " |")
 
     # If no explicit header, add separator after first row anyway
     if not has_header and md_rows:
@@ -766,7 +766,7 @@ def _pm_text_node_to_html(node: dict[str, Any]) -> str:
     Text content and attribute values are escaped to prevent XSS and
     malformed HTML output.
     """
-    text = html_module.escape(node.get("text", ""))
+    text: str = html_module.escape(str(node.get("text", "")))
     marks: list[dict[str, Any]] = node.get("marks", [])
 
     for mark in marks:
