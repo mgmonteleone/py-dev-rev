@@ -17,7 +17,16 @@ from typing import Any
 
 import pytest
 
-from devrev.utils.content_converter import html_to_devrev_rt
+from devrev.utils.content_converter import (
+    CONTENT_FORMAT_DEVREV_RT,
+    CONTENT_FORMAT_HTML,
+    CONTENT_FORMAT_MARKDOWN,
+    CONTENT_FORMAT_PLAIN,
+    detect_content_format,
+    devrev_rt_to_html,
+    devrev_rt_to_markdown,
+    html_to_devrev_rt,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -502,3 +511,191 @@ class TestGoldenFixtures:
         # Each cell has paragraph content
         for cell in first_row["content"]:
             assert cell["content"][0]["type"] == "paragraph"
+
+
+# ---------------------------------------------------------------------------
+# 7. Content format detection
+# ---------------------------------------------------------------------------
+
+
+class TestDetectContentFormat:
+    """Tests for detect_content_format()."""
+
+    def test_detects_devrev_rt_json(self) -> None:
+        content = '{"article": {"type": "doc", "content": []}, "artifactIds": []}'
+        assert detect_content_format(content) == CONTENT_FORMAT_DEVREV_RT
+
+    def test_detects_markdown_heading(self) -> None:
+        assert detect_content_format("# Hello\n\nWorld") == CONTENT_FORMAT_MARKDOWN
+
+    def test_detects_markdown_list(self) -> None:
+        assert detect_content_format("- item 1\n- item 2") == CONTENT_FORMAT_MARKDOWN
+
+    def test_detects_markdown_link(self) -> None:
+        assert detect_content_format("Check [this](http://example.com)") == CONTENT_FORMAT_MARKDOWN
+
+    def test_detects_html(self) -> None:
+        assert detect_content_format("<p>Hello world</p>") == CONTENT_FORMAT_HTML
+
+    def test_detects_html_with_tags(self) -> None:
+        assert detect_content_format("<h1>Title</h1><p>Body</p>") == CONTENT_FORMAT_HTML
+
+    def test_detects_plain_text(self) -> None:
+        assert detect_content_format("Just some plain text") == CONTENT_FORMAT_PLAIN
+
+    def test_detects_empty_string(self) -> None:
+        assert detect_content_format("") == CONTENT_FORMAT_PLAIN
+
+    def test_invalid_json_not_devrev_rt(self) -> None:
+        assert detect_content_format('{"key": "value"}') == CONTENT_FORMAT_PLAIN
+
+    def test_markdown_bold(self) -> None:
+        assert detect_content_format("This is **bold** text") == CONTENT_FORMAT_MARKDOWN
+
+    def test_fenced_code_block(self) -> None:
+        assert detect_content_format("```python\nprint('hi')\n```") == CONTENT_FORMAT_MARKDOWN
+
+
+# ---------------------------------------------------------------------------
+# 8. devrev/rt → Markdown round-trip
+# ---------------------------------------------------------------------------
+
+
+class TestDevrevRtToMarkdown:
+    """Tests for devrev_rt_to_markdown()."""
+
+    def test_heading(self) -> None:
+        rt = html_to_devrev_rt("# Hello")
+        md = devrev_rt_to_markdown(rt)
+        assert "# Hello" in md
+
+    def test_paragraph(self) -> None:
+        rt = html_to_devrev_rt("<p>Hello world</p>")
+        md = devrev_rt_to_markdown(rt)
+        assert "Hello world" in md
+
+    def test_bold_text(self) -> None:
+        rt = html_to_devrev_rt("<p><strong>bold</strong></p>")
+        md = devrev_rt_to_markdown(rt)
+        assert "**bold**" in md
+
+    def test_italic_text(self) -> None:
+        rt = html_to_devrev_rt("<p><em>italic</em></p>")
+        md = devrev_rt_to_markdown(rt)
+        assert "*italic*" in md
+
+    def test_code_inline(self) -> None:
+        rt = html_to_devrev_rt("<p><code>code</code></p>")
+        md = devrev_rt_to_markdown(rt)
+        assert "`code`" in md
+
+    def test_link(self) -> None:
+        rt = html_to_devrev_rt('<p><a href="https://example.com">link</a></p>')
+        md = devrev_rt_to_markdown(rt)
+        assert "[link](https://example.com)" in md
+
+    def test_code_block(self) -> None:
+        rt = html_to_devrev_rt('<pre><code class="language-python">print("hi")</code></pre>')
+        md = devrev_rt_to_markdown(rt)
+        assert "```python" in md
+        assert 'print("hi")' in md
+        assert "```" in md
+
+    def test_bullet_list(self) -> None:
+        rt = html_to_devrev_rt("<ul><li>one</li><li>two</li></ul>")
+        md = devrev_rt_to_markdown(rt)
+        assert "- one" in md
+        assert "- two" in md
+
+    def test_ordered_list(self) -> None:
+        rt = html_to_devrev_rt("<ol><li>first</li><li>second</li></ol>")
+        md = devrev_rt_to_markdown(rt)
+        assert "1. first" in md
+        assert "2. second" in md
+
+    def test_horizontal_rule(self) -> None:
+        rt = html_to_devrev_rt("<hr>")
+        md = devrev_rt_to_markdown(rt)
+        assert "---" in md
+
+    def test_passthrough_non_json(self) -> None:
+        """Non-JSON strings should be returned unchanged."""
+        assert devrev_rt_to_markdown("Hello world") == "Hello world"
+
+    def test_passthrough_non_devrev_json(self) -> None:
+        """JSON without 'article' key should be returned unchanged."""
+        content = '{"key": "value"}'
+        assert devrev_rt_to_markdown(content) == content
+
+    def test_empty_doc(self) -> None:
+        content = '{"article": {"type": "doc", "content": []}}'
+        assert devrev_rt_to_markdown(content) == ""
+
+    def test_strikethrough(self) -> None:
+        rt = html_to_devrev_rt("<p><s>deleted</s></p>")
+        md = devrev_rt_to_markdown(rt)
+        assert "~~deleted~~" in md
+
+
+# ---------------------------------------------------------------------------
+# 9. devrev/rt → HTML round-trip
+# ---------------------------------------------------------------------------
+
+
+class TestDevrevRtToHtml:
+    """Tests for devrev_rt_to_html()."""
+
+    def test_paragraph(self) -> None:
+        rt = html_to_devrev_rt("<p>Hello</p>")
+        html = devrev_rt_to_html(rt)
+        assert "<p>Hello</p>" in html
+
+    def test_heading(self) -> None:
+        rt = html_to_devrev_rt("# Title")
+        html = devrev_rt_to_html(rt)
+        assert "<h1>Title</h1>" in html
+
+    def test_bold(self) -> None:
+        rt = html_to_devrev_rt("<p><strong>bold</strong></p>")
+        html = devrev_rt_to_html(rt)
+        assert "<strong>bold</strong>" in html
+
+    def test_italic(self) -> None:
+        rt = html_to_devrev_rt("<p><em>italic</em></p>")
+        html = devrev_rt_to_html(rt)
+        assert "<em>italic</em>" in html
+
+    def test_link(self) -> None:
+        rt = html_to_devrev_rt('<p><a href="https://example.com">link</a></p>')
+        html = devrev_rt_to_html(rt)
+        assert 'href="https://example.com"' in html
+        assert "link</a>" in html
+
+    def test_code_block(self) -> None:
+        rt = html_to_devrev_rt('<pre><code class="language-js">var x;</code></pre>')
+        html = devrev_rt_to_html(rt)
+        assert "<pre><code" in html
+        assert "var x;" in html
+
+    def test_bullet_list(self) -> None:
+        rt = html_to_devrev_rt("<ul><li>a</li><li>b</li></ul>")
+        html = devrev_rt_to_html(rt)
+        assert "<ul>" in html
+        assert "<li>" in html
+
+    def test_horizontal_rule(self) -> None:
+        rt = html_to_devrev_rt("<hr>")
+        html = devrev_rt_to_html(rt)
+        assert "<hr>" in html
+
+    def test_passthrough_non_json(self) -> None:
+        assert devrev_rt_to_html("plain text") == "plain text"
+
+    def test_passthrough_non_devrev_json(self) -> None:
+        content = '{"key": "value"}'
+        assert devrev_rt_to_html(content) == content
+
+    def test_image(self) -> None:
+        rt = html_to_devrev_rt('<img src="http://img.png" alt="pic">')
+        html = devrev_rt_to_html(rt)
+        assert 'src="http://img.png"' in html

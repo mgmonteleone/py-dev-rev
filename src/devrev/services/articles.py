@@ -35,7 +35,15 @@ from devrev.models.artifacts import (
 )
 from devrev.models.base import SetTagWithValue
 from devrev.services.base import AsyncBaseService, BaseService
-from devrev.utils.content_converter import html_to_devrev_rt
+from devrev.utils.content_converter import (
+    CONTENT_FORMAT_DEVREV_RT,
+    CONTENT_FORMAT_HTML,
+    CONTENT_FORMAT_MARKDOWN,
+    detect_content_format,
+    devrev_rt_to_html,
+    devrev_rt_to_markdown,
+    html_to_devrev_rt,
+)
 
 # Content format to file extension mapping
 _CONTENT_FORMAT_EXTENSIONS: dict[str, str] = {
@@ -99,6 +107,57 @@ def _extract_content_format(resource: dict[str, object]) -> str:
                 if isinstance(file_type, str):
                     return file_type
     return "text/plain"
+
+
+def _convert_content(
+    content: str,
+    source_format: str,
+    target_format: str,
+) -> tuple[str, str]:
+    """Convert article content between formats.
+
+    Args:
+        content: The raw content string.
+        source_format: The MIME type of *content* (e.g. ``"devrev/rt"``).
+        target_format: The desired output MIME type.
+
+    Returns:
+        A ``(converted_content, actual_format)`` tuple.  If no conversion
+        is necessary (source == target, or conversion is not possible)
+        the original content and format are returned.
+    """
+    if source_format == target_format:
+        return content, source_format
+
+    # Auto-detect source format when unknown / generic
+    if source_format in ("text/plain", ""):
+        source_format = detect_content_format(content)
+
+    if target_format == CONTENT_FORMAT_MARKDOWN:
+        if source_format == CONTENT_FORMAT_DEVREV_RT:
+            return devrev_rt_to_markdown(content), CONTENT_FORMAT_MARKDOWN
+        # HTML or unknown → convert to devrev/rt first, then to markdown
+        if source_format == CONTENT_FORMAT_HTML:
+            rt = html_to_devrev_rt(content)
+            return devrev_rt_to_markdown(rt), CONTENT_FORMAT_MARKDOWN
+        # Already markdown or plain text
+        return content, source_format
+
+    if target_format == CONTENT_FORMAT_HTML:
+        if source_format == CONTENT_FORMAT_DEVREV_RT:
+            return devrev_rt_to_html(content), CONTENT_FORMAT_HTML
+        if source_format == CONTENT_FORMAT_MARKDOWN:
+            rt = html_to_devrev_rt(content)
+            return devrev_rt_to_html(rt), CONTENT_FORMAT_HTML
+        return content, source_format
+
+    if target_format == CONTENT_FORMAT_DEVREV_RT:
+        if source_format != CONTENT_FORMAT_DEVREV_RT:
+            return html_to_devrev_rt(content), CONTENT_FORMAT_DEVREV_RT
+        return content, source_format
+
+    # Unknown target format – return unchanged
+    return content, source_format
 
 
 class ArticlesService(BaseService):
@@ -313,17 +372,27 @@ class ArticlesService(BaseService):
             # Re-raise the original error
             raise DevRevError(f"Failed to create article with content: {e}") from e
 
-    def get_with_content(self, id: str) -> ArticleWithContent:
+    def get_with_content(
+        self,
+        id: str,
+        *,
+        output_format: str | None = None,
+    ) -> ArticleWithContent:
         """Get an article with its content loaded.
 
         This is a high-level method that:
         1. Fetches article metadata
         2. Locates the content artifact
         3. Downloads artifact content
-        4. Returns combined model
+        4. Optionally converts to the requested output format
+        5. Returns combined model
 
         Args:
             id: Article ID
+            output_format: Desired output format for the content.  Accepted
+                values: ``"text/markdown"``, ``"text/html"``, ``"devrev/rt"``.
+                When ``None`` (the default) the raw stored content is returned
+                as-is.
 
         Returns:
             ArticleWithContent with metadata and content
@@ -336,6 +405,9 @@ class ArticlesService(BaseService):
             >>> article_with_content = client.articles.get_with_content("ART-123")
             >>> print(article_with_content.article.title)
             >>> print(article_with_content.content)
+            >>> # Get content as Markdown
+            >>> md = client.articles.get_with_content("ART-123", output_format="text/markdown")
+            >>> print(md.content)
         """
         if not self._parent_client:
             raise DevRevError(
@@ -364,12 +436,18 @@ class ArticlesService(BaseService):
             # Get content format from resource metadata (more reliable than artifact.get)
             content_format = _extract_content_format(article.resource)
 
+            # Step 4: Convert to requested output format if specified
+            if output_format is not None:
+                content, content_format = _convert_content(content, content_format, output_format)
+
             return ArticleWithContent(
                 article=article,
                 content=content,
                 content_format=content_format,
                 content_version=None,
             )
+        except DevRevError:
+            raise
         except Exception as e:
             raise DevRevError(f"Failed to download content for article {id}: {e}") from e
 
@@ -772,17 +850,27 @@ class AsyncArticlesService(AsyncBaseService):
             # Re-raise the original error
             raise DevRevError(f"Failed to create article with content: {e}") from e
 
-    async def get_with_content(self, id: str) -> ArticleWithContent:
+    async def get_with_content(
+        self,
+        id: str,
+        *,
+        output_format: str | None = None,
+    ) -> ArticleWithContent:
         """Get an article with its content loaded (async).
 
         This is a high-level method that:
         1. Fetches article metadata
         2. Locates the content artifact
         3. Downloads artifact content
-        4. Returns combined model
+        4. Optionally converts to the requested output format
+        5. Returns combined model
 
         Args:
             id: Article ID
+            output_format: Desired output format for the content.  Accepted
+                values: ``"text/markdown"``, ``"text/html"``, ``"devrev/rt"``.
+                When ``None`` (the default) the raw stored content is returned
+                as-is.
 
         Returns:
             ArticleWithContent with metadata and content
@@ -818,12 +906,18 @@ class AsyncArticlesService(AsyncBaseService):
             # Get content format from resource metadata (more reliable than artifact.get)
             content_format = _extract_content_format(article.resource)
 
+            # Step 4: Convert to requested output format if specified
+            if output_format is not None:
+                content, content_format = _convert_content(content, content_format, output_format)
+
             return ArticleWithContent(
                 article=article,
                 content=content,
                 content_format=content_format,
                 content_version=None,
             )
+        except DevRevError:
+            raise
         except Exception as e:
             raise DevRevError(f"Failed to download content for article {id}: {e}") from e
 
