@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.2] - 2026-04-08
+
+### Maintenance
+
+- **CI dependency updates** — Merged 4 Dependabot PRs:
+  - PR #199: Bump `peter-evans/create-pull-request` from 6 to 8
+  - PR #201: Bump uv group dependencies (2 updates)
+  - PR #202: Bump `actions/configure-pages` from 4 to 6
+  - PR #203: Bump `codecov/codecov-action` from 5 to 6
+
 ## [2.12.1] - 2026-04-07
 
 ### Fixed
