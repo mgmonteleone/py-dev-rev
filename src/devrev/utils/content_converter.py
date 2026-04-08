@@ -29,7 +29,7 @@ from __future__ import annotations
 import html as html_module
 import json
 import re
-from typing import Any
+from typing import Any, Literal
 
 from bs4 import BeautifulSoup, NavigableString, Tag  # type: ignore[attr-defined]
 from markdown import markdown as md_to_html  # type: ignore[import-untyped]
@@ -292,7 +292,15 @@ def _ensure_block_children(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _is_markdown(content: str) -> bool:
-    """Heuristic check: does *content* look like Markdown rather than HTML?"""
+    """Heuristic check: does *content* look like Markdown rather than HTML?
+
+    **Trade-offs:**  Content that starts with an HTML tag (e.g. ``<div>``,
+    ``<p>``) is classified as HTML even if it also contains Markdown syntax
+    inside the tags.  This means ``<p>**bold**</p>`` will be detected as
+    HTML, not Markdown.  This is intentional: mixed HTML-with-Markdown is
+    better handled by the HTML parser path, which preserves the outer
+    structure.  Pure Markdown documents rarely start with a raw HTML tag.
+    """
     # If it starts with an HTML tag it's almost certainly HTML.
     stripped = content.strip()
     if stripped.startswith("<") and not stripped.startswith("<!"):
@@ -375,6 +383,9 @@ CONTENT_FORMAT_DEVREV_RT = "devrev/rt"
 CONTENT_FORMAT_MARKDOWN = "text/markdown"
 CONTENT_FORMAT_HTML = "text/html"
 CONTENT_FORMAT_PLAIN = "text/plain"
+
+#: Type alias for the output formats accepted by conversion functions.
+OutputFormat = Literal["text/markdown", "text/html", "devrev/rt"]
 
 
 def detect_content_format(content: str) -> str:

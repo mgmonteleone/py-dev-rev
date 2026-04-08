@@ -514,7 +514,7 @@ class TestGoldenFixtures:
 
 
 # ---------------------------------------------------------------------------
-# 7. Content format detection
+# 11. Content format detection
 # ---------------------------------------------------------------------------
 
 
@@ -557,7 +557,7 @@ class TestDetectContentFormat:
 
 
 # ---------------------------------------------------------------------------
-# 8. devrev/rt → Markdown round-trip
+# 12. devrev/rt → Markdown round-trip
 # ---------------------------------------------------------------------------
 
 
@@ -638,7 +638,7 @@ class TestDevrevRtToMarkdown:
 
 
 # ---------------------------------------------------------------------------
-# 9. devrev/rt → HTML round-trip
+# 13. devrev/rt → HTML round-trip
 # ---------------------------------------------------------------------------
 
 
@@ -702,7 +702,7 @@ class TestDevrevRtToHtml:
 
 
 # ---------------------------------------------------------------------------
-# 10. _convert_content routing logic (via service module)
+# 14. _convert_content routing logic (via service module)
 # ---------------------------------------------------------------------------
 
 
@@ -771,7 +771,7 @@ class TestConvertContent:
 
 
 # ---------------------------------------------------------------------------
-# 11. HTML escaping in devrev_rt_to_html
+# 15. HTML escaping in devrev_rt_to_html
 # ---------------------------------------------------------------------------
 
 

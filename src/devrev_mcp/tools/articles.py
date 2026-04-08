@@ -20,6 +20,7 @@ from devrev.models.articles import (
     SetSharedWithMembership,
 )
 from devrev.models.base import SetTagWithValue
+from devrev.utils.content_converter import OutputFormat
 from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
@@ -68,7 +69,7 @@ async def devrev_articles_get(
     ctx: Context[Any, Any, Any],
     id: str,
     include_content: bool = False,
-    output_format: str | None = None,
+    output_format: OutputFormat | None = None,
 ) -> dict[str, Any]:
     """Get a specific article by ID.
 

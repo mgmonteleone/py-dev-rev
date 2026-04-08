@@ -39,6 +39,7 @@ from devrev.utils.content_converter import (
     CONTENT_FORMAT_DEVREV_RT,
     CONTENT_FORMAT_HTML,
     CONTENT_FORMAT_MARKDOWN,
+    OutputFormat,
     detect_content_format,
     devrev_rt_to_html,
     devrev_rt_to_markdown,
@@ -380,7 +381,7 @@ class ArticlesService(BaseService):
         self,
         id: str,
         *,
-        output_format: str | None = None,
+        output_format: OutputFormat | None = None,
     ) -> ArticleWithContent:
         """Get an article with its content loaded.
 
@@ -858,7 +859,7 @@ class AsyncArticlesService(AsyncBaseService):
         self,
         id: str,
         *,
-        output_format: str | None = None,
+        output_format: OutputFormat | None = None,
     ) -> ArticleWithContent:
         """Get an article with its content loaded (async).
 
