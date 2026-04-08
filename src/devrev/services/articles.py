@@ -45,14 +45,6 @@ from devrev.utils.content_converter import (
     html_to_devrev_rt,
 )
 
-# Content format to file extension mapping
-_CONTENT_FORMAT_EXTENSIONS: dict[str, str] = {
-    "text/html": ".html",
-    "text/markdown": ".md",
-    "text/plain": ".txt",
-    "devrev/rt": "",  # DevRev rich text uses no extension (file name "Article")
-}
-
 
 def _extract_content_artifact_id(resource: dict[str, object]) -> str | None:
     """Extract the content artifact ID from an article's resource dict.
@@ -125,7 +117,19 @@ def _convert_content(
         A ``(converted_content, actual_format)`` tuple.  If no conversion
         is necessary (source == target, or conversion is not possible)
         the original content and format are returned.
+    Raises:
+        ValueError: If *target_format* is not a recognised format.
     """
+    _VALID_FORMATS = {
+        CONTENT_FORMAT_MARKDOWN,
+        CONTENT_FORMAT_HTML,
+        CONTENT_FORMAT_DEVREV_RT,
+    }
+    if target_format not in _VALID_FORMATS:
+        raise ValueError(
+            f"Invalid output_format {target_format!r}. Accepted values: {sorted(_VALID_FORMATS)}"
+        )
+
     if source_format == target_format:
         return content, source_format
 

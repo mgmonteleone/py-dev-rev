@@ -26,6 +26,7 @@ Public API
 
 from __future__ import annotations
 
+import html as html_module
 import json
 import re
 from typing import Any
@@ -702,12 +703,12 @@ def _pm_nodes_to_html(nodes: list[dict[str, Any]]) -> str:
 
         elif ntype in ("tableCell", "tableHeader"):
             tag = "th" if ntype == "tableHeader" else "td"
-            inner = _pm_inline_to_html(content)
+            inner = _pm_nodes_to_html(content)
             parts.append(f"<{tag}>{inner}</{tag}>")
 
         elif ntype == "image":
-            src = attrs.get("src", "")
-            alt = attrs.get("alt", "")
+            src = html_module.escape(attrs.get("src", ""), quote=True)
+            alt = html_module.escape(attrs.get("alt", ""), quote=True)
             parts.append(f'<img src="{src}" alt="{alt}">')
 
         elif ntype == "text":
@@ -731,8 +732,8 @@ def _pm_inline_to_html(nodes: list[dict[str, Any]]) -> str:
             parts.append("<br>")
         elif ntype == "image":
             attrs = node.get("attrs") or {}
-            src = attrs.get("src", "")
-            alt = attrs.get("alt", "")
+            src = html_module.escape(attrs.get("src", ""), quote=True)
+            alt = html_module.escape(attrs.get("alt", ""), quote=True)
             parts.append(f'<img src="{src}" alt="{alt}">')
         else:
             content = node.get("content", [])
@@ -742,8 +743,12 @@ def _pm_inline_to_html(nodes: list[dict[str, Any]]) -> str:
 
 
 def _pm_text_node_to_html(node: dict[str, Any]) -> str:
-    """Convert a ProseMirror text node (with marks) to HTML."""
-    text = node.get("text", "")
+    """Convert a ProseMirror text node (with marks) to HTML.
+
+    Text content and attribute values are escaped to prevent XSS and
+    malformed HTML output.
+    """
+    text = html_module.escape(node.get("text", ""))
     marks: list[dict[str, Any]] = node.get("marks", [])
 
     for mark in marks:
@@ -759,8 +764,12 @@ def _pm_text_node_to_html(node: dict[str, Any]) -> str:
         elif mtype == "underline":
             text = f"<u>{text}</u>"
         elif mtype == "link":
-            href = (mark.get("attrs") or {}).get("href", "")
-            target = (mark.get("attrs") or {}).get("target", "_blank")
+            href = html_module.escape(
+                (mark.get("attrs") or {}).get("href", ""), quote=True
+            )
+            target = html_module.escape(
+                (mark.get("attrs") or {}).get("target", "_blank"), quote=True
+            )
             text = f'<a href="{href}" target="{target}">{text}</a>'
         elif mtype == "subscript":
             text = f"<sub>{text}</sub>"

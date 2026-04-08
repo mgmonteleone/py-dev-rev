@@ -699,3 +699,92 @@ class TestDevrevRtToHtml:
         rt = html_to_devrev_rt('<img src="http://img.png" alt="pic">')
         html = devrev_rt_to_html(rt)
         assert 'src="http://img.png"' in html
+
+
+# ---------------------------------------------------------------------------
+# 10. _convert_content routing logic (via service module)
+# ---------------------------------------------------------------------------
+
+
+class TestConvertContent:
+    """Tests for the _convert_content helper in articles service."""
+
+    def test_same_format_is_noop(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        content = "# Hello"
+        result, fmt = _convert_content(content, "text/markdown", "text/markdown")
+        assert result == content
+        assert fmt == "text/markdown"
+
+    def test_devrev_rt_to_markdown(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        rt = html_to_devrev_rt("# Heading")
+        result, fmt = _convert_content(rt, "devrev/rt", "text/markdown")
+        assert "Heading" in result
+        assert fmt == "text/markdown"
+
+    def test_devrev_rt_to_html(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        rt = html_to_devrev_rt("<p>Hello</p>")
+        result, fmt = _convert_content(rt, "devrev/rt", "text/html")
+        assert "<p>" in result
+        assert fmt == "text/html"
+
+    def test_html_to_markdown(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        result, fmt = _convert_content("<p>Hello</p>", "text/html", "text/markdown")
+        assert "Hello" in result
+        assert fmt == "text/markdown"
+
+    def test_markdown_to_html(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        result, fmt = _convert_content("# Title", "text/markdown", "text/html")
+        assert "<h1>" in result
+        assert fmt == "text/html"
+
+    def test_any_to_devrev_rt(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        result, fmt = _convert_content("# Hello", "text/markdown", "devrev/rt")
+        parsed = json.loads(result)
+        assert "article" in parsed
+        assert fmt == "devrev/rt"
+
+    def test_auto_detect_plain_text_source(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        rt_json = html_to_devrev_rt("# Hello")
+        result, fmt = _convert_content(rt_json, "text/plain", "text/markdown")
+        # Should auto-detect as devrev/rt and convert to markdown
+        assert "Hello" in result
+
+    def test_invalid_target_format_raises(self) -> None:
+        from devrev.services.articles import _convert_content
+
+        with pytest.raises(ValueError, match="Invalid output_format"):
+            _convert_content("hello", "text/plain", "application/pdf")
+
+
+# ---------------------------------------------------------------------------
+# 11. HTML escaping in devrev_rt_to_html
+# ---------------------------------------------------------------------------
+
+
+class TestHtmlEscaping:
+    """Tests to verify XSS-safe HTML output."""
+
+    def test_text_with_angle_brackets_is_escaped(self) -> None:
+        rt = html_to_devrev_rt("<p>a &lt;script&gt; tag</p>")
+        html_out = devrev_rt_to_html(rt)
+        assert "<script>" not in html_out
+        assert "&lt;script&gt;" in html_out
+
+    def test_special_chars_in_text(self) -> None:
+        rt = html_to_devrev_rt("<p>Tom &amp; Jerry</p>")
+        html_out = devrev_rt_to_html(rt)
+        assert "Tom &amp; Jerry" in html_out
