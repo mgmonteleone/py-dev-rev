@@ -10,7 +10,7 @@ Supported formats
 -----------------
 * **HTML** – parsed with *BeautifulSoup 4* for robust DOM walking.
 * **Markdown** – first converted to HTML via the *markdown* library
-  (with ``tables``, ``fenced_code``, and ``codehilite`` extensions),
+  (with ``tables``, ``fenced_code``, and ``md_in_html`` extensions),
   then parsed identically.
 * **Plain text** – wrapped in a single ``<p>`` before conversion.
 * **devrev/rt JSON** – ProseMirror document envelope; detected and
@@ -463,7 +463,14 @@ def _pm_nodes_to_markdown(nodes: list[dict[str, Any]], *, indent: str = "") -> s
 
         elif ntype == "blockquote":
             inner = _pm_nodes_to_markdown(content, indent="> ")
-            parts.append(inner)
+            # Prefix blank lines with "> " to preserve multi-paragraph blockquotes
+            fixed_lines: list[str] = []
+            for line in inner.split("\n"):
+                if line == "":
+                    fixed_lines.append(">")
+                else:
+                    fixed_lines.append(line)
+            parts.append("\n".join(fixed_lines))
 
         elif ntype == "bulletList":
             for item in content:
@@ -764,13 +771,11 @@ def _pm_text_node_to_html(node: dict[str, Any]) -> str:
         elif mtype == "underline":
             text = f"<u>{text}</u>"
         elif mtype == "link":
-            href = html_module.escape(
-                (mark.get("attrs") or {}).get("href", ""), quote=True
-            )
+            href = html_module.escape((mark.get("attrs") or {}).get("href", ""), quote=True)
             target = html_module.escape(
                 (mark.get("attrs") or {}).get("target", "_blank"), quote=True
             )
-            text = f'<a href="{href}" target="{target}">{text}</a>'
+            text = f'<a href="{href}" target="{target}" rel="noopener noreferrer">{text}</a>'
         elif mtype == "subscript":
             text = f"<sub>{text}</sub>"
         elif mtype == "superscript":
