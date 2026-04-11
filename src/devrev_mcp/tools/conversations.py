@@ -16,6 +16,7 @@ from devrev.models.conversations import (
     ConversationsUpdateRequest,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -60,6 +61,7 @@ async def devrev_conversations_get(
     Args:
         id: Conversation ID (e.g., "don:core:dvrv-us-1:devo/1:conversation/123").
     """
+    validate_don_id(id, "conversation", "devrev_conversations_get")
     app = ctx.request_context.lifespan_context
     try:
         request = ConversationsGetRequest(id=id)
@@ -108,6 +110,7 @@ if _config.enable_destructive_tools:
             title: New conversation title.
             description: New conversation description.
         """
+        validate_don_id(id, "conversation", "devrev_conversations_update")
         app = ctx.request_context.lifespan_context
         try:
             request = ConversationsUpdateRequest(id=id, title=title, description=description)
@@ -126,6 +129,7 @@ if _config.enable_destructive_tools:
         Args:
             id: Conversation ID to delete.
         """
+        validate_don_id(id, "conversation", "devrev_conversations_delete")
         app = ctx.request_context.lifespan_context
         try:
             request = ConversationsDeleteRequest(id=id)

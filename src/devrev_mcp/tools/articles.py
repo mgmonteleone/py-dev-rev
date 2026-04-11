@@ -22,6 +22,7 @@ from devrev.models.articles import (
 from devrev.models.base import SetTagWithValue
 from devrev.utils.content_converter import OutputFormat
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -89,6 +90,7 @@ async def devrev_articles_get(
     Raises:
         RuntimeError: If the DevRev API call fails.
     """
+    validate_don_id(id, "article", "devrev_articles_get")
     app = ctx.request_context.lifespan_context
     try:
         if include_content:
@@ -251,6 +253,7 @@ if _config.enable_destructive_tools:
         Raises:
             RuntimeError: If the DevRev API call fails.
         """
+        validate_don_id(id, "article", "devrev_articles_update")
         app = ctx.request_context.lifespan_context
         try:
             article_status = None
@@ -323,6 +326,7 @@ if _config.enable_destructive_tools:
         Raises:
             RuntimeError: If the DevRev API call fails.
         """
+        validate_don_id(id, "article", "devrev_articles_delete")
         app = ctx.request_context.lifespan_context
         try:
             request = ArticlesDeleteRequest(id=id)

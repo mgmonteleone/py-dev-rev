@@ -260,6 +260,20 @@ from devrev.models.recommendations import (
     MessageRole,
     TokenUsage,
 )
+from devrev.models.rev_orgs import (
+    RevOrg,
+    RevOrgSummary,
+    RevOrgsCreateRequest,
+    RevOrgsCreateResponse,
+    RevOrgsDeleteRequest,
+    RevOrgsDeleteResponse,
+    RevOrgsGetRequest,
+    RevOrgsGetResponse,
+    RevOrgsListRequest,
+    RevOrgsListResponse,
+    RevOrgsUpdateRequest,
+    RevOrgsUpdateResponse,
+)
 from devrev.models.rev_users import (
     RevUser,
     RevUsersAssociationsAddRequest,
@@ -694,6 +708,19 @@ __all__ = [
     "ChatCompletionResponse",
     "GetReplyRequest",
     "GetReplyResponse",
+    # Rev Orgs
+    "RevOrg",
+    "RevOrgSummary",
+    "RevOrgsCreateRequest",
+    "RevOrgsCreateResponse",
+    "RevOrgsGetRequest",
+    "RevOrgsGetResponse",
+    "RevOrgsListRequest",
+    "RevOrgsListResponse",
+    "RevOrgsUpdateRequest",
+    "RevOrgsUpdateResponse",
+    "RevOrgsDeleteRequest",
+    "RevOrgsDeleteResponse",
     # Rev Users
     "RevUser",
     "RevUserSummary",
@@ -895,6 +922,12 @@ from devrev.models.works import (  # noqa: F811
 from devrev.models.works import (
     WorksExportResponse as _WorksExportResponse,
 )
+from devrev.models.rev_orgs import (  # noqa: F811
+    RevOrg as _RevOrg,
+)
+from devrev.models.rev_orgs import (
+    RevOrgsListResponse as _RevOrgsListResponse,
+)
 from devrev.models.works import (
     WorksListResponse as _WorksListResponse,
 )
@@ -904,6 +937,8 @@ _TagWithValue.model_rebuild()
 _Account.model_rebuild()
 _AccountsListResponse.model_rebuild()
 _AccountsExportResponse.model_rebuild()
+_RevOrg.model_rebuild()
+_RevOrgsListResponse.model_rebuild()
 _Work.model_rebuild()
 _WorksListResponse.model_rebuild()
 _WorksExportResponse.model_rebuild()

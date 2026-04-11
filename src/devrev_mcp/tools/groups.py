@@ -22,6 +22,7 @@ from devrev.models.groups import (
     GroupType,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -75,6 +76,7 @@ async def devrev_groups_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, A
     Raises:
         RuntimeError: If the DevRev API call fails.
     """
+    validate_don_id(id, "group", "devrev_groups_get")
     app = ctx.request_context.lifespan_context
     try:
         request = GroupsGetRequest(id=id)
@@ -146,6 +148,7 @@ if _config.enable_destructive_tools:
         Raises:
             RuntimeError: If the DevRev API call fails.
         """
+        validate_don_id(id, "group", "devrev_groups_update")
         app = ctx.request_context.lifespan_context
         try:
             request = GroupsUpdateRequest(id=id, name=name, description=description)

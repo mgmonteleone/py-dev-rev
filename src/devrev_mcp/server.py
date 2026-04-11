@@ -243,6 +243,7 @@ from devrev_mcp.tools import groups as _groups_tools  # noqa: E402, F401
 from devrev_mcp.tools import incidents as _incidents_tools  # noqa: E402, F401
 from devrev_mcp.tools import links as _links_tools  # noqa: E402, F401
 from devrev_mcp.tools import parts as _parts_tools  # noqa: E402, F401
+from devrev_mcp.tools import rev_orgs as _rev_orgs_tools  # noqa: E402, F401
 from devrev_mcp.tools import server_info as _server_info_tools  # noqa: E402, F401
 from devrev_mcp.tools import slas as _slas_tools  # noqa: E402, F401
 from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
