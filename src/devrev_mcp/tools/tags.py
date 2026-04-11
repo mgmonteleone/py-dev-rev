@@ -16,6 +16,7 @@ from devrev.models.tags import (
     TagsUpdateRequest,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -67,6 +68,7 @@ async def devrev_tags_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, Any
     Raises:
         RuntimeError: If the DevRev API request fails.
     """
+    validate_don_id(id, "tag", "devrev_tags_get")
     app = ctx.request_context.lifespan_context
     try:
         request = TagsGetRequest(id=id)
@@ -123,6 +125,7 @@ if _config.enable_destructive_tools:
         Raises:
             RuntimeError: If the DevRev API request fails.
         """
+        validate_don_id(id, "tag", "devrev_tags_update")
         app = ctx.request_context.lifespan_context
         try:
             request = TagsUpdateRequest(id=id, name=name, description=description)
@@ -144,6 +147,7 @@ if _config.enable_destructive_tools:
         Raises:
             RuntimeError: If the DevRev API request fails.
         """
+        validate_don_id(id, "tag", "devrev_tags_delete")
         app = ctx.request_context.lifespan_context
         try:
             request = TagsDeleteRequest(id=id)

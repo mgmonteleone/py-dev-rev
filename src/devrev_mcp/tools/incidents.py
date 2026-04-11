@@ -10,6 +10,7 @@ from mcp.server.fastmcp import Context
 from devrev.exceptions import DevRevError
 from devrev.models.incidents import IncidentSeverity, IncidentStage
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -77,6 +78,7 @@ async def devrev_incidents_get(
     Args:
         id: The incident ID.
     """
+    validate_don_id(id, "incident", "devrev_incidents_get")
     app = ctx.request_context.lifespan_context
     try:
         incident = await app.get_client().incidents.get(id)
@@ -148,6 +150,7 @@ if _config.enable_destructive_tools:
             stage: New stage: ACKNOWLEDGED, IDENTIFIED, MITIGATED, RESOLVED.
             severity: New severity level: SEV0, SEV1, SEV2, SEV3.
         """
+        validate_don_id(id, "incident", "devrev_incidents_update")
         app = ctx.request_context.lifespan_context
         try:
             stage_enum = None
@@ -189,6 +192,7 @@ if _config.enable_destructive_tools:
         Args:
             id: The incident ID to delete.
         """
+        validate_don_id(id, "incident", "devrev_incidents_delete")
         app = ctx.request_context.lifespan_context
         try:
             await app.get_client().incidents.delete(id)

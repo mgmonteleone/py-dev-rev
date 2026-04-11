@@ -16,6 +16,7 @@ from devrev.models.question_answers import (
     QuestionAnswersUpdateRequest,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -62,6 +63,7 @@ async def devrev_question_answers_get(
     Args:
         id: The question answer ID.
     """
+    validate_don_id(id, "qa", "devrev_question_answers_get")
     app = ctx.request_context.lifespan_context
     try:
         request = QuestionAnswersGetRequest(id=id)
@@ -124,6 +126,7 @@ if _config.enable_destructive_tools:
             question: New question text.
             answer: New answer text.
         """
+        validate_don_id(id, "qa", "devrev_question_answers_update")
         app = ctx.request_context.lifespan_context
         try:
             request = QuestionAnswersUpdateRequest(id=id, question=question, answer=answer)
@@ -142,6 +145,7 @@ if _config.enable_destructive_tools:
         Args:
             id: The question answer ID to delete.
         """
+        validate_don_id(id, "qa", "devrev_question_answers_delete")
         app = ctx.request_context.lifespan_context
         try:
             request = QuestionAnswersDeleteRequest(id=id)

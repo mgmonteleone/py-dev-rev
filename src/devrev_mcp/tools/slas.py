@@ -18,6 +18,7 @@ from devrev.models.slas import (
     SlaTrackerStatus,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -62,6 +63,7 @@ async def devrev_slas_get(
     Args:
         id: SLA ID (e.g., "don:core:dvrv-us-1:devo/1:sla/123").
     """
+    validate_don_id(id, "sla", "devrev_slas_get")
     app = ctx.request_context.lifespan_context
     try:
         request = SlasGetRequest(id=id)
@@ -110,6 +112,7 @@ if _config.enable_destructive_tools:
             name: New SLA name.
             description: New SLA description.
         """
+        validate_don_id(id, "sla", "devrev_slas_update")
         app = ctx.request_context.lifespan_context
         try:
             request = SlasUpdateRequest(id=id, name=name, description=description)
@@ -130,6 +133,7 @@ if _config.enable_destructive_tools:
             id: SLA ID to transition.
             status: New status (draft, published, archived, active, paused, breached, completed).
         """
+        validate_don_id(id, "sla", "devrev_slas_transition")
         app = ctx.request_context.lifespan_context
         try:
             # Try SlaStatus first, then SlaTrackerStatus, then use raw string

@@ -16,6 +16,7 @@ from devrev.models.links import (
     LinkType,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -63,6 +64,7 @@ async def devrev_links_get(
     Args:
         id: Link ID (e.g., "don:core:dvrv-us-1:devo/1:link/123").
     """
+    validate_don_id(id, "link", "devrev_links_get")
     app = ctx.request_context.lifespan_context
     try:
         request = LinksGetRequest(id=id)
@@ -119,6 +121,7 @@ if _config.enable_destructive_tools:
         Args:
             id: Link ID to delete.
         """
+        validate_don_id(id, "link", "devrev_links_delete")
         app = ctx.request_context.lifespan_context
         try:
             request = LinksDeleteRequest(id=id)
