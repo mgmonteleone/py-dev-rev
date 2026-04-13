@@ -161,9 +161,7 @@ def validate_don_id(
     if len(expected_friendly) == 1:
         expected_description = f"an {expected_friendly[0]} ID"
     else:
-        expected_description = (
-            "one of: " + ", ".join(f"{n} ID" for n in expected_friendly)
-        )
+        expected_description = "one of: " + ", ".join(f"{n} ID" for n in expected_friendly)
 
     # Suggest the correct tool for the supplied type, if known.
     suggestion = ""

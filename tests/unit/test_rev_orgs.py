@@ -146,9 +146,7 @@ class TestRevOrgModels:
             (["don:core:account:1", "don:core:account:2"], 50),
         ],
     )
-    def test_rev_orgs_list_request_with_filters(
-        self, account_ids: list[str], limit: int
-    ) -> None:
+    def test_rev_orgs_list_request_with_filters(self, account_ids: list[str], limit: int) -> None:
         """RevOrgsListRequest serializes account and limit filters."""
         req = RevOrgsListRequest(account=account_ids, limit=limit)
         data = req.model_dump(exclude_none=True)
@@ -204,7 +202,10 @@ class TestRevOrgModels:
         """RevOrgsListResponse deserializes list and pagination cursor."""
         response = RevOrgsListResponse.model_validate(
             {
-                "rev_orgs": [sample_rev_org_data, {**sample_rev_org_data, "id": "don:core:revorgs/456"}],
+                "rev_orgs": [
+                    sample_rev_org_data,
+                    {**sample_rev_org_data, "id": "don:core:revorgs/456"},
+                ],
                 "next_cursor": "cursor-abc",
             }
         )
@@ -228,9 +229,7 @@ class TestRevOrgsService:
         sample_rev_org_data: dict[str, Any],
     ) -> None:
         """get() calls /rev-orgs.get and returns a RevOrg."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"rev_org": sample_rev_org_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"rev_org": sample_rev_org_data})
 
         service = RevOrgsService(mock_http_client)
         result = service.get("don:core:dvrv-us-1:devo/1:revorgs/123")
@@ -289,9 +288,7 @@ class TestRevOrgsService:
         sample_rev_org_data: dict[str, Any],
     ) -> None:
         """create() calls /rev-orgs.create with the correct payload."""
-        mock_http_client.post.return_value = create_mock_response(
-            {"rev_org": sample_rev_org_data}
-        )
+        mock_http_client.post.return_value = create_mock_response({"rev_org": sample_rev_org_data})
 
         service = RevOrgsService(mock_http_client)
         result = service.create(

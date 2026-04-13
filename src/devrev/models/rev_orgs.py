@@ -36,9 +36,7 @@ class RevOrg(DevRevResponseModel):
     description: str | None = Field(default=None, description="Rev org description")
     account: AccountSummary | None = Field(default=None, description="Associated account")
     created_date: datetime | None = Field(default=None, description="Creation timestamp")
-    modified_date: datetime | None = Field(
-        default=None, description="Last modification timestamp"
-    )
+    modified_date: datetime | None = Field(default=None, description="Last modification timestamp")
     created_by: UserSummary | None = Field(
         default=None, description="User who created this rev org"
     )
@@ -46,21 +44,13 @@ class RevOrg(DevRevResponseModel):
         default=None, description="User who last modified this rev org"
     )
     domain: str | None = Field(default=None, description="Domain")
-    external_ref: str | None = Field(
-        default=None, description="External reference identifier"
-    )
-    external_refs: list[str] | None = Field(
-        default=None, description="External references"
-    )
-    custom_fields: dict[str, Any] | None = Field(
-        default=None, description="Custom fields"
-    )
+    external_ref: str | None = Field(default=None, description="External reference identifier")
+    external_refs: list[str] | None = Field(default=None, description="External references")
+    custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
     sub_type: str | None = Field(default=None, description="Rev org subtype")
     tags: list[TagWithValue] | None = Field(default=None, description="Tags")
     tier: str | None = Field(default=None, description="Rev org tier")
-    artifacts: list[str] | None = Field(
-        default=None, description="Associated artifact IDs"
-    )
+    artifacts: list[str] | None = Field(default=None, description="Associated artifact IDs")
 
 
 class RevOrgSummary(DevRevResponseModel):
@@ -87,45 +77,29 @@ class RevOrgsListRequest(DevRevBaseModel):
     """Request to list rev orgs."""
 
     account: list[str] | None = Field(default=None, description="Filter by account IDs")
-    created_by: list[str] | None = Field(
-        default=None, description="Filter by creator user IDs"
-    )
-    created_date: DateFilter | None = Field(
-        default=None, description="Filter by creation date"
-    )
+    created_by: list[str] | None = Field(default=None, description="Filter by creator user IDs")
+    created_date: DateFilter | None = Field(default=None, description="Filter by creation date")
     cursor: str | None = Field(default=None, description="Pagination cursor")
-    display_name: list[str] | None = Field(
-        default=None, description="Filter by display names"
-    )
+    display_name: list[str] | None = Field(default=None, description="Filter by display names")
     domains: list[str] | None = Field(default=None, description="Filter by domains")
-    external_refs: list[str] | None = Field(
-        default=None, description="Filter by external refs"
-    )
+    external_refs: list[str] | None = Field(default=None, description="Filter by external refs")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
     modified_date: DateFilter | None = Field(
         default=None, description="Filter by modification date"
     )
-    owned_by: list[str] | None = Field(
-        default=None, description="Filter by owner user IDs"
-    )
+    owned_by: list[str] | None = Field(default=None, description="Filter by owner user IDs")
     tags: list[str] | None = Field(default=None, description="Filter by tag IDs")
 
 
 class RevOrgsCreateRequest(DevRevBaseModel):
     """Request to create a rev org."""
 
-    display_name: str = Field(
-        ..., description="Rev org display name", min_length=1, max_length=256
-    )
+    display_name: str = Field(..., description="Rev org display name", min_length=1, max_length=256)
     account: str = Field(..., description="Parent account ID")
     description: str | None = Field(default=None, description="Rev org description")
-    external_ref: str | None = Field(
-        default=None, description="External reference identifier"
-    )
+    external_ref: str | None = Field(default=None, description="External reference identifier")
     tier: str | None = Field(default=None, description="Rev org tier")
-    custom_fields: dict[str, Any] | None = Field(
-        default=None, description="Custom fields"
-    )
+    custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
     custom_schema_spec: CustomSchemaSpec | None = Field(
         default=None, description="Custom schema spec"
     )
