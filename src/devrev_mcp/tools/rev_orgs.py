@@ -1,4 +1,4 @@
-"""MCP tools for DevRev account operations."""
+"""MCP tools for DevRev rev org operations."""
 
 from __future__ import annotations
 
@@ -18,18 +18,20 @@ logger = logging.getLogger(__name__)
 
 
 @mcp.tool()
-async def devrev_accounts_list(
+async def devrev_rev_orgs_list(
     ctx: Context[Any, Any, Any],
+    account: list[str] | None = None,
     display_name: list[str] | None = None,
     domains: list[str] | None = None,
     owned_by: list[str] | None = None,
     cursor: str | None = None,
     limit: int | None = None,
 ) -> dict[str, Any]:
-    """List DevRev accounts.
+    """List DevRev rev orgs.
 
     Args:
-        display_name: Filter by account display name(s).
+        account: Filter by account ID(s).
+        display_name: Filter by rev org display name(s).
         domains: Filter by domain(s).
         owned_by: Filter by owner user ID(s).
         cursor: Pagination cursor from a previous response.
@@ -37,7 +39,8 @@ async def devrev_accounts_list(
     """
     app = ctx.request_context.lifespan_context
     try:
-        response = await app.get_client().accounts.list(
+        response = await app.get_client().rev_orgs.list(
+            account=account,
             display_name=display_name,
             domains=domains,
             owned_by=owned_by,
@@ -46,27 +49,27 @@ async def devrev_accounts_list(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
         )
-        items = serialize_models(response.accounts)
-        return paginated_response(items, next_cursor=response.next_cursor, total_label="accounts")
+        items = serialize_models(response.rev_orgs)
+        return paginated_response(items, next_cursor=response.next_cursor, total_label="rev_orgs")
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
 
 
 @mcp.tool()
-async def devrev_accounts_get(
+async def devrev_rev_orgs_get(
     ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
-    """Get a DevRev account by ID.
+    """Get a DevRev rev org by ID.
 
     Args:
-        id: The account ID.
+        id: The rev org ID.
     """
-    validate_don_id(id, "account", "devrev_accounts_get")
+    validate_don_id(id, "revo", "devrev_rev_orgs_get")
     app = ctx.request_context.lifespan_context
     try:
-        account = await app.get_client().accounts.get(id)
-        return serialize_model(account)
+        rev_org = await app.get_client().rev_orgs.get(id)
+        return serialize_model(rev_org)
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e
 
@@ -75,110 +78,81 @@ async def devrev_accounts_get(
 if _config.enable_destructive_tools:
 
     @mcp.tool()
-    async def devrev_accounts_create(
+    async def devrev_rev_orgs_create(
         ctx: Context[Any, Any, Any],
         display_name: str,
+        account: str,
         description: str | None = None,
-        domains: list[str] | None = None,
-        external_refs: list[str] | None = None,
-        owned_by: list[str] | None = None,
+        external_ref: str | None = None,
         tier: str | None = None,
     ) -> dict[str, Any]:
-        """Create a new DevRev account.
+        """Create a new rev org.
 
         Args:
-            display_name: Display name for the account.
-            description: Account description.
-            domains: List of domains associated with the account.
-            external_refs: External reference IDs.
-            owned_by: List of owner user IDs.
-            tier: Account tier.
+            display_name: Display name for the rev org.
+            account: Parent account ID.
+            description: Rev org description.
+            external_ref: External reference identifier.
+            tier: Rev org tier.
         """
         app = ctx.request_context.lifespan_context
         try:
-            account = await app.get_client().accounts.create(
+            rev_org = await app.get_client().rev_orgs.create(
                 display_name=display_name,
+                account=account,
                 description=description,
-                domains=domains,
-                external_refs=external_refs,
-                owned_by=owned_by,
+                external_ref=external_ref,
                 tier=tier,
             )
-            return serialize_model(account)
+            return serialize_model(rev_org)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_accounts_update(
+    async def devrev_rev_orgs_update(
         ctx: Context[Any, Any, Any],
         id: str,
         display_name: str | None = None,
         description: str | None = None,
         tier: str | None = None,
     ) -> dict[str, Any]:
-        """Update an existing DevRev account.
+        """Update an existing rev org.
 
         Only provided fields will be updated; others remain unchanged.
 
         Args:
-            id: The account ID to update.
+            id: The rev org ID to update.
             display_name: New display name.
             description: New description.
-            tier: New account tier.
+            tier: New tier.
         """
-        validate_don_id(id, "account", "devrev_accounts_update")
+        validate_don_id(id, "revo", "devrev_rev_orgs_update")
         app = ctx.request_context.lifespan_context
         try:
-            account = await app.get_client().accounts.update(
+            rev_org = await app.get_client().rev_orgs.update(
                 id,
                 display_name=display_name,
                 description=description,
                 tier=tier,
             )
-            return serialize_model(account)
+            return serialize_model(rev_org)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
 
     @mcp.tool()
-    async def devrev_accounts_delete(
+    async def devrev_rev_orgs_delete(
         ctx: Context[Any, Any, Any],
         id: str,
     ) -> dict[str, Any]:
-        """Delete a DevRev account.
+        """Delete a rev org.
 
         Args:
-            id: The account ID to delete.
+            id: The rev org ID to delete.
         """
-        validate_don_id(id, "account", "devrev_accounts_delete")
+        validate_don_id(id, "revo", "devrev_rev_orgs_delete")
         app = ctx.request_context.lifespan_context
         try:
-            await app.get_client().accounts.delete(id)
+            await app.get_client().rev_orgs.delete(id)
             return {"deleted": True, "id": id}
-        except DevRevError as e:
-            raise RuntimeError(format_devrev_error(e)) from e
-
-    @mcp.tool()
-    async def devrev_accounts_merge(
-        ctx: Context[Any, Any, Any],
-        primary_account: str,
-        secondary_account: str,
-    ) -> dict[str, Any]:
-        """Merge two DevRev accounts into one.
-
-        The secondary account will be merged into the primary account.
-
-        Args:
-            primary_account: ID of the primary (surviving) account.
-            secondary_account: ID of the secondary (merged) account.
-        """
-        validate_don_id(primary_account, "account", "devrev_accounts_merge")
-        validate_don_id(secondary_account, "account", "devrev_accounts_merge")
-        app = ctx.request_context.lifespan_context
-        try:
-            account = await app.get_client().accounts.merge(
-                primary_account=primary_account,
-                secondary_account=secondary_account,
-            )
-            return serialize_model(account)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e

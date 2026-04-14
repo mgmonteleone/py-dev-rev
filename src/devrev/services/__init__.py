@@ -34,6 +34,7 @@ from devrev.services.recommendations import (
     AsyncRecommendationsService,
     RecommendationsService,
 )
+from devrev.services.rev_orgs import AsyncRevOrgsService, RevOrgsService
 from devrev.services.rev_users import AsyncRevUsersService, RevUsersService
 from devrev.services.search import AsyncSearchService, SearchService
 from devrev.services.slas import AsyncSlasService, SlasService
@@ -99,6 +100,9 @@ __all__ = [
     # Recommendations
     "RecommendationsService",
     "AsyncRecommendationsService",
+    # Rev Orgs
+    "RevOrgsService",
+    "AsyncRevOrgsService",
     # Rev Users
     "RevUsersService",
     "AsyncRevUsersService",

@@ -10,6 +10,7 @@ from mcp.server.fastmcp import Context
 from devrev.exceptions import DevRevError
 from devrev.models.dev_users import DevUserState
 from devrev_mcp.server import mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -60,6 +61,7 @@ async def devrev_dev_users_get(
     Args:
         id: The dev user ID.
     """
+    validate_don_id(id, "devu", "devrev_dev_users_get")
     app = ctx.request_context.lifespan_context
     try:
         user = await app.get_client().dev_users.get(id)
@@ -110,6 +112,7 @@ async def devrev_rev_users_get(
     Args:
         id: The rev user ID.
     """
+    validate_don_id(id, "revu", "devrev_rev_users_get")
     app = ctx.request_context.lifespan_context
     try:
         user = await app.get_client().rev_users.get(id)

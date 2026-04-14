@@ -20,6 +20,7 @@ from devrev.models.parts import (
     PartType,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -70,6 +71,7 @@ async def devrev_parts_get(ctx: Context[Any, Any, Any], id: str) -> dict[str, An
     Raises:
         RuntimeError: If the DevRev API call fails.
     """
+    validate_don_id(id, "part", "devrev_parts_get")
     app = ctx.request_context.lifespan_context
     try:
         part = await app.get_client().parts.get(PartsGetRequest(id=id))
@@ -156,6 +158,7 @@ if _config.enable_destructive_tools:
         Raises:
             RuntimeError: If the DevRev API call fails.
         """
+        validate_don_id(id, "part", "devrev_parts_update")
         app = ctx.request_context.lifespan_context
         try:
             request = PartsUpdateRequest(
@@ -181,6 +184,7 @@ if _config.enable_destructive_tools:
         Raises:
             RuntimeError: If the DevRev API call fails.
         """
+        validate_don_id(id, "part", "devrev_parts_delete")
         app = ctx.request_context.lifespan_context
         try:
             await app.get_client().parts.delete(PartsDeleteRequest(id=id))

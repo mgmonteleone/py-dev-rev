@@ -17,6 +17,7 @@ from devrev.models.timeline_entries import (
     TimelineEntryType,
 )
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size
@@ -64,6 +65,7 @@ async def devrev_timeline_get(
     Args:
         id: Timeline entry ID (e.g., "don:core:dvrv-us-1:devo/1:timeline_entry/123").
     """
+    validate_don_id(id, "timeline_entry", "devrev_timeline_get")
     app = ctx.request_context.lifespan_context
     try:
         request = TimelineEntriesGetRequest(id=id)
@@ -120,6 +122,7 @@ if _config.enable_destructive_tools:
             id: Timeline entry ID to update.
             body: New entry content/body text.
         """
+        validate_don_id(id, "timeline_entry", "devrev_timeline_update")
         app = ctx.request_context.lifespan_context
         try:
             request = TimelineEntriesUpdateRequest(id=id, body=body)
@@ -138,6 +141,7 @@ if _config.enable_destructive_tools:
         Args:
             id: Timeline entry ID to delete.
         """
+        validate_don_id(id, "timeline_entry", "devrev_timeline_delete")
         app = ctx.request_context.lifespan_context
         try:
             request = TimelineEntriesDeleteRequest(id=id)

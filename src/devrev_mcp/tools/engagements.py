@@ -14,6 +14,7 @@ from mcp.server.fastmcp import Context
 from devrev.exceptions import DevRevError
 from devrev.models.engagements import EngagementType
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -82,6 +83,7 @@ async def devrev_engagements_get(ctx: Context[Any, Any, Any], id: str) -> dict[s
     Returns:
         Engagement details
     """
+    validate_don_id(id, "engagement", "devrev_engagements_get")
     app = ctx.request_context.lifespan_context
     try:
         engagement = await app.get_client().engagements.get(id)
@@ -172,6 +174,7 @@ if _config.enable_destructive_tools:
         Returns:
             Updated engagement
         """
+        validate_don_id(id, "engagement", "devrev_engagements_update")
         app = ctx.request_context.lifespan_context
         try:
             eng_type = None
@@ -214,6 +217,7 @@ if _config.enable_destructive_tools:
         Returns:
             Deletion confirmation
         """
+        validate_don_id(id, "engagement", "devrev_engagements_delete")
         app = ctx.request_context.lifespan_context
         try:
             await app.get_client().engagements.delete(id)

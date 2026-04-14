@@ -38,6 +38,7 @@ from devrev.services.recommendations import (
     AsyncRecommendationsService,
     RecommendationsService,
 )
+from devrev.services.rev_orgs import AsyncRevOrgsService, RevOrgsService
 from devrev.services.rev_users import AsyncRevUsersService, RevUsersService
 from devrev.services.search import AsyncSearchService, SearchService
 from devrev.services.slas import AsyncSlasService, SlasService
@@ -160,6 +161,7 @@ class DevRevClient:
         self._groups = GroupsService(self._http)
         self._links = LinksService(self._http)
         self._parts = PartsService(self._http)
+        self._rev_orgs = RevOrgsService(self._http)
         self._rev_users = RevUsersService(self._http)
         self._slas = SlasService(self._http)
         self._tags = TagsService(self._http)
@@ -241,6 +243,11 @@ class DevRevClient:
     def parts(self) -> PartsService:
         """Access the Parts service."""
         return self._parts
+
+    @property
+    def rev_orgs(self) -> RevOrgsService:
+        """Access the Rev Orgs service for managing revenue organizations."""
+        return self._rev_orgs
 
     @property
     def rev_users(self) -> RevUsersService:
@@ -482,6 +489,7 @@ class AsyncDevRevClient:
         self._groups = AsyncGroupsService(self._http)
         self._links = AsyncLinksService(self._http)
         self._parts = AsyncPartsService(self._http)
+        self._rev_orgs = AsyncRevOrgsService(self._http)
         self._rev_users = AsyncRevUsersService(self._http)
         self._slas = AsyncSlasService(self._http)
         self._tags = AsyncTagsService(self._http)
@@ -563,6 +571,11 @@ class AsyncDevRevClient:
     def parts(self) -> AsyncPartsService:
         """Access the Parts service."""
         return self._parts
+
+    @property
+    def rev_orgs(self) -> AsyncRevOrgsService:
+        """Access the Rev Orgs service for managing revenue organizations."""
+        return self._rev_orgs
 
     @property
     def rev_users(self) -> AsyncRevUsersService:

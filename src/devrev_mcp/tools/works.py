@@ -10,6 +10,7 @@ from mcp.server.fastmcp import Context
 from devrev.exceptions import DevRevError
 from devrev.models.works import IssuePriority, TicketSeverity, WorkType
 from devrev_mcp.server import _config, mcp
+from devrev_mcp.utils.don_id import validate_don_id
 from devrev_mcp.utils.errors import format_devrev_error
 from devrev_mcp.utils.formatting import serialize_model, serialize_models
 from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
@@ -72,6 +73,7 @@ async def devrev_works_get(
     Args:
         id: The work item ID (e.g., don:core:dvrv-us-1:devo/1:issue/123).
     """
+    validate_don_id(id, ["work", "ticket", "issue"], "devrev_works_get")
     app = ctx.request_context.lifespan_context
     try:
         work = await app.get_client().works.get(id)
@@ -171,6 +173,7 @@ if _config.enable_destructive_tools:
             priority: New issue priority: P0, P1, P2, P3.
             severity: New ticket severity: BLOCKER, HIGH, MEDIUM, LOW.
         """
+        validate_don_id(id, ["work", "ticket", "issue"], "devrev_works_update")
         app = ctx.request_context.lifespan_context
         try:
             # Convert enum strings, catching invalid values
@@ -216,6 +219,7 @@ if _config.enable_destructive_tools:
         Args:
             id: The work item ID to delete.
         """
+        validate_don_id(id, ["work", "ticket", "issue"], "devrev_works_delete")
         app = ctx.request_context.lifespan_context
         try:
             await app.get_client().works.delete(id)
