@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.1] - 2026-04-14
+
 ### Security
 
 - **Bump pytest from 8.4.2 to 9.0.3** (CUSS-409) — Major version upgrade including security fix CVE-2025-71176 (insecure temporary directory). All 1,091 tests pass without modification.
