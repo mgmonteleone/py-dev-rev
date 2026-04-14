@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.0] - 2026-04-14
+
+### Added
+
+- **DON ID type validation with helpful error messages** (CUSS-396, PR #207)
+  - New `validate_don_id()` utility in `src/devrev_mcp/utils/don_id.py`
+  - `parse_don_type()` extracts object type segment from DON IDs
+  - `DON_TYPE_MAP` maps DON type segments to human-friendly names
+  - `TOOL_SUGGESTIONS` maps DON types to the correct MCP tool for actionable suggestions
+  - Integrated into all 14 MCP tool files (`_get`, `_update`, `_delete` operations)
+  - Example: *"This is a rev_org ID, try using devrev_rev_orgs_get instead"*
+  - Raises `RuntimeError` caught by existing MCP error handlers
+
+- **Rev Orgs (revenue organizations) service** (CUSS-397, PR #207)
+  - Pydantic v2 models: `RevOrg`, `RevOrgSummary`, request/response models (`src/devrev/models/rev_orgs.py`)
+  - Sync `RevOrgsService` and async `AsyncRevOrgsService` (`src/devrev/services/rev_orgs.py`)
+  - MCP tools: `devrev_rev_orgs_list`, `devrev_rev_orgs_get`, `devrev_rev_orgs_create`, `devrev_rev_orgs_update`, `devrev_rev_orgs_delete`
+  - Destructive tools gated behind `enable_destructive_tools` config flag
+  - Registered in `DevRevClient` and `AsyncDevRevClient` as `rev_orgs` property
+
+### Security
+
+- **Bump cryptography from 46.0.5 to 46.0.7** (PR #206) — Fixes CVE-2026-39892 (buffer overflow with non-contiguous buffers) and CVE-2026-34073 (name constraint bypass with wildcard DNS SAN)
+
+### Maintenance
+
+- **CI dependency updates** — Folded 3 Dependabot PRs into PR #207:
+  - PR #208: Bump `softprops/action-gh-release` from v2 to v3 (Node 24)
+  - PR #209: Bump `actions/deploy-pages` from v4 to v5 (Node 24)
+  - PR #210: Bump `actions/github-script` from v8 to v9 (Node 24)
+
+### Testing
+
+- 22 new unit tests for DON ID validation (`tests/unit/test_don_id_validation.py`)
+- 19 new unit tests for Rev Orgs models and services (`tests/unit/test_rev_orgs.py`)
+- All 1,091 tests passing
+
 ## [2.13.0] - 2026-04-08
 
 ### Added
