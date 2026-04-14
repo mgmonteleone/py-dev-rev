@@ -121,8 +121,11 @@ def validate_don_id(
             in the error message to aid the caller.
 
     Raises:
-        ValueError: When ``don_id`` is a DON ID whose type segment does not
-            match any of the ``expected_types``.
+        RuntimeError: When ``don_id`` is a DON ID whose type segment does not
+            match any of the ``expected_types``.  ``RuntimeError`` is used
+            (rather than ``ValueError``) so that the exception is caught by
+            the ``except … RuntimeError`` blocks already present in MCP tool
+            handlers, ensuring callers see a friendly error message.
 
     Examples:
         >>> validate_don_id("don:core:dvrv-us-1:devo/1:account/1", "account", "devrev_accounts_get")
@@ -134,7 +137,7 @@ def validate_don_id(
         ... )
         Traceback (most recent call last):
             ...
-        ValueError: The provided ID 'don:identity:dvrv-us-1:devo/1:revo/CHj' appears to be
+        RuntimeError: The provided ID 'don:identity:dvrv-us-1:devo/1:revo/CHj' appears to be
         a rev_org ID, but devrev_accounts_get expects an account ID.
         Try using devrev_rev_orgs_get instead.
     """
@@ -168,7 +171,7 @@ def validate_don_id(
     if actual_type and actual_type in TOOL_SUGGESTIONS:
         suggestion = f" Try using {TOOL_SUGGESTIONS[actual_type]} instead."
 
-    raise ValueError(
+    raise RuntimeError(
         f"The provided ID '{don_id}' appears to be {actual_description}, "
         f"but {tool_name} expects {expected_description}.{suggestion}"
     )

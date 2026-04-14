@@ -47,7 +47,7 @@ def mock_http_client() -> MagicMock:
 def sample_rev_org_data() -> dict[str, Any]:
     """Minimal Rev Org data matching the API response shape."""
     return {
-        "id": "don:core:dvrv-us-1:devo/1:revorgs/123",
+        "id": "don:core:dvrv-us-1:devo/1:revo/123",
         "display_id": "REV-123",
         "display_name": "Acme Corp",
     }
@@ -87,9 +87,9 @@ class TestRevOrgModels:
 
     def test_rev_org_model_creation(self, sample_rev_org_data: dict[str, Any]) -> None:
         """RevOrg can be created with only the required id field."""
-        rev_org = RevOrg.model_validate({"id": "don:core:dvrv-us-1:devo/1:revorgs/1"})
+        rev_org = RevOrg.model_validate({"id": "don:core:dvrv-us-1:devo/1:revo/1"})
 
-        assert rev_org.id == "don:core:dvrv-us-1:devo/1:revorgs/1"
+        assert rev_org.id == "don:core:dvrv-us-1:devo/1:revo/1"
         assert rev_org.display_name is None
         assert rev_org.account is None
 
@@ -115,22 +115,22 @@ class TestRevOrgModels:
         """RevOrgSummary parses id and optional display fields."""
         summary = RevOrgSummary.model_validate(
             {
-                "id": "don:core:dvrv-us-1:devo/1:revorgs/99",
+                "id": "don:core:dvrv-us-1:devo/1:revo/99",
                 "display_id": "REV-99",
                 "display_name": "Summary Org",
             }
         )
 
-        assert summary.id == "don:core:dvrv-us-1:devo/1:revorgs/99"
+        assert summary.id == "don:core:dvrv-us-1:devo/1:revo/99"
         assert summary.display_id == "REV-99"
         assert summary.display_name == "Summary Org"
 
     def test_rev_orgs_get_request(self) -> None:
         """RevOrgsGetRequest serializes id correctly."""
-        req = RevOrgsGetRequest(id="don:core:dvrv-us-1:devo/1:revorgs/5")
+        req = RevOrgsGetRequest(id="don:core:dvrv-us-1:devo/1:revo/5")
         data = req.model_dump(exclude_none=True)
 
-        assert data["id"] == "don:core:dvrv-us-1:devo/1:revorgs/5"
+        assert data["id"] == "don:core:dvrv-us-1:devo/1:revo/5"
 
     def test_rev_orgs_list_request_defaults(self) -> None:
         """RevOrgsListRequest has all-None defaults."""
@@ -175,8 +175,8 @@ class TestRevOrgModels:
 
     def test_rev_orgs_update_request(self) -> None:
         """RevOrgsUpdateRequest requires id."""
-        req = RevOrgsUpdateRequest(id="don:core:dvrv-us-1:devo/1:revorgs/7", display_name="Renamed")
-        assert req.id == "don:core:dvrv-us-1:devo/1:revorgs/7"
+        req = RevOrgsUpdateRequest(id="don:core:dvrv-us-1:devo/1:revo/7", display_name="Renamed")
+        assert req.id == "don:core:dvrv-us-1:devo/1:revo/7"
         assert req.display_name == "Renamed"
 
         with pytest.raises(ValidationError):
@@ -184,8 +184,8 @@ class TestRevOrgModels:
 
     def test_rev_orgs_delete_request(self) -> None:
         """RevOrgsDeleteRequest requires id."""
-        req = RevOrgsDeleteRequest(id="don:core:dvrv-us-1:devo/1:revorgs/8")
-        assert req.id == "don:core:dvrv-us-1:devo/1:revorgs/8"
+        req = RevOrgsDeleteRequest(id="don:core:dvrv-us-1:devo/1:revo/8")
+        assert req.id == "don:core:dvrv-us-1:devo/1:revo/8"
 
         with pytest.raises(ValidationError):
             RevOrgsDeleteRequest()  # type: ignore[call-arg]
@@ -204,7 +204,7 @@ class TestRevOrgModels:
             {
                 "rev_orgs": [
                     sample_rev_org_data,
-                    {**sample_rev_org_data, "id": "don:core:revorgs/456"},
+                    {**sample_rev_org_data, "id": "don:core:revo/456"},
                 ],
                 "next_cursor": "cursor-abc",
             }
@@ -232,7 +232,7 @@ class TestRevOrgsService:
         mock_http_client.post.return_value = create_mock_response({"rev_org": sample_rev_org_data})
 
         service = RevOrgsService(mock_http_client)
-        result = service.get("don:core:dvrv-us-1:devo/1:revorgs/123")
+        result = service.get("don:core:dvrv-us-1:devo/1:revo/123")
 
         assert isinstance(result, RevOrg)
         assert result.id == sample_rev_org_data["id"]
@@ -320,7 +320,7 @@ class TestRevOrgsService:
 
         service = RevOrgsService(mock_http_client)
         result = service.update(
-            "don:core:dvrv-us-1:devo/1:revorgs/123",
+            "don:core:dvrv-us-1:devo/1:revo/123",
             display_name="Acme Corp Renamed",
         )
 
@@ -330,7 +330,7 @@ class TestRevOrgsService:
         call_endpoint = mock_http_client.post.call_args[0][0]
         assert call_endpoint == "/rev-orgs.update"
         payload = mock_http_client.post.call_args[1]["data"]
-        assert payload["id"] == "don:core:dvrv-us-1:devo/1:revorgs/123"
+        assert payload["id"] == "don:core:dvrv-us-1:devo/1:revo/123"
         assert payload["display_name"] == "Acme Corp Renamed"
 
     def test_rev_orgs_service_delete(
@@ -341,11 +341,11 @@ class TestRevOrgsService:
         mock_http_client.post.return_value = create_mock_response({})
 
         service = RevOrgsService(mock_http_client)
-        result = service.delete("don:core:dvrv-us-1:devo/1:revorgs/123")
+        result = service.delete("don:core:dvrv-us-1:devo/1:revo/123")
 
         assert result is None
         mock_http_client.post.assert_called_once()
         call_endpoint = mock_http_client.post.call_args[0][0]
         assert call_endpoint == "/rev-orgs.delete"
         payload = mock_http_client.post.call_args[1]["data"]
-        assert payload["id"] == "don:core:dvrv-us-1:devo/1:revorgs/123"
+        assert payload["id"] == "don:core:dvrv-us-1:devo/1:revo/123"

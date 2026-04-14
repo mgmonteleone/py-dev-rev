@@ -86,8 +86,8 @@ class TestValidateDonId:
     # ------------------------------------------------------------------ #
 
     def test_validate_don_id_wrong_type_raises_value_error(self) -> None:
-        """A DON ID whose type doesn't match expected_types raises ValueError."""
-        with pytest.raises(ValueError):
+        """A DON ID whose type doesn't match expected_types raises RuntimeError."""
+        with pytest.raises(RuntimeError):
             validate_don_id(
                 "don:identity:dvrv-us-1:devo/1:revo/CHj",
                 "account",
@@ -96,7 +96,7 @@ class TestValidateDonId:
 
     def test_validate_don_id_error_message_contains_tool_name(self) -> None:
         """The error message names the tool that rejected the ID."""
-        with pytest.raises(ValueError, match="devrev_accounts_get"):
+        with pytest.raises(RuntimeError, match="devrev_accounts_get"):
             validate_don_id(
                 "don:identity:dvrv-us-1:devo/1:revo/CHj",
                 "account",
@@ -105,7 +105,7 @@ class TestValidateDonId:
 
     def test_validate_don_id_error_message_contains_actual_type_name(self) -> None:
         """The error message includes the friendly name of the actual type."""
-        with pytest.raises(ValueError, match="rev_org"):
+        with pytest.raises(RuntimeError, match="rev_org"):
             validate_don_id(
                 "don:identity:dvrv-us-1:devo/1:revo/CHj",
                 "account",
@@ -114,7 +114,7 @@ class TestValidateDonId:
 
     def test_validate_don_id_error_message_contains_expected_type_name(self) -> None:
         """The error message includes the friendly name of the expected type."""
-        with pytest.raises(ValueError, match="account"):
+        with pytest.raises(RuntimeError, match="account"):
             validate_don_id(
                 "don:identity:dvrv-us-1:devo/1:revo/CHj",
                 "account",
@@ -123,7 +123,7 @@ class TestValidateDonId:
 
     def test_validate_don_id_error_message_suggests_correct_tool(self) -> None:
         """The error message suggests the tool that handles the supplied type."""
-        with pytest.raises(ValueError, match="devrev_rev_orgs_get"):
+        with pytest.raises(RuntimeError, match="devrev_rev_orgs_get"):
             validate_don_id(
                 "don:identity:dvrv-us-1:devo/1:revo/CHj",
                 "account",
@@ -132,7 +132,7 @@ class TestValidateDonId:
 
     def test_validate_don_id_list_no_matching_type_raises(self) -> None:
         """An account ID is rejected when none of the expected types match."""
-        with pytest.raises(ValueError):
+        with pytest.raises(RuntimeError):
             validate_don_id(
                 "don:core:dvrv-us-1:devo/1:account/123",
                 ["work", "ticket", "issue"],
@@ -142,9 +142,9 @@ class TestValidateDonId:
     def test_validate_don_id_unknown_parseable_type_raises_with_raw_type_name(
         self,
     ) -> None:
-        """A DON ID whose type parses but isn't in DON_TYPE_MAP raises ValueError
+        """A DON ID whose type parses but isn't in DON_TYPE_MAP raises RuntimeError
         with the raw type name in the message."""
-        with pytest.raises(ValueError, match="unknowntype"):
+        with pytest.raises(RuntimeError, match="unknowntype"):
             validate_don_id(
                 "don:core:dvrv-us-1:devo/1:unknowntype/999",
                 "account",
@@ -156,7 +156,7 @@ class TestValidateDonId:
     ) -> None:
         """A 'don:'-prefixed string whose last segment lacks '/' cannot be parsed;
         the error message describes it as 'unrecognised DON ID'."""
-        with pytest.raises(ValueError, match="unrecognised DON ID"):
+        with pytest.raises(RuntimeError, match="unrecognised DON ID"):
             validate_don_id(
                 # 5 colon-segments but the last one has no '/', so parse_don_type → None
                 "don:core:dvrv-us-1:devo/1:noslash",
