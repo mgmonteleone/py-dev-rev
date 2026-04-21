@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -29,9 +30,10 @@ pytestmark = [
 
 
 @pytest.fixture
-def client() -> DevRevClient:
+def client() -> Iterator[DevRevClient]:
     """Create a DevRev client using the ambient DEVREV_API_TOKEN."""
-    return DevRevClient()
+    with DevRevClient() as c:
+        yield c
 
 
 def test_works_list_modified_since_returns_recent_tickets(client: DevRevClient) -> None:
