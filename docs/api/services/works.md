@@ -2,6 +2,9 @@
 
 Manage work items (issues, tickets, tasks, opportunities) in DevRev.
 
+In DevRev, **works** is the umbrella type covering tickets (customer support),
+issues (engineering), and tasks.
+
 ## WorksService
 
 ::: devrev.services.works.WorksService
@@ -15,6 +18,8 @@ Manage work items (issues, tickets, tasks, opportunities) in DevRev.
         - delete
         - export
         - count
+        - list_modified_since
+        - list_created_since
 
 ## AsyncWorksService
 
@@ -121,6 +126,65 @@ response = client.works.export(
 print(f"Exported {len(response.works)} issues")
 ```
 
+### Sort Order
+
+`list` and `export` accept a `sort_by` parameter. Both forms are accepted and
+normalized to the server form before the request is sent:
+
+- Canonical: `"modified_date:desc"`, `"created_date:asc"`
+- Legacy shortcut: `"-modified_date"` (descending), `"created_date"` (ascending)
+
+```python
+# Canonical form
+response = client.works.list(
+    type=[WorkType.TICKET],
+    sort_by=["modified_date:desc"],
+)
+
+# Legacy shortcut — normalized internally to "modified_date:desc"
+response = client.works.list(
+    type=[WorkType.TICKET],
+    sort_by=["-modified_date"],
+)
+```
+
+!!! note "Server requires `field:direction`"
+    The DevRev server rejects bare `"-field"` entries. The SDK normalizes
+    legacy shortcuts to the `field:direction` form on your behalf — you do not
+    need to change existing call sites, but new code should prefer the
+    canonical form.
+
+### List Work Items Modified or Created Since
+
+Use `list_modified_since` / `list_created_since` to stream work items that
+changed within a recent window. Both helpers page server-side sorted
+`{timestamp_field}:desc` and early-exit as soon as a record older than the
+cutoff is seen.
+
+```python
+from datetime import datetime, timedelta, timezone
+from devrev import DevRevClient
+from devrev.models import WorkType
+
+client = DevRevClient()
+
+cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+
+# All works modified in the last 7 days
+recent = client.works.list_modified_since(
+    cutoff,
+    type=[WorkType.TICKET, WorkType.ISSUE],
+)
+
+# Cap total items; page_size tunes per-request page size
+recent_capped = client.works.list_created_since(
+    cutoff,
+    type=[WorkType.TICKET],
+    limit=500,
+    page_size=100,
+)
+```
+
 ### Async Usage
 
 ```python
@@ -132,6 +196,10 @@ async def main():
         response = await client.works.list(limit=10)
         for work in response.works:
             print(f"[{work.type}] {work.title}")
+
+        # Async variants of the time-based helpers
+        cutoff = datetime.now(timezone.utc) - timedelta(days=1)
+        recent = await client.works.list_modified_since(cutoff)
 
 asyncio.run(main())
 ```

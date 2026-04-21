@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`WorksService.list_modified_since` and `list_created_since`** (CUSS-451) —
+  New sync and async helpers on `WorksService` / `AsyncWorksService` that
+  stream work items with `modified_date >= after` or `created_date >= after`.
+  Both page server-side sorted `{timestamp_field}:desc` and early-exit when a
+  record older than the cutoff is seen. Accept `type`, `owned_by`,
+  `applies_to_part`, `limit` (hard cap on total items), and `page_size`
+  (per-request page size).
+- **`ConversationsService.list_modified_since`** (CUSS-451) — New sync and
+  async helper that streams conversations modified after a given datetime,
+  newest first. Pages via cursor until the server returns no further cursor,
+  `limit` is reached, or a conversation older than `after` is seen. Accepts
+  `limit` and `page_size`.
+- **MCP tools for time-windowed queries** (CUSS-451) —
+  `devrev_works_list_modified_since`, `devrev_works_list_created_since`, and
+  `devrev_conversations_list_modified_since`. Each accepts an ISO-8601
+  `after` timestamp and optional `limit`.
+- **`sort_by` and `modified_date_after` / `modified_date_before` on
+  `devrev_conversations_list` MCP tool** (CUSS-451) — Expose the same sort
+  and date-range filters already available in the SDK `list` request.
+- **`sort_by` on `devrev_works_list` and `devrev_works_export` MCP tools**
+  (CUSS-451) — Forward the sort order down to the SDK.
+
+### Changed / Breaking
+
+- **`sort_by` syntax normalization** (CUSS-451) — The DevRev server rejects
+  bare `"-field"` entries on `/works.list` and `/conversations.list` and
+  requires the canonical `"field:asc"` / `"field:desc"` form. `WorksService`
+  and `ConversationsService` now normalize both legacy `"-field"` /
+  `"field"` shortcuts and canonical `"field:direction"` entries to the
+  server form before sending the request. Existing call sites using the
+  `"-field"` shortcut continue to work unchanged; new code should prefer the
+  canonical form. Callers that previously sent `"-field"` directly to a
+  request model and bypassed the service layer will now see their input
+  normalized when they route through `WorksService.list` /
+  `ConversationsService.list`.
+
+### Fixed
+
+- **`/works.list` rejected bare `"-field"` sort entries** (CUSS-451) —
+  Integration tests observed the DevRev PUBLIC API returning an error for
+  bare `"-modified_date"` / `"-created_date"` sort values, requiring the
+  canonical `field:direction` form. `WorksService.list` /
+  `WorksService.export` (and their async variants) now normalize
+  `sort_by` before sending.
+- **`/conversations.list` rejected bare `"-field"` sort entries** (CUSS-451)
+  — Same server behavior observed for conversations. `ConversationsService.list`
+  (and its async variant) now normalize `sort_by` before sending.
+- **`list_modified_since` / `list_created_since` helpers paginate until the
+  cutoff is crossed** (CUSS-451) — Server-side `modified_date` / `created_date`
+  filters may not be honored uniformly across older accounts. The new
+  helpers apply client-side early-exit on the sorted stream so results are
+  bounded by the cutoff even when the server does not filter.
+
 ## [2.14.1] - 2026-04-14
 
 ### Security

@@ -220,3 +220,115 @@ components:
           nullable: true
           description: User state
 
+    # ============================================================================
+    # CORRECTION #3: /works.list sort_by syntax (CUSS-451)
+    # ============================================================================
+    #
+    # Issue: OpenAPI spec documents `sort_by` as an array of strings without
+    #   specifying the accepted entry format. The live PUBLIC API rejects
+    #   bare "-field" shortcuts and requires the canonical
+    #   "field:asc" / "field:desc" form.
+    #
+    # Affected Endpoint: POST /works.list (and POST /works.export)
+    # Severity: HIGH - Causes 4xx validation errors for any client that
+    #   relies on the common "-field" descending shortcut.
+    # Ticket: CUSS-451
+    #
+    # Observed server response for `sort_by: ["-modified_date"]`:
+    #   400 Bad Request — "sort_by entries must be of the form
+    #   'field:asc' or 'field:desc'"
+    #
+    # SDK Mitigation: `WorksService.list` / `WorksService.export` normalize
+    #   `sort_by` entries before sending. Callers MAY continue to pass
+    #   "-field" / "field" shortcuts; they are rewritten to
+    #   "field:desc" / "field:asc" on the wire.
+    #
+    # Spec Correction (documentation-only — no schema change needed):
+    WorksListSortByCorrection:
+      type: array
+      description: |
+        Sort order for /works.list results.
+
+        **Required format**: Each entry MUST be `"field:asc"` or
+        `"field:desc"`. The server rejects bare `"-field"` and `"field"`
+        shortcuts.
+
+        **SDK behavior**: The Python SDK normalizes legacy shortcuts to the
+        canonical form before sending, so callers may pass either format to
+        `WorksService.list` / `WorksService.export`.
+      items:
+        type: string
+        pattern: "^[a-zA-Z_][a-zA-Z0-9_.]*:(asc|desc)$"
+        example: "modified_date:desc"
+      example:
+        - "modified_date:desc"
+        - "created_date:asc"
+
+    # ============================================================================
+    # CORRECTION #4: /conversations.list sort_by syntax (CUSS-451)
+    # ============================================================================
+    #
+    # Issue: Same as Correction #3 but on the conversations endpoint. The
+    #   live PUBLIC API rejects bare "-field" entries on
+    #   POST /conversations.list and requires "field:asc" / "field:desc".
+    #
+    # Affected Endpoint: POST /conversations.list
+    # Severity: HIGH - Causes 4xx validation errors.
+    # Ticket: CUSS-451
+    #
+    # SDK Mitigation: `ConversationsService.list` normalizes `sort_by`
+    #   entries before sending.
+    ConversationsListSortByCorrection:
+      type: array
+      description: |
+        Sort order for /conversations.list results.
+
+        **Required format**: Each entry MUST be `"field:asc"` or
+        `"field:desc"`. Matches the corrected syntax documented for
+        /works.list.
+      items:
+        type: string
+        pattern: "^[a-zA-Z_][a-zA-Z0-9_.]*:(asc|desc)$"
+        example: "modified_date:desc"
+      example:
+        - "modified_date:desc"
+
+    # ============================================================================
+    # CORRECTION #5: Time-windowed listing on /works.list and /conversations.list (CUSS-451)
+    # ============================================================================
+    #
+    # Issue: The spec documents `modified_date` / `created_date` filters on
+    #   /works.list and /conversations.list, but server-side filtering is
+    #   not uniformly honored across all accounts. Observed behavior:
+    #     - Some accounts return records older than the declared `after`
+    #       cutoff when paginating results.
+    #     - Sort order is honored reliably when `sort_by` uses the
+    #       `field:direction` form (see Corrections #3 and #4).
+    #
+    # Affected Endpoints: POST /works.list, POST /conversations.list
+    # Severity: MEDIUM - Does not break validation, but causes over-broad
+    #   result sets for clients that rely on the server-side date filter.
+    # Ticket: CUSS-451
+    #
+    # SDK Mitigation: `WorksService.list_modified_since`,
+    #   `WorksService.list_created_since`, and
+    #   `ConversationsService.list_modified_since` page server-side sorted
+    #   `{timestamp_field}:desc` and apply a client-side early-exit as soon
+    #   as a record older than the cutoff is seen. This guarantees the
+    #   returned set is bounded by the cutoff regardless of server-side
+    #   filter behavior.
+    #
+    # Documentation-only correction (no schema change):
+    TimeWindowedListingCorrection:
+      type: object
+      description: |
+        /works.list and /conversations.list support `modified_date` and
+        (for works) `created_date` filters, but server-side honoring of
+        these filters is inconsistent across accounts. Clients that need a
+        strict time-window guarantee should sort by the timestamp field in
+        descending order and early-exit on the first record older than the
+        cutoff.
+      properties:
+        note:
+          type: string
+          example: "See SDK helpers list_modified_since / list_created_since."
