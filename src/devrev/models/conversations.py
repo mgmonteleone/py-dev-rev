@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import Field
 
 from devrev.models.base import (
+    DateFilter,
     DevRevBaseModel,
     DevRevResponseModel,
     PaginatedResponse,
@@ -63,6 +64,13 @@ class ConversationsListRequest(DevRevBaseModel):
 
     cursor: str | None = Field(default=None, description="Pagination cursor")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results")
+    modified_date: DateFilter | None = Field(
+        default=None, description="Filter by modification date"
+    )
+    sort_by: list[str] | None = Field(
+        default=None,
+        description='Sort order (e.g., ["modified_date:desc"])',
+    )
 
 
 class ConversationsUpdateRequest(DevRevBaseModel):
