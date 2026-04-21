@@ -1,5 +1,6 @@
 """Comprehensive tests for DevRev MCP works tools."""
 
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,11 +12,13 @@ from devrev_mcp.tools.works import (
     devrev_works_export,
     devrev_works_get,
     devrev_works_list,
+    devrev_works_list_created_since,
+    devrev_works_list_modified_since,
     devrev_works_update,
 )
 
 
-def _make_mock_work(data=None):
+def _make_mock_work(data: dict[str, str] | None = None) -> MagicMock:
     """Create a mock Work model with model_dump support."""
     default = {"id": "don:core:work/1", "title": "Test Work", "type": "ticket"}
     work = MagicMock()
@@ -248,3 +251,178 @@ class TestWorksExportTool:
         call_kwargs = mock_client.works.export.call_args.kwargs
         assert call_kwargs["type"] == [WorkType.ISSUE]
         assert call_kwargs["first"] == 50
+
+
+class TestWorksDocstringTerminology:
+    """Verify all works tool docstrings clarify the ticket/issue/task terminology."""
+
+    @pytest.mark.parametrize(
+        "tool",
+        [
+            devrev_works_list,
+            devrev_works_get,
+            devrev_works_create,
+            devrev_works_update,
+            devrev_works_delete,
+            devrev_works_count,
+            devrev_works_export,
+            devrev_works_list_modified_since,
+            devrev_works_list_created_since,
+        ],
+    )
+    def test_docstring_mentions_ticket_issue_task(self, tool):
+        """Each works tool docstring must reference tickets, issues, and tasks."""
+        doc = (tool.__doc__ or "").lower()
+        assert "ticket" in doc, f"{tool.__name__} docstring missing 'ticket'"
+        assert "issue" in doc, f"{tool.__name__} docstring missing 'issue'"
+        assert "task" in doc, f"{tool.__name__} docstring missing 'task'"
+
+
+class TestWorksListSortBy:
+    """Tests for sort_by forwarding on devrev_works_list."""
+
+    async def test_list_forwards_sort_by(self, mock_ctx, mock_client):
+        """sort_by is forwarded unchanged to the SDK."""
+        response = MagicMock()
+        response.works = []
+        response.next_cursor = None
+        mock_client.works.list.return_value = response
+
+        await devrev_works_list(mock_ctx, sort_by=["modified_date:desc", "-created_date"])
+        call_kwargs = mock_client.works.list.call_args.kwargs
+        assert call_kwargs["sort_by"] == ["modified_date:desc", "-created_date"]
+
+    async def test_list_sort_by_defaults_to_none(self, mock_ctx, mock_client):
+        """sort_by defaults to None and is forwarded as None."""
+        response = MagicMock()
+        response.works = []
+        response.next_cursor = None
+        mock_client.works.list.return_value = response
+
+        await devrev_works_list(mock_ctx)
+        call_kwargs = mock_client.works.list.call_args.kwargs
+        assert call_kwargs["sort_by"] is None
+
+
+class TestWorksExportSortBy:
+    """Tests for sort_by forwarding on devrev_works_export."""
+
+    async def test_export_forwards_sort_by(self, mock_ctx, mock_client):
+        """sort_by is forwarded unchanged to the SDK."""
+        mock_client.works.export.return_value = []
+
+        await devrev_works_export(mock_ctx, sort_by=["created_date:asc"])
+        call_kwargs = mock_client.works.export.call_args.kwargs
+        assert call_kwargs["sort_by"] == ["created_date:asc"]
+
+    async def test_export_sort_by_defaults_to_none(self, mock_ctx, mock_client):
+        """sort_by defaults to None and is forwarded as None."""
+        mock_client.works.export.return_value = []
+
+        await devrev_works_export(mock_ctx)
+        call_kwargs = mock_client.works.export.call_args.kwargs
+        assert call_kwargs["sort_by"] is None
+
+
+class TestWorksListModifiedSince:
+    """Tests for devrev_works_list_modified_since tool."""
+
+    async def test_parses_iso_with_z_suffix(self, mock_ctx, mock_client):
+        """A trailing 'Z' is accepted and converted to a UTC datetime."""
+        mock_client.works.list_modified_since.return_value = []
+
+        await devrev_works_list_modified_since(mock_ctx, after="2024-01-15T12:34:56Z")
+        args, _ = mock_client.works.list_modified_since.call_args
+        assert args[0] == datetime(2024, 1, 15, 12, 34, 56, tzinfo=UTC)
+
+    async def test_parses_iso_with_offset(self, mock_ctx, mock_client):
+        """An explicit UTC offset is accepted."""
+        mock_client.works.list_modified_since.return_value = []
+
+        await devrev_works_list_modified_since(mock_ctx, after="2024-01-15T12:34:56+00:00")
+        args, _ = mock_client.works.list_modified_since.call_args
+        assert args[0] == datetime(2024, 1, 15, 12, 34, 56, tzinfo=UTC)
+
+    async def test_invalid_iso_raises_runtime_error(self, mock_ctx, mock_client):
+        """Invalid ISO input raises RuntimeError with a clear message."""
+        with pytest.raises(RuntimeError, match="Invalid after format"):
+            await devrev_works_list_modified_since(mock_ctx, after="not-a-date")
+        mock_client.works.list_modified_since.assert_not_called()
+
+    async def test_forwards_filter_kwargs(self, mock_ctx, mock_client):
+        """type, owned_by, applies_to_part, and limit are forwarded."""
+        mock_client.works.list_modified_since.return_value = []
+
+        await devrev_works_list_modified_since(
+            mock_ctx,
+            after="2024-01-15T00:00:00Z",
+            type=["ticket", "issue"],
+            owned_by=["u1"],
+            applies_to_part=["p1"],
+            limit=500,
+        )
+        from devrev.models.works import WorkType
+
+        call_kwargs = mock_client.works.list_modified_since.call_args.kwargs
+        assert call_kwargs["type"] == [WorkType.TICKET, WorkType.ISSUE]
+        assert call_kwargs["owned_by"] == ["u1"]
+        assert call_kwargs["applies_to_part"] == ["p1"]
+        assert call_kwargs["limit"] == 500
+
+    async def test_returns_paginated_shape(self, mock_ctx, mock_client):
+        """Returns a dict with count and works (no next_cursor)."""
+        work = _make_mock_work({"id": "w1"})
+        mock_client.works.list_modified_since.return_value = [work]
+
+        result = await devrev_works_list_modified_since(mock_ctx, after="2024-01-15T00:00:00Z")
+        assert result["count"] == 1
+        assert result["works"][0]["id"] == "w1"
+        assert "next_cursor" not in result
+
+
+class TestWorksListCreatedSince:
+    """Tests for devrev_works_list_created_since tool."""
+
+    async def test_parses_iso_with_z_suffix(self, mock_ctx, mock_client):
+        """A trailing 'Z' is accepted and converted to a UTC datetime."""
+        mock_client.works.list_created_since.return_value = []
+
+        await devrev_works_list_created_since(mock_ctx, after="2024-02-01T00:00:00Z")
+        args, _ = mock_client.works.list_created_since.call_args
+        assert args[0] == datetime(2024, 2, 1, 0, 0, 0, tzinfo=UTC)
+
+    async def test_invalid_iso_raises_runtime_error(self, mock_ctx, mock_client):
+        """Invalid ISO input raises RuntimeError with a clear message."""
+        with pytest.raises(RuntimeError, match="Invalid after format"):
+            await devrev_works_list_created_since(mock_ctx, after="bogus")
+        mock_client.works.list_created_since.assert_not_called()
+
+    async def test_forwards_filter_kwargs(self, mock_ctx, mock_client):
+        """type, owned_by, applies_to_part, and limit are forwarded."""
+        mock_client.works.list_created_since.return_value = []
+
+        await devrev_works_list_created_since(
+            mock_ctx,
+            after="2024-02-01T00:00:00Z",
+            type=["task"],
+            owned_by=["u2"],
+            applies_to_part=["p2"],
+            limit=10,
+        )
+        from devrev.models.works import WorkType
+
+        call_kwargs = mock_client.works.list_created_since.call_args.kwargs
+        assert call_kwargs["type"] == [WorkType.TASK]
+        assert call_kwargs["owned_by"] == ["u2"]
+        assert call_kwargs["applies_to_part"] == ["p2"]
+        assert call_kwargs["limit"] == 10
+
+    async def test_returns_paginated_shape(self, mock_ctx, mock_client):
+        """Returns a dict with count and works (no next_cursor)."""
+        work = _make_mock_work({"id": "w9"})
+        mock_client.works.list_created_since.return_value = [work]
+
+        result = await devrev_works_list_created_since(mock_ctx, after="2024-02-01T00:00:00Z")
+        assert result["count"] == 1
+        assert result["works"][0]["id"] == "w9"
+        assert "next_cursor" not in result
