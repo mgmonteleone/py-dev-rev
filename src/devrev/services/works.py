@@ -44,6 +44,20 @@ _WorkList = list[Work]
 _StrList = list[str]
 
 
+def _is_before_cutoff(timestamp: datetime | None, cutoff: datetime) -> bool:
+    """Return True if ``timestamp`` is strictly older than ``cutoff``.
+
+    Returns False when the timestamp is unknown or when the two datetimes have
+    incompatible tz-awareness; the server-side filter remains authoritative.
+    """
+    if timestamp is None:
+        return False
+    try:
+        return timestamp < cutoff
+    except TypeError:
+        return False
+
+
 def _normalize_sort_by(sort_by: Sequence[str] | None) -> _StrList | None:
     """Normalize sort_by entries to the server-expected ``field:direction`` form.
 
@@ -318,7 +332,7 @@ class WorksService(BaseService):
             stop = False
             for work in page.works:
                 timestamp = getattr(work, timestamp_field, None)
-                if timestamp is not None and timestamp < after:
+                if _is_before_cutoff(timestamp, after):
                     stop = True
                     break
                 collected.append(work)
@@ -544,7 +558,7 @@ class AsyncWorksService(AsyncBaseService):
             stop = False
             for work in page.works:
                 timestamp = getattr(work, timestamp_field, None)
-                if timestamp is not None and timestamp < after:
+                if _is_before_cutoff(timestamp, after):
                     stop = True
                     break
                 collected.append(work)
