@@ -33,6 +33,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed / Breaking
 
+- **BREAKING: `WorksListRequest` and `WorksExportRequest` no longer accept
+  date filter fields** (CUSS-451) — `WorksListRequest` previously exposed
+  `created_date` and `modified_date` fields, and `WorksExportRequest`
+  previously exposed a `created_date` field. These were aspirational: the
+  DevRev PUBLIC API rejects both filters on `/works.list` and
+  `/works.export` with `400 bad-request.bad-request-field`. The fields have
+  been removed from both request models. Existing callers that populate
+  `WorksListRequest(created_date=...)`,
+  `WorksListRequest(modified_date=...)`, or
+  `WorksExportRequest(created_date=...)` will now raise
+  `pydantic.ValidationError` at construction time.
+
+    **Migration**: use the new `WorksService.list_modified_since` /
+    `WorksService.list_created_since` helpers (sync and async), which page
+    server-side sorted `{timestamp_field}:desc` and early-exit on records
+    older than the cutoff. See `docs/api/services/works.md` for examples.
 - **`sort_by` syntax normalization** (CUSS-451) — The DevRev server rejects
   bare `"-field"` entries on `/works.list` and `/conversations.list` and
   requires the canonical `"field:asc"` / `"field:desc"` form. `WorksService`
@@ -61,6 +77,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   filters may not be honored uniformly across older accounts. The new
   helpers apply client-side early-exit on the sorted stream so results are
   bounded by the cutoff even when the server does not filter.
+- **`BaseService._post` serialized non-JSON-native types incorrectly**
+  (CUSS-451) — `BaseService._post` and `AsyncBaseService._post` dumped
+  request models with `model_dump(exclude_none=True, by_alias=True)`, which
+  returns Python-native types (e.g., `datetime` as `datetime` objects
+  rather than ISO 8601 strings). Request bodies containing timestamps — as
+  used by the new `list_modified_since` / `list_created_since` filter
+  payloads — failed to round-trip through the HTTP layer. Both methods now
+  pass `mode="json"` so Pydantic produces JSON-serializable primitives
+  before the request is sent.
 
 ## [2.14.1] - 2026-04-14
 
