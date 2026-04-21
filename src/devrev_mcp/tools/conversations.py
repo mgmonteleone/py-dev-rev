@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any
 
 from mcp.server.fastmcp import Context
 
 from devrev.exceptions import DevRevError
+from devrev.models.base import DateFilter
 from devrev.models.conversations import (
     ConversationsCreateRequest,
     ConversationsDeleteRequest,
@@ -24,27 +26,102 @@ from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
 logger = logging.getLogger(__name__)
 
 
+def _parse_iso_datetime(value: str, field_name: str) -> datetime:
+    """Parse an ISO-8601 datetime string, accepting a trailing ``Z`` for UTC.
+
+    Args:
+        value: The ISO-8601 datetime string.
+        field_name: Name of the parameter being parsed (for error messages).
+
+    Returns:
+        A parsed ``datetime`` instance.
+
+    Raises:
+        RuntimeError: If the string cannot be parsed.
+    """
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as e:
+        raise RuntimeError(
+            f"Invalid {field_name} format: {value}. "
+            "Use ISO-8601 format (e.g., 2025-01-01T00:00:00Z)."
+        ) from e
+
+
 @mcp.tool()
 async def devrev_conversations_list(
     ctx: Context[Any, Any, Any],
     cursor: str | None = None,
     limit: int | None = None,
+    modified_date_after: str | None = None,
+    modified_date_before: str | None = None,
+    sort_by: list[str] | None = None,
 ) -> dict[str, Any]:
     """List DevRev conversations.
 
     Args:
         cursor: Pagination cursor from a previous response.
         limit: Maximum number of items to return (default: 25, max: 100).
+        modified_date_after: Only include conversations modified after this
+            ISO-8601 timestamp (e.g., "2025-01-01T00:00:00Z").
+        modified_date_before: Only include conversations modified before this
+            ISO-8601 timestamp.
+        sort_by: Sort order entries (e.g., ["modified_date:desc"] or
+            ["-modified_date"]).
     """
     app = ctx.request_context.lifespan_context
     try:
+        modified_date: DateFilter | None = None
+        if modified_date_after is not None or modified_date_before is not None:
+            after_dt = (
+                _parse_iso_datetime(modified_date_after, "modified_date_after")
+                if modified_date_after is not None
+                else None
+            )
+            before_dt = (
+                _parse_iso_datetime(modified_date_before, "modified_date_before")
+                if modified_date_before is not None
+                else None
+            )
+            modified_date = DateFilter(after=after_dt, before=before_dt)
         request = ConversationsListRequest(
             cursor=cursor,
             limit=clamp_page_size(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
+            modified_date=modified_date,
+            sort_by=sort_by,
         )
         conversations = await app.get_client().conversations.list(request)
+        items = serialize_models(list(conversations))
+        return {"count": len(items), "conversations": items}
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_conversations_list_modified_since(
+    ctx: Context[Any, Any, Any],
+    after: str,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    """List DevRev conversations modified after a given ISO-8601 datetime.
+
+    Streams pages newest-first, stopping when the cutoff is crossed or the
+    ``limit`` is reached. The cutoff is supplied as an ISO-8601 string.
+
+    Args:
+        after: ISO-8601 datetime; only conversations modified after this are
+            returned (e.g., "2025-01-01T00:00:00Z").
+        limit: Maximum number of conversations to return overall.
+    """
+    app = ctx.request_context.lifespan_context
+    after_dt = _parse_iso_datetime(after, "after")
+    try:
+        conversations = await app.get_client().conversations.list_modified_since(
+            after=after_dt,
+            limit=limit,
+        )
         items = serialize_models(list(conversations))
         return {"count": len(items), "conversations": items}
     except DevRevError as e:

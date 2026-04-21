@@ -99,6 +99,7 @@ def mock_client():
     # Conversations service
     client.conversations = AsyncMock()
     client.conversations.list = AsyncMock()
+    client.conversations.list_modified_since = AsyncMock()
     client.conversations.get = AsyncMock()
     client.conversations.create = AsyncMock()
     client.conversations.update = AsyncMock()
