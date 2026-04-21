@@ -189,10 +189,14 @@ class TestNormalizeSortBy:
     def test_preserves_explicit_direction(self) -> None:
         assert _normalize_sort_by(["modified_date:desc"]) == ["modified_date:desc"]
 
+    def test_dash_prefix_becomes_desc(self) -> None:
+        assert _normalize_sort_by(["-modified_date"]) == ["modified_date:desc"]
+
     def test_mixed_entries(self) -> None:
-        assert _normalize_sort_by(["modified_date:desc", "created_date"]) == [
+        assert _normalize_sort_by(["modified_date:desc", "created_date", "-priority"]) == [
             "modified_date:desc",
             "created_date:asc",
+            "priority:desc",
         ]
 
 
@@ -215,6 +219,37 @@ class TestConversationsListRequestModel:
         payload = request.model_dump(exclude_none=True, by_alias=True, mode="json")
         assert isinstance(payload["modified_date"]["after"], str)
         assert payload["modified_date"]["after"].startswith("2024-01-15T10:00:00")
+
+
+class TestConversationsServiceListSortByNormalization:
+    """Tests that ConversationsService.list normalizes sort_by before sending."""
+
+    def test_list_normalizes_dash_prefix_sort_by_in_payload(
+        self, mock_http_client: MagicMock
+    ) -> None:
+        mock_http_client.post.return_value = create_mock_response(
+            {"conversations": [], "next_cursor": None}
+        )
+
+        service = ConversationsService(mock_http_client)
+        service.list(ConversationsListRequest(sort_by=["-modified_date"]))
+
+        payload = mock_http_client.post.call_args[1]["data"]
+        assert payload["sort_by"] == ["modified_date:desc"]
+
+    @pytest.mark.asyncio
+    async def test_async_list_normalizes_dash_prefix_sort_by_in_payload(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        mock_async_http_client.post.return_value = create_mock_response(
+            {"conversations": [], "next_cursor": None}
+        )
+
+        service = AsyncConversationsService(mock_async_http_client)
+        await service.list(ConversationsListRequest(sort_by=["-modified_date"]))
+
+        payload = mock_async_http_client.post.call_args[1]["data"]
+        assert payload["sort_by"] == ["modified_date:desc"]
 
 
 class TestListModifiedSince:

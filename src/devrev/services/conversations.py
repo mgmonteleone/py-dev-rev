@@ -29,15 +29,21 @@ from devrev.services.base import AsyncBaseService, BaseService
 def _normalize_sort_by(sort_by: Sequence[str] | None) -> list[str] | None:
     """Normalize sort_by entries to the ``field:direction`` format.
 
-    Accepts bare field names (e.g. ``"modified_date"``) or entries already in
-    ``field:direction`` form (e.g. ``"modified_date:desc"``). Bare field names
+    Accepts entries already in ``field:direction`` form (e.g.
+    ``"modified_date:desc"``), the legacy ``"-field"`` shorthand for
+    descending order, and bare field names (e.g. ``"modified_date"``) which
     default to ascending order.
     """
     if sort_by is None:
         return None
     normalized: list[str] = []
     for entry in sort_by:
-        normalized.append(entry if ":" in entry else f"{entry}:asc")
+        if ":" in entry:
+            normalized.append(entry)
+        elif entry.startswith("-"):
+            normalized.append(f"{entry[1:]}:desc")
+        else:
+            normalized.append(f"{entry}:asc")
     return normalized
 
 
@@ -86,6 +92,8 @@ class ConversationsService(BaseService):
         """List conversations."""
         if request is None:
             request = ConversationsListRequest()
+        if request.sort_by is not None:
+            request.sort_by = _normalize_sort_by(request.sort_by)
         response = self._post("/conversations.list", request, ConversationsListResponse)
         return response.conversations
 
@@ -216,6 +224,8 @@ class AsyncConversationsService(AsyncBaseService):
         """List conversations."""
         if request is None:
             request = ConversationsListRequest()
+        if request.sort_by is not None:
+            request.sort_by = _normalize_sort_by(request.sort_by)
         response = await self._post("/conversations.list", request, ConversationsListResponse)
         return response.conversations
 
