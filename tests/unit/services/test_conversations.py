@@ -348,6 +348,66 @@ class TestListModifiedSince:
         payload = mock_http_client.post.call_args[1]["data"]
         assert payload["limit"] == 3
 
+    def test_limit_above_server_max_clamped_to_100(self, mock_http_client: MagicMock) -> None:
+        """limit=200, page_size=None must never send limit>100 per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        page1_convs = [
+            self._make_conv(f"a{i}", after + timedelta(days=200 - i)) for i in range(100)
+        ]
+        page2_convs = [
+            self._make_conv(f"b{i}", after + timedelta(days=100 - i)) for i in range(100)
+        ]
+        mock_http_client.post.side_effect = [
+            create_mock_response({"conversations": page1_convs, "next_cursor": "cursor-2"}),
+            create_mock_response({"conversations": page2_convs, "next_cursor": None}),
+        ]
+
+        service = ConversationsService(mock_http_client)
+        result = service.list_modified_since(after, limit=200)
+
+        assert len(result) == 200
+        assert mock_http_client.post.call_count == 2
+        for call in mock_http_client.post.call_args_list:
+            payload = call[1]["data"]
+            assert payload["limit"] is not None
+            assert payload["limit"] <= 100
+
+    def test_small_limit_below_server_max_passed_through(self, mock_http_client: MagicMock) -> None:
+        """limit=50, page_size=None sends the small limit directly."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_http_client.post.return_value = create_mock_response(
+            {"conversations": [], "next_cursor": None}
+        )
+
+        service = ConversationsService(mock_http_client)
+        service.list_modified_since(after, limit=50)
+
+        payload = mock_http_client.post.call_args[1]["data"]
+        assert payload["limit"] == 50
+
+    def test_limit_spanning_multiple_pages_clamps_each_request(
+        self, mock_http_client: MagicMock
+    ) -> None:
+        """limit=300, page_size=None keeps each per-page limit at <=100."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        page1 = [self._make_conv(f"a{i}", after + timedelta(days=300 - i)) for i in range(100)]
+        page2 = [self._make_conv(f"b{i}", after + timedelta(days=200 - i)) for i in range(100)]
+        page3 = [self._make_conv(f"c{i}", after + timedelta(days=100 - i)) for i in range(100)]
+        mock_http_client.post.side_effect = [
+            create_mock_response({"conversations": page1, "next_cursor": "c2"}),
+            create_mock_response({"conversations": page2, "next_cursor": "c3"}),
+            create_mock_response({"conversations": page3, "next_cursor": None}),
+        ]
+
+        service = ConversationsService(mock_http_client)
+        result = service.list_modified_since(after, limit=300)
+
+        assert len(result) == 300
+        assert mock_http_client.post.call_count == 3
+        payloads = [c[1]["data"] for c in mock_http_client.post.call_args_list]
+        assert all(p["limit"] is not None and p["limit"] <= 100 for p in payloads)
+        assert payloads[2]["limit"] == 100
+
 
 class TestAsyncListModifiedSince:
     """Tests for AsyncConversationsService.list_modified_since."""
@@ -404,3 +464,85 @@ class TestAsyncListModifiedSince:
 
         assert [c.id for c in result] == ["a", "b"]
         assert mock_async_http_client.post.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_async_limit_above_server_max_clamped_to_100(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        """Async: limit=200, page_size=None must never send limit>100 per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        page1_convs = [
+            {
+                "id": f"a{i}",
+                "modified_date": (after + timedelta(days=200 - i)).isoformat(),
+            }
+            for i in range(100)
+        ]
+        page2_convs = [
+            {
+                "id": f"b{i}",
+                "modified_date": (after + timedelta(days=100 - i)).isoformat(),
+            }
+            for i in range(100)
+        ]
+        mock_async_http_client.post.side_effect = [
+            create_mock_response({"conversations": page1_convs, "next_cursor": "cursor-2"}),
+            create_mock_response({"conversations": page2_convs, "next_cursor": None}),
+        ]
+
+        service = AsyncConversationsService(mock_async_http_client)
+        result = await service.list_modified_since(after, limit=200)
+
+        assert len(result) == 200
+        assert mock_async_http_client.post.call_count == 2
+        for call in mock_async_http_client.post.call_args_list:
+            payload = call[1]["data"]
+            assert payload["limit"] is not None
+            assert payload["limit"] <= 100
+
+    @pytest.mark.asyncio
+    async def test_async_small_limit_passed_through(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        """Async: limit=50, page_size=None sends the small limit directly."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_async_http_client.post.return_value = create_mock_response(
+            {"conversations": [], "next_cursor": None}
+        )
+
+        service = AsyncConversationsService(mock_async_http_client)
+        await service.list_modified_since(after, limit=50)
+
+        payload = mock_async_http_client.post.call_args[1]["data"]
+        assert payload["limit"] == 50
+
+    @pytest.mark.asyncio
+    async def test_async_limit_spanning_multiple_pages_clamps_each_request(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        """Async: limit=300, page_size=None keeps each per-page limit at <=100."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+
+        def _page(prefix: str, day_start: int) -> list[dict[str, Any]]:
+            return [
+                {
+                    "id": f"{prefix}{i}",
+                    "modified_date": (after + timedelta(days=day_start - i)).isoformat(),
+                }
+                for i in range(100)
+            ]
+
+        mock_async_http_client.post.side_effect = [
+            create_mock_response({"conversations": _page("a", 300), "next_cursor": "c2"}),
+            create_mock_response({"conversations": _page("b", 200), "next_cursor": "c3"}),
+            create_mock_response({"conversations": _page("c", 100), "next_cursor": None}),
+        ]
+
+        service = AsyncConversationsService(mock_async_http_client)
+        result = await service.list_modified_since(after, limit=300)
+
+        assert len(result) == 300
+        assert mock_async_http_client.post.call_count == 3
+        payloads = [c[1]["data"] for c in mock_async_http_client.post.call_args_list]
+        assert all(p["limit"] is not None and p["limit"] <= 100 for p in payloads)
+        assert payloads[2]["limit"] == 100

@@ -47,18 +47,31 @@ def _normalize_sort_by(sort_by: Sequence[str] | None) -> list[str] | None:
     return normalized
 
 
+# ``ConversationsListRequest.limit`` is pydantic-constrained to ``le=100``;
+# clamp any computed per-page limit so pagination loops do not construct a
+# request body that fails validation before it is ever sent.
+_CONVERSATIONS_MAX_PAGE = 100
+
+
 def _resolve_page_limit(
     overall_limit: int | None,
     collected: int,
     page_size: int | None,
 ) -> int | None:
-    """Compute the ``limit`` to send for the next page request."""
+    """Compute the ``limit`` to send for the next page request.
+
+    The returned value is always clamped to ``_CONVERSATIONS_MAX_PAGE`` so
+    callers using an ``overall_limit`` greater than the server maximum (e.g.
+    ``limit=200, page_size=None``) still paginate correctly.
+    """
     if overall_limit is None:
-        return page_size
+        if page_size is None:
+            return None
+        return min(page_size, _CONVERSATIONS_MAX_PAGE)
     remaining = overall_limit - collected
     if page_size is None:
-        return remaining
-    return min(page_size, remaining)
+        return min(remaining, _CONVERSATIONS_MAX_PAGE)
+    return min(page_size, remaining, _CONVERSATIONS_MAX_PAGE)
 
 
 def _is_before_cutoff(modified_date: datetime | None, cutoff: datetime) -> bool:
