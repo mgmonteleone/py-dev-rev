@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [3.0.1] - 2026-04-22
+
+### Changed
+
+- **Shared pagination helper** (CUSS-457) — Extracted the per-request page-size
+  clamp (`_MAX_PAGE = 100`) and the `resolve_page_limit` helper from
+  `conversations.py` and `works.py` into a single shared module
+  `src/devrev/services/_pagination.py`. Non-breaking internal refactor; no
+  public SDK or MCP surface change. The shared helper adopts the tighter of
+  the two pre-existing semantics, eliminating a small over-fetch on the
+  final page of paginated `list_*_since` calls in `WorksService`.
+
 ## [3.0.0] - 2026-04-22
 
 ### Added
