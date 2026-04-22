@@ -167,15 +167,18 @@ class WorksListRequest(DevRevBaseModel):
     type: list[WorkType] | None = Field(default=None, description="Filter by work types")
     applies_to_part: list[str] | None = Field(default=None, description="Filter by part IDs")
     created_by: list[str] | None = Field(default=None, description="Filter by creator user IDs")
-    created_date: DateFilter | None = Field(default=None, description="Filter by creation date")
     cursor: str | None = Field(default=None, description="Pagination cursor")
     external_ref: list[str] | None = Field(default=None, description="Filter by external refs")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results to return")
-    modified_date: DateFilter | None = Field(
-        default=None, description="Filter by modification date"
-    )
     owned_by: list[str] | None = Field(default=None, description="Filter by owner user IDs")
-    sort_by: list[str] | None = Field(default=None, description="Sort order")
+    sort_by: list[str] | None = Field(
+        default=None,
+        description=(
+            "Sort order. Each entry uses the server form 'field:asc' or 'field:desc' "
+            "(e.g. 'modified_date:desc'). The legacy '-field' form is accepted by the "
+            "service and normalized before being sent."
+        ),
+    )
     stage_name: list[str] | None = Field(default=None, description="Filter by stage names")
     target_close_date: DateFilter | None = Field(
         default=None, description="Filter by target close date"
@@ -226,8 +229,15 @@ class WorksExportRequest(DevRevBaseModel):
     type: list[WorkType] | None = Field(default=None, description="Filter by work types")
     applies_to_part: list[str] | None = Field(default=None, description="Filter by part IDs")
     created_by: list[str] | None = Field(default=None, description="Filter by creator user IDs")
-    created_date: DateFilter | None = Field(default=None, description="Filter by creation date")
     first: int | None = Field(default=None, ge=1, le=10000, description="Max results")
+    sort_by: list[str] | None = Field(
+        default=None,
+        description=(
+            "Sort order. Each entry uses the server form 'field:asc' or 'field:desc' "
+            "(e.g. 'modified_date:desc'). The legacy '-field' form is accepted by the "
+            "service and normalized before being sent."
+        ),
+    )
 
 
 class WorksCountRequest(DevRevBaseModel):

@@ -1,7 +1,8 @@
 """Unit tests for WorksService."""
 
+from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
@@ -12,7 +13,12 @@ from devrev.models.works import (
     WorksListResponse,
     WorkType,
 )
-from devrev.services.works import WorksService
+from devrev.services.works import (
+    AsyncWorksService,
+    WorksService,
+    _is_before_cutoff,
+    _normalize_sort_by,
+)
 
 
 def create_mock_response(data: dict[str, Any], status_code: int = 200) -> MagicMock:
@@ -207,3 +213,494 @@ class TestWorksService:
 
         assert isinstance(result, Work)
         assert result.applies_to_part == "don:core:dvrv-us-1:devo/org123:product/1"
+
+
+def _work_page(works: list[dict[str, Any]], next_cursor: str | None = None) -> dict[str, Any]:
+    """Build a works.list response payload for mocking."""
+    return {"works": works, "next_cursor": next_cursor}
+
+
+def _work_record(work_id: str, timestamp_field: str, timestamp: str) -> dict[str, Any]:
+    """Build a single work dict with a specific timestamp field set."""
+    return {
+        "id": work_id,
+        "type": "issue",
+        "display_id": work_id.split(":")[-1],
+        "title": f"Work {work_id}",
+        timestamp_field: timestamp,
+    }
+
+
+class TestNormalizeSortBy:
+    """Tests for the ``_normalize_sort_by`` helper."""
+
+    def test_none_passes_through(self) -> None:
+        assert _normalize_sort_by(None) is None
+
+    def test_empty_list(self) -> None:
+        assert _normalize_sort_by([]) == []
+
+    def test_dash_prefix_becomes_desc(self) -> None:
+        assert _normalize_sort_by(["-modified_date"]) == ["modified_date:desc"]
+
+    def test_bare_field_becomes_asc(self) -> None:
+        assert _normalize_sort_by(["modified_date"]) == ["modified_date:asc"]
+
+    def test_server_form_passes_through(self) -> None:
+        assert _normalize_sort_by(["modified_date:desc"]) == ["modified_date:desc"]
+        assert _normalize_sort_by(["created_date:asc"]) == ["created_date:asc"]
+
+    def test_mixed_inputs(self) -> None:
+        assert _normalize_sort_by(["-modified_date", "created_date:asc", "title"]) == [
+            "modified_date:desc",
+            "created_date:asc",
+            "title:asc",
+        ]
+
+
+class TestWorksServiceSortNormalization:
+    """Sort normalization is applied inside list() and export() requests."""
+
+    def test_list_normalizes_dash_form(
+        self, mock_http_client: MagicMock, sample_work_data: dict[str, Any]
+    ) -> None:
+        mock_http_client.post.return_value = create_mock_response(_work_page([sample_work_data]))
+        service = WorksService(mock_http_client)
+        service.list(sort_by=["-modified_date"])
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["sort_by"] == ["modified_date:desc"]
+
+    def test_list_preserves_server_form(
+        self, mock_http_client: MagicMock, sample_work_data: dict[str, Any]
+    ) -> None:
+        mock_http_client.post.return_value = create_mock_response(_work_page([sample_work_data]))
+        service = WorksService(mock_http_client)
+        service.list(sort_by=["modified_date:desc"])
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["sort_by"] == ["modified_date:desc"]
+
+    def test_export_normalizes_sort_by(
+        self, mock_http_client: MagicMock, sample_work_data: dict[str, Any]
+    ) -> None:
+        mock_http_client.post.return_value = create_mock_response({"works": [sample_work_data]})
+        service = WorksService(mock_http_client)
+        service.export(sort_by=["-created_date"])
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["sort_by"] == ["created_date:desc"]
+
+
+class TestListModifiedSince:
+    """Tests for ``WorksService.list_modified_since``."""
+
+    def test_early_exit_when_record_older_than_after(self, mock_http_client: MagicMock) -> None:
+        """Iteration stops as soon as a record's modified_date < after."""
+        after = datetime(2024, 6, 1, tzinfo=UTC)
+        page1 = _work_page(
+            [
+                _work_record("don:core:work:1", "modified_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "modified_date", "2024-06-15T00:00:00Z"),
+                _work_record("don:core:work:3", "modified_date", "2024-05-15T00:00:00Z"),
+            ],
+            next_cursor="cursor-2",
+        )
+        mock_http_client.post.return_value = create_mock_response(page1)
+
+        service = WorksService(mock_http_client)
+        results = service.list_modified_since(after)
+
+        assert [w.id for w in results] == ["don:core:work:1", "don:core:work:2"]
+        # Only one HTTP request — early-exit prevented a second page fetch.
+        assert mock_http_client.post.call_count == 1
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["sort_by"] == ["modified_date:desc"]
+
+    def test_paginates_until_cutoff_across_pages(self, mock_http_client: MagicMock) -> None:
+        after = datetime(2024, 6, 1, tzinfo=UTC)
+        page1 = _work_page(
+            [
+                _work_record("don:core:work:1", "modified_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "modified_date", "2024-06-15T00:00:00Z"),
+            ],
+            next_cursor="cursor-2",
+        )
+        page2 = _work_page(
+            [
+                _work_record("don:core:work:3", "modified_date", "2024-06-05T00:00:00Z"),
+                _work_record("don:core:work:4", "modified_date", "2024-05-15T00:00:00Z"),
+            ],
+            next_cursor="cursor-3",
+        )
+        mock_http_client.post.side_effect = [
+            create_mock_response(page1),
+            create_mock_response(page2),
+        ]
+
+        service = WorksService(mock_http_client)
+        results = service.list_modified_since(after)
+
+        assert [w.id for w in results] == [
+            "don:core:work:1",
+            "don:core:work:2",
+            "don:core:work:3",
+        ]
+        assert mock_http_client.post.call_count == 2
+
+    def test_respects_hard_limit(self, mock_http_client: MagicMock) -> None:
+        after = datetime(2020, 1, 1, tzinfo=UTC)
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "modified_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "modified_date", "2024-06-01T00:00:00Z"),
+                _work_record("don:core:work:3", "modified_date", "2024-05-01T00:00:00Z"),
+            ],
+            next_cursor="cursor-2",
+        )
+        mock_http_client.post.return_value = create_mock_response(page)
+
+        service = WorksService(mock_http_client)
+        results = service.list_modified_since(after, limit=2)
+
+        assert [w.id for w in results] == ["don:core:work:1", "don:core:work:2"]
+        assert mock_http_client.post.call_count == 1
+
+
+class TestListCreatedSince:
+    """Tests for ``WorksService.list_created_since``."""
+
+    def test_early_exit_and_sort_order(self, mock_http_client: MagicMock) -> None:
+        after = datetime(2024, 6, 1, tzinfo=UTC)
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "created_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "created_date", "2024-05-15T00:00:00Z"),
+            ]
+        )
+        mock_http_client.post.return_value = create_mock_response(page)
+
+        service = WorksService(mock_http_client)
+        results = service.list_created_since(after)
+
+        assert [w.id for w in results] == ["don:core:work:1"]
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["sort_by"] == ["created_date:desc"]
+
+    def test_respects_hard_limit(self, mock_http_client: MagicMock) -> None:
+        after = datetime(2020, 1, 1, tzinfo=UTC)
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "created_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "created_date", "2024-06-01T00:00:00Z"),
+            ],
+            next_cursor="cursor-2",
+        )
+        mock_http_client.post.return_value = create_mock_response(page)
+
+        service = WorksService(mock_http_client)
+        results = service.list_created_since(after, limit=1)
+
+        assert [w.id for w in results] == ["don:core:work:1"]
+        assert mock_http_client.post.call_count == 1
+
+
+class TestListSincePageLimitClamp:
+    """``_list_since`` must never send ``limit>100`` to the server."""
+
+    def test_page_size_above_server_max_clamped_to_100(self, mock_http_client: MagicMock) -> None:
+        """``page_size=200`` must be clamped to 100 in the outgoing request."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_http_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = WorksService(mock_http_client)
+        service.list_modified_since(after, page_size=200)
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["limit"] == 100
+
+    def test_limit_above_server_max_clamped_to_100(self, mock_http_client: MagicMock) -> None:
+        """``limit=200, page_size=None`` must never send ``limit>100`` per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        page1_works = [
+            _work_record(
+                f"don:core:work:a{i}",
+                "modified_date",
+                f"2024-07-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        page2_works = [
+            _work_record(
+                f"don:core:work:b{i}",
+                "modified_date",
+                f"2024-06-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        mock_http_client.post.side_effect = [
+            create_mock_response(_work_page(page1_works, next_cursor="cursor-2")),
+            create_mock_response(_work_page(page2_works, next_cursor=None)),
+        ]
+
+        service = WorksService(mock_http_client)
+        results = service.list_modified_since(after, limit=200)
+
+        assert len(results) == 200
+        assert mock_http_client.post.call_count == 2
+        for call in mock_http_client.post.call_args_list:
+            payload = call[1]["data"]
+            assert payload["limit"] is not None
+            assert payload["limit"] <= 100
+
+    def test_small_limit_below_server_max_passed_through(self, mock_http_client: MagicMock) -> None:
+        """``limit=50, page_size=None`` sends the small limit directly."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_http_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = WorksService(mock_http_client)
+        service.list_modified_since(after, limit=50)
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["limit"] == 50
+
+    def test_list_created_since_page_size_clamped_smoke(self, mock_http_client: MagicMock) -> None:
+        """Smoke test: shared helper path clamps for ``list_created_since`` too."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_http_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = WorksService(mock_http_client)
+        service.list_created_since(after, page_size=200)
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["limit"] == 100
+
+
+class TestAsyncListSince:
+    """Async variants for ``list_modified_since`` / ``list_created_since``."""
+
+    @pytest.mark.asyncio
+    async def test_async_list_modified_since_early_exit(self) -> None:
+        after = datetime(2024, 6, 1, tzinfo=UTC)
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "modified_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "modified_date", "2024-05-15T00:00:00Z"),
+            ],
+            next_cursor="cursor-next",
+        )
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(page)
+
+        service = AsyncWorksService(mock_async_client)
+        results = await service.list_modified_since(after)
+
+        assert [w.id for w in results] == ["don:core:work:1"]
+        assert mock_async_client.post.call_count == 1
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"]["sort_by"] == ["modified_date:desc"]
+
+    @pytest.mark.asyncio
+    async def test_async_list_created_since_respects_limit(self) -> None:
+        after = datetime(2020, 1, 1, tzinfo=UTC)
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "created_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "created_date", "2024-06-01T00:00:00Z"),
+                _work_record("don:core:work:3", "created_date", "2024-05-01T00:00:00Z"),
+            ],
+            next_cursor="cursor-next",
+        )
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(page)
+
+        service = AsyncWorksService(mock_async_client)
+        results = await service.list_created_since(after, limit=2)
+
+        assert [w.id for w in results] == ["don:core:work:1", "don:core:work:2"]
+        assert mock_async_client.post.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_async_list_normalizes_sort_by(self) -> None:
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = AsyncWorksService(mock_async_client)
+        await service.list(sort_by=["-modified_date"])
+
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"]["sort_by"] == ["modified_date:desc"]
+
+    @pytest.mark.asyncio
+    async def test_async_page_size_above_server_max_clamped_to_100(self) -> None:
+        """Async: ``page_size=200`` must be clamped to 100 per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = AsyncWorksService(mock_async_client)
+        await service.list_modified_since(after, page_size=200)
+
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"]["limit"] == 100
+
+    @pytest.mark.asyncio
+    async def test_async_limit_above_server_max_clamped_to_100(self) -> None:
+        """Async: ``limit=200, page_size=None`` must never send ``limit>100`` per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        page1_works = [
+            _work_record(
+                f"don:core:work:a{i}",
+                "modified_date",
+                f"2024-07-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        page2_works = [
+            _work_record(
+                f"don:core:work:b{i}",
+                "modified_date",
+                f"2024-06-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        mock_async_client = AsyncMock()
+        mock_async_client.post.side_effect = [
+            create_mock_response(_work_page(page1_works, next_cursor="cursor-2")),
+            create_mock_response(_work_page(page2_works, next_cursor=None)),
+        ]
+
+        service = AsyncWorksService(mock_async_client)
+        results = await service.list_modified_since(after, limit=200)
+
+        assert len(results) == 200
+        assert mock_async_client.post.call_count == 2
+        for call in mock_async_client.post.call_args_list:
+            payload = call[1]["data"]
+            assert payload["limit"] is not None
+            assert payload["limit"] <= 100
+
+    @pytest.mark.asyncio
+    async def test_async_small_limit_passed_through(self) -> None:
+        """Async: ``limit=50, page_size=None`` sends the small limit directly."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = AsyncWorksService(mock_async_client)
+        await service.list_modified_since(after, limit=50)
+
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"]["limit"] == 50
+
+
+class TestIsBeforeCutoffHelper:
+    """Tests for the ``_is_before_cutoff`` helper."""
+
+    def test_none_timestamp_returns_false(self) -> None:
+        cutoff = datetime(2024, 6, 1, tzinfo=UTC)
+        assert _is_before_cutoff(None, cutoff) is False
+
+    def test_aware_timestamp_before_cutoff(self) -> None:
+        cutoff = datetime(2024, 6, 1, tzinfo=UTC)
+        ts = datetime(2024, 5, 1, tzinfo=UTC)
+        assert _is_before_cutoff(ts, cutoff) is True
+
+    def test_aware_timestamp_after_cutoff(self) -> None:
+        cutoff = datetime(2024, 6, 1, tzinfo=UTC)
+        ts = datetime(2024, 7, 1, tzinfo=UTC)
+        assert _is_before_cutoff(ts, cutoff) is False
+
+    def test_naive_timestamp_with_aware_cutoff_returns_false(self) -> None:
+        """Incompatible tz-awareness must not raise; defers to server filter."""
+        cutoff = datetime(2024, 6, 1, tzinfo=UTC)
+        ts = datetime(2024, 5, 1)  # naive
+        assert _is_before_cutoff(ts, cutoff) is False
+
+    def test_aware_timestamp_with_naive_cutoff_returns_false(self) -> None:
+        """Incompatible tz-awareness must not raise; defers to server filter."""
+        cutoff = datetime(2024, 6, 1)  # naive
+        ts = datetime(2024, 5, 1, tzinfo=UTC)
+        assert _is_before_cutoff(ts, cutoff) is False
+
+
+class TestListSinceTimestampTypeSafety:
+    """``_list_since`` must not raise TypeError on mixed naive/aware timestamps."""
+
+    def test_naive_after_with_aware_record_timestamps_does_not_raise(
+        self, mock_http_client: MagicMock
+    ) -> None:
+        """A naive ``after`` with tz-aware record timestamps must not raise."""
+        after = datetime(2024, 6, 1)  # naive
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "modified_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "modified_date", "2024-05-15T00:00:00Z"),
+            ],
+            next_cursor=None,
+        )
+        mock_http_client.post.return_value = create_mock_response(page)
+
+        service = WorksService(mock_http_client)
+        # Must not raise TypeError. Both records are kept because the helper
+        # returns False on incompatible tz-awareness (server-side filter is
+        # authoritative).
+        results = service.list_modified_since(after)
+
+        assert [w.id for w in results] == ["don:core:work:1", "don:core:work:2"]
+        assert mock_http_client.post.call_count == 1
+
+    def test_aware_after_with_naive_record_timestamps_does_not_raise(
+        self, mock_http_client: MagicMock
+    ) -> None:
+        """A tz-aware ``after`` with naive record timestamps must not raise."""
+        after = datetime(2024, 6, 1, tzinfo=UTC)
+        # Timestamps without 'Z' / offset are parsed as naive datetimes.
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "modified_date", "2024-07-01T00:00:00"),
+                _work_record("don:core:work:2", "modified_date", "2024-05-15T00:00:00"),
+            ],
+            next_cursor=None,
+        )
+        mock_http_client.post.return_value = create_mock_response(page)
+
+        service = WorksService(mock_http_client)
+        results = service.list_modified_since(after)
+
+        assert [w.id for w in results] == ["don:core:work:1", "don:core:work:2"]
+        assert mock_http_client.post.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_async_naive_after_with_aware_record_timestamps_does_not_raise(
+        self,
+    ) -> None:
+        """Async variant: naive ``after`` with aware record timestamps must not raise."""
+        after = datetime(2024, 6, 1)  # naive
+        page = _work_page(
+            [
+                _work_record("don:core:work:1", "created_date", "2024-07-01T00:00:00Z"),
+                _work_record("don:core:work:2", "created_date", "2024-05-15T00:00:00Z"),
+            ],
+            next_cursor=None,
+        )
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(page)
+
+        service = AsyncWorksService(mock_async_client)
+        results = await service.list_created_since(after)
+
+        assert [w.id for w in results] == ["don:core:work:1", "don:core:work:2"]
+        assert mock_async_client.post.call_count == 1

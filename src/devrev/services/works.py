@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from devrev.models.base import DateFilter, StageUpdate
+from devrev.models.base import StageUpdate
 from devrev.models.works import (
     IssuePriority,
     TicketSeverity,
@@ -35,6 +35,74 @@ from devrev.services.base import AsyncBaseService, BaseService
 
 if TYPE_CHECKING:
     from devrev.utils.http import AsyncHTTPClient, HTTPClient
+
+
+# Module-level type aliases. Declared here so class-scoped annotations can
+# refer to ``list[...]`` without colliding with the ``list`` method defined on
+# :class:`WorksService` / :class:`AsyncWorksService`.
+_WorkList = list[Work]
+_StrList = list[str]
+
+
+def _is_before_cutoff(timestamp: datetime | None, cutoff: datetime) -> bool:
+    """Return True if ``timestamp`` is strictly older than ``cutoff``.
+
+    Returns False when the timestamp is unknown or when the two datetimes have
+    incompatible tz-awareness; the server-side filter remains authoritative.
+    """
+    if timestamp is None:
+        return False
+    try:
+        return timestamp < cutoff
+    except TypeError:
+        return False
+
+
+# ``WorksListRequest.limit`` is pydantic-constrained to ``le=100``; clamp any
+# computed per-page limit so pagination loops do not construct a request body
+# that fails validation before it is ever sent.
+_WORKS_MAX_PAGE = 100
+
+
+def _resolve_page_limit(
+    overall_limit: int | None,
+    collected: int,
+    page_size: int | None,
+) -> int | None:
+    """Compute the ``limit`` to send for the next page request.
+
+    The returned value is always clamped to ``_WORKS_MAX_PAGE`` so callers using
+    an ``overall_limit`` greater than the server maximum (e.g. ``limit=200,
+    page_size=None``) still paginate correctly.
+    """
+    if page_size is not None:
+        return min(page_size, _WORKS_MAX_PAGE)
+    if overall_limit is None:
+        return None
+    remaining = overall_limit - collected
+    return min(remaining, _WORKS_MAX_PAGE)
+
+
+def _normalize_sort_by(sort_by: Sequence[str] | None) -> _StrList | None:
+    """Normalize sort_by entries to the server-expected ``field:direction`` form.
+
+    Accepts both the legacy ``"-field"`` (descending) / ``"field"`` (ascending)
+    shorthand and the explicit ``"field:asc"`` / ``"field:desc"`` form. Returns
+    a new list with every entry in the ``"field:direction"`` form. Returns
+    ``None`` when the input is ``None`` so callers can pass the result straight
+    through to request models with no-op semantics.
+    """
+    if sort_by is None:
+        return None
+    normalized: list[str] = []
+    for entry in sort_by:
+        if ":" in entry:
+            normalized.append(entry)
+        elif entry.startswith("-"):
+            normalized.append(f"{entry[1:]}:desc")
+        else:
+            normalized.append(f"{entry}:asc")
+    return normalized
 
 
 class WorksService(BaseService):
@@ -109,10 +177,10 @@ class WorksService(BaseService):
         type: Sequence[WorkType] | None = None,
         applies_to_part: Sequence[str] | None = None,
         created_by: Sequence[str] | None = None,
-        created_date: DateFilter | None = None,
         cursor: str | None = None,
         limit: int | None = None,
         owned_by: Sequence[str] | None = None,
+        sort_by: Sequence[str] | None = None,
         stage_name: Sequence[str] | None = None,
     ) -> WorksListResponse:
         """List work items.
@@ -121,10 +189,12 @@ class WorksService(BaseService):
             type: Filter by work types
             applies_to_part: Filter by part IDs
             created_by: Filter by creator user IDs
-            created_date: Filter by creation date
             cursor: Pagination cursor
             limit: Maximum number of results
             owned_by: Filter by owner user IDs
+            sort_by: Sort order. Accepts either the server form
+                ``"field:asc"`` / ``"field:desc"`` or the legacy
+                ``"-field"`` shorthand; the client normalizes before sending.
             stage_name: Filter by stage names
 
         Returns:
@@ -134,10 +204,10 @@ class WorksService(BaseService):
             type=type,
             applies_to_part=applies_to_part,
             created_by=created_by,
-            created_date=created_date,
             cursor=cursor,
             limit=limit,
             owned_by=owned_by,
+            sort_by=_normalize_sort_by(sort_by),
             stage_name=stage_name,
         )
         return self._post("/works.list", request, WorksListResponse)
@@ -198,8 +268,8 @@ class WorksService(BaseService):
         type: Sequence[WorkType] | None = None,
         applies_to_part: Sequence[str] | None = None,
         created_by: Sequence[str] | None = None,
-        created_date: DateFilter | None = None,
         first: int | None = None,
+        sort_by: Sequence[str] | None = None,
     ) -> Sequence[Work]:
         """Export work items.
 
@@ -207,8 +277,10 @@ class WorksService(BaseService):
             type: Filter by work types
             applies_to_part: Filter by part IDs
             created_by: Filter by creator user IDs
-            created_date: Filter by creation date
             first: Maximum number of results
+            sort_by: Sort order. Accepts either the server form
+                ``"field:asc"`` / ``"field:desc"`` or the legacy
+                ``"-field"`` shorthand; the client normalizes before sending.
 
         Returns:
             List of exported work items
@@ -217,8 +289,8 @@ class WorksService(BaseService):
             type=type,
             applies_to_part=applies_to_part,
             created_by=created_by,
-            created_date=created_date,
             first=first,
+            sort_by=_normalize_sort_by(sort_by),
         )
         response = self._post("/works.export", request, WorksExportResponse)
         return response.works
@@ -250,6 +322,104 @@ class WorksService(BaseService):
         )
         response = self._post("/works.count", request, WorksCountResponse)
         return response.count
+
+    def _list_since(
+        self,
+        after: datetime,
+        timestamp_field: str,
+        *,
+        type: Sequence[WorkType] | None,
+        owned_by: Sequence[str] | None,
+        applies_to_part: Sequence[str] | None,
+        limit: int | None,
+        page_size: int | None,
+    ) -> _WorkList:
+        """Shared cursor-paginated fetcher for ``list_*_since`` helpers.
+
+        Streams pages sorted ``{timestamp_field}:desc`` and early-exits as soon
+        as a record's timestamp is strictly older than ``after``. Respects
+        ``limit`` as a hard cap on returned items.
+        """
+        sort_by = [f"{timestamp_field}:desc"]
+        collected: _WorkList = []
+        cursor: str | None = None
+        while True:
+            if limit is not None and len(collected) >= limit:
+                break
+            page = self.list(
+                type=type,
+                owned_by=owned_by,
+                applies_to_part=applies_to_part,
+                cursor=cursor,
+                limit=_resolve_page_limit(limit, len(collected), page_size),
+                sort_by=sort_by,
+            )
+            stop = False
+            for work in page.works:
+                timestamp = getattr(work, timestamp_field, None)
+                if _is_before_cutoff(timestamp, after):
+                    stop = True
+                    break
+                collected.append(work)
+                if limit is not None and len(collected) >= limit:
+                    stop = True
+                    break
+            if stop or not page.next_cursor:
+                break
+            cursor = page.next_cursor
+        return collected
+
+    def list_modified_since(
+        self,
+        after: datetime,
+        *,
+        type: Sequence[WorkType] | None = None,
+        owned_by: Sequence[str] | None = None,
+        applies_to_part: Sequence[str] | None = None,
+        limit: int | None = None,
+        page_size: int | None = None,
+    ) -> _WorkList:
+        """Return work items modified at or after ``after``.
+
+        Pages through ``works.list`` sorted by ``modified_date:desc`` and stops
+        as soon as it sees a record older than ``after``. Uses ``limit`` as a
+        hard cap when provided.
+        """
+        return self._list_since(
+            after,
+            "modified_date",
+            type=type,
+            owned_by=owned_by,
+            applies_to_part=applies_to_part,
+            limit=limit,
+            page_size=page_size,
+        )
+
+    def list_created_since(
+        self,
+        after: datetime,
+        *,
+        type: Sequence[WorkType] | None = None,
+        owned_by: Sequence[str] | None = None,
+        applies_to_part: Sequence[str] | None = None,
+        limit: int | None = None,
+        page_size: int | None = None,
+    ) -> _WorkList:
+        """Return work items created at or after ``after``.
+
+        Pages through ``works.list`` sorted by ``created_date:desc`` and stops
+        as soon as it sees a record older than ``after``. Uses ``limit`` as a
+        hard cap when provided.
+        """
+        return self._list_since(
+            after,
+            "created_date",
+            type=type,
+            owned_by=owned_by,
+            applies_to_part=applies_to_part,
+            limit=limit,
+            page_size=page_size,
+        )
 
 
 class AsyncWorksService(AsyncBaseService):
@@ -301,14 +471,21 @@ class AsyncWorksService(AsyncBaseService):
         cursor: str | None = None,
         limit: int | None = None,
         owned_by: Sequence[str] | None = None,
+        sort_by: Sequence[str] | None = None,
     ) -> WorksListResponse:
-        """List work items."""
+        """List work items.
+
+        ``sort_by`` accepts either the server form ``"field:asc"`` /
+        ``"field:desc"`` or the legacy ``"-field"`` shorthand; the client
+        normalizes before sending.
+        """
         request = WorksListRequest(
             type=type,
             applies_to_part=applies_to_part,
             cursor=cursor,
             limit=limit,
             owned_by=owned_by,
+            sort_by=_normalize_sort_by(sort_by),
         )
         return await self._post("/works.list", request, WorksListResponse)
 
@@ -345,9 +522,19 @@ class AsyncWorksService(AsyncBaseService):
         *,
         type: Sequence[WorkType] | None = None,
         first: int | None = None,
+        sort_by: Sequence[str] | None = None,
     ) -> Sequence[Work]:
-        """Export work items."""
-        request = WorksExportRequest(type=type, first=first)
+        """Export work items.
+
+        ``sort_by`` accepts either the server form ``"field:asc"`` /
+        ``"field:desc"`` or the legacy ``"-field"`` shorthand; the client
+        normalizes before sending.
+        """
+        request = WorksExportRequest(
+            type=type,
+            first=first,
+            sort_by=_normalize_sort_by(sort_by),
+        )
         response = await self._post("/works.export", request, WorksExportResponse)
         return response.works
 
@@ -361,3 +548,101 @@ class AsyncWorksService(AsyncBaseService):
         request = WorksCountRequest(type=type, owned_by=owned_by)
         response = await self._post("/works.count", request, WorksCountResponse)
         return response.count
+
+    async def _list_since(
+        self,
+        after: datetime,
+        timestamp_field: str,
+        *,
+        type: Sequence[WorkType] | None,
+        owned_by: Sequence[str] | None,
+        applies_to_part: Sequence[str] | None,
+        limit: int | None,
+        page_size: int | None,
+    ) -> _WorkList:
+        """Shared cursor-paginated fetcher for async ``list_*_since`` helpers.
+
+        Streams pages sorted ``{timestamp_field}:desc`` and early-exits as soon
+        as a record's timestamp is strictly older than ``after``. Respects
+        ``limit`` as a hard cap on returned items.
+        """
+        sort_by = [f"{timestamp_field}:desc"]
+        collected: _WorkList = []
+        cursor: str | None = None
+        while True:
+            if limit is not None and len(collected) >= limit:
+                break
+            page = await self.list(
+                type=type,
+                owned_by=owned_by,
+                applies_to_part=applies_to_part,
+                cursor=cursor,
+                limit=_resolve_page_limit(limit, len(collected), page_size),
+                sort_by=sort_by,
+            )
+            stop = False
+            for work in page.works:
+                timestamp = getattr(work, timestamp_field, None)
+                if _is_before_cutoff(timestamp, after):
+                    stop = True
+                    break
+                collected.append(work)
+                if limit is not None and len(collected) >= limit:
+                    stop = True
+                    break
+            if stop or not page.next_cursor:
+                break
+            cursor = page.next_cursor
+        return collected
+
+    async def list_modified_since(
+        self,
+        after: datetime,
+        *,
+        type: Sequence[WorkType] | None = None,
+        owned_by: Sequence[str] | None = None,
+        applies_to_part: Sequence[str] | None = None,
+        limit: int | None = None,
+        page_size: int | None = None,
+    ) -> _WorkList:
+        """Return work items modified at or after ``after``.
+
+        Pages through ``works.list`` sorted by ``modified_date:desc`` and stops
+        as soon as it sees a record older than ``after``. Uses ``limit`` as a
+        hard cap when provided.
+        """
+        return await self._list_since(
+            after,
+            "modified_date",
+            type=type,
+            owned_by=owned_by,
+            applies_to_part=applies_to_part,
+            limit=limit,
+            page_size=page_size,
+        )
+
+    async def list_created_since(
+        self,
+        after: datetime,
+        *,
+        type: Sequence[WorkType] | None = None,
+        owned_by: Sequence[str] | None = None,
+        applies_to_part: Sequence[str] | None = None,
+        limit: int | None = None,
+        page_size: int | None = None,
+    ) -> _WorkList:
+        """Return work items created at or after ``after``.
+
+        Pages through ``works.list`` sorted by ``created_date:desc`` and stops
+        as soon as it sees a record older than ``after``. Uses ``limit`` as a
+        hard cap when provided.
+        """
+        return await self._list_since(
+            after,
+            "created_date",
+            type=type,
+            owned_by=owned_by,
+            applies_to_part=applies_to_part,
+            limit=limit,
+            page_size=page_size,
+        )

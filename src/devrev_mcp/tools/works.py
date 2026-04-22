@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any
 
 from mcp.server.fastmcp import Context
@@ -18,6 +19,17 @@ from devrev_mcp.utils.pagination import clamp_page_size, paginated_response
 logger = logging.getLogger(__name__)
 
 
+def _parse_iso_after(value: str, param_name: str) -> datetime:
+    """Parse an ISO-8601 timestamp, accepting a trailing ``Z`` for UTC."""
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as e:
+        raise RuntimeError(
+            f"Invalid {param_name} format: {value}. "
+            "Use ISO-8601 (e.g., 2024-01-15T00:00:00Z or 2024-01-15T00:00:00+00:00)."
+        ) from e
+
+
 @mcp.tool()
 async def devrev_works_list(
     ctx: Context[Any, Any, Any],
@@ -26,8 +38,12 @@ async def devrev_works_list(
     owned_by: list[str] | None = None,
     cursor: str | None = None,
     limit: int | None = None,
+    sort_by: list[str] | None = None,
 ) -> dict[str, Any]:
-    """List DevRev work items (tickets, issues, tasks).
+    """List DevRev work items (tickets, issues, and tasks).
+
+    Work items in DevRev include tickets (customer-facing), issues (internal
+    engineering), and tasks. Use the ``type`` filter to scope results.
 
     Args:
         type: Filter by work type(s): TICKET, ISSUE, TASK, OPPORTUNITY.
@@ -35,6 +51,8 @@ async def devrev_works_list(
         owned_by: Filter by owner user ID(s).
         cursor: Pagination cursor from a previous response.
         limit: Maximum number of items to return (default: 25, max: 100).
+        sort_by: Sort order as a list of ``"field:asc"`` / ``"field:desc"``
+            entries (or legacy ``"-field"`` shorthand), forwarded to the SDK.
     """
     app = ctx.request_context.lifespan_context
     try:
@@ -56,6 +74,7 @@ async def devrev_works_list(
             limit=clamp_page_size(
                 limit, default=app.config.default_page_size, maximum=app.config.max_page_size
             ),
+            sort_by=sort_by,
         )
         items = serialize_models(response.works)
         return paginated_response(items, next_cursor=response.next_cursor, total_label="works")
@@ -68,7 +87,7 @@ async def devrev_works_get(
     ctx: Context[Any, Any, Any],
     id: str,
 ) -> dict[str, Any]:
-    """Get a DevRev work item by ID.
+    """Get a DevRev work item (ticket, issue, or task) by ID.
 
     Args:
         id: The work item ID (e.g., don:core:dvrv-us-1:devo/1:issue/123).
@@ -161,7 +180,7 @@ if _config.enable_destructive_tools:
         priority: str | None = None,
         severity: str | None = None,
     ) -> dict[str, Any]:
-        """Update an existing DevRev work item.
+        """Update an existing DevRev work item (ticket, issue, or task).
 
         Only provided fields will be updated; others remain unchanged.
 
@@ -214,7 +233,7 @@ if _config.enable_destructive_tools:
         ctx: Context[Any, Any, Any],
         id: str,
     ) -> dict[str, Any]:
-        """Delete a DevRev work item.
+        """Delete a DevRev work item (ticket, issue, or task).
 
         Args:
             id: The work item ID to delete.
@@ -234,7 +253,7 @@ async def devrev_works_count(
     type: list[str] | None = None,
     owned_by: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Count DevRev work items matching filters.
+    """Count DevRev work items (tickets, issues, and tasks) matching filters.
 
     Args:
         type: Filter by work type(s): TICKET, ISSUE, TASK, OPPORTUNITY.
@@ -263,14 +282,17 @@ async def devrev_works_export(
     ctx: Context[Any, Any, Any],
     type: list[str] | None = None,
     first: int | None = None,
+    sort_by: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Export DevRev work items.
+    """Export DevRev work items (tickets, issues, and tasks).
 
     Returns a bulk export of work items. Use for large data retrieval.
 
     Args:
         type: Filter by work type(s): TICKET, ISSUE, TASK, OPPORTUNITY.
         first: Maximum number of items to export.
+        sort_by: Sort order as a list of ``"field:asc"`` / ``"field:desc"``
+            entries (or legacy ``"-field"`` shorthand), forwarded to the SDK.
     """
     app = ctx.request_context.lifespan_context
     try:
@@ -284,8 +306,102 @@ async def devrev_works_export(
                     f"Invalid work type: {e.args[0]}. "
                     f"Valid types: {', '.join(wt.name for wt in WorkType)}"
                 ) from e
-        works = await app.get_client().works.export(type=work_types, first=first)
+        works = await app.get_client().works.export(type=work_types, first=first, sort_by=sort_by)
         items = serialize_models(list(works))
         return {"count": len(items), "works": items}
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_works_list_modified_since(
+    ctx: Context[Any, Any, Any],
+    after: str,
+    type: list[str] | None = None,
+    owned_by: list[str] | None = None,
+    applies_to_part: list[str] | None = None,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    """List DevRev work items (tickets, issues, and tasks) modified at or after a timestamp.
+
+    Pages through results server-side sorted by ``modified_date:desc`` and
+    returns all matches. Use ``limit`` as a hard cap on total items.
+
+    Args:
+        after: ISO-8601 timestamp (e.g., ``2024-01-15T00:00:00Z``). Items with
+            ``modified_date >= after`` are returned.
+        type: Filter by work type(s): TICKET, ISSUE, TASK, OPPORTUNITY.
+        owned_by: Filter by owner user ID(s).
+        applies_to_part: Filter by part ID(s) the work applies to.
+        limit: Maximum total items to return across all pages.
+    """
+    after_dt = _parse_iso_after(after, "after")
+    app = ctx.request_context.lifespan_context
+    try:
+        work_types = None
+        if type:
+            try:
+                work_types = [WorkType[t.upper()] for t in type]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid work type: {e.args[0]}. "
+                    f"Valid types: {', '.join(wt.name for wt in WorkType)}"
+                ) from e
+        works = await app.get_client().works.list_modified_since(
+            after_dt,
+            type=work_types,
+            owned_by=owned_by,
+            applies_to_part=applies_to_part,
+            limit=limit,
+        )
+        items = serialize_models(list(works))
+        return paginated_response(items, next_cursor=None, total_label="works")
+    except DevRevError as e:
+        raise RuntimeError(format_devrev_error(e)) from e
+
+
+@mcp.tool()
+async def devrev_works_list_created_since(
+    ctx: Context[Any, Any, Any],
+    after: str,
+    type: list[str] | None = None,
+    owned_by: list[str] | None = None,
+    applies_to_part: list[str] | None = None,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    """List DevRev work items (tickets, issues, and tasks) created at or after a timestamp.
+
+    Pages through results server-side sorted by ``created_date:desc`` and
+    returns all matches. Use ``limit`` as a hard cap on total items.
+
+    Args:
+        after: ISO-8601 timestamp (e.g., ``2024-01-15T00:00:00Z``). Items with
+            ``created_date >= after`` are returned.
+        type: Filter by work type(s): TICKET, ISSUE, TASK, OPPORTUNITY.
+        owned_by: Filter by owner user ID(s).
+        applies_to_part: Filter by part ID(s) the work applies to.
+        limit: Maximum total items to return across all pages.
+    """
+    after_dt = _parse_iso_after(after, "after")
+    app = ctx.request_context.lifespan_context
+    try:
+        work_types = None
+        if type:
+            try:
+                work_types = [WorkType[t.upper()] for t in type]
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Invalid work type: {e.args[0]}. "
+                    f"Valid types: {', '.join(wt.name for wt in WorkType)}"
+                ) from e
+        works = await app.get_client().works.list_created_since(
+            after_dt,
+            type=work_types,
+            owned_by=owned_by,
+            applies_to_part=applies_to_part,
+            limit=limit,
+        )
+        items = serialize_models(list(works))
+        return paginated_response(items, next_cursor=None, total_label="works")
     except DevRevError as e:
         raise RuntimeError(format_devrev_error(e)) from e

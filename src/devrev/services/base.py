@@ -72,7 +72,9 @@ class BaseService:
         Returns:
             Parsed response model or raw dict if no response_type
         """
-        data = request.model_dump(exclude_none=True, by_alias=True) if request else None
+        data = (
+            request.model_dump(exclude_none=True, by_alias=True, mode="json") if request else None
+        )
         response = self._http.post(endpoint, data=data)
 
         # Handle empty responses (204 No Content or empty body)
@@ -185,7 +187,9 @@ class AsyncBaseService:
         Returns:
             Parsed response model or raw dict if no response_type
         """
-        data = request.model_dump(exclude_none=True, by_alias=True) if request else None
+        data = (
+            request.model_dump(exclude_none=True, by_alias=True, mode="json") if request else None
+        )
         response = await self._http.post(endpoint, data=data)
 
         # Handle empty responses (204 No Content or empty body)

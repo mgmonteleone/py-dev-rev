@@ -10,15 +10,32 @@ Complete reference of all MCP capabilities provided by the DevRev MCP Server.
 
 Tools are the primary way AI assistants interact with DevRev. Each tool maps to one or more DevRev API endpoints.
 
-### Works (Tickets & Issues)
+### Works (Tickets, Issues & Tasks)
+
+In DevRev, **works** is the umbrella type covering tickets (customer support),
+issues (engineering), and tasks.
 
 | Tool | Description |
 |------|-------------|
-| `devrev_works_list` | List work items (tickets, issues) with filters |
+| `devrev_works_list` | List work items with filters and `sort_by` (e.g., `["modified_date:desc"]`) |
 | `devrev_works_get` | Get a specific work item by ID |
-| `devrev_works_create` | Create a new ticket or issue |
+| `devrev_works_create` | Create a new ticket, issue, or task |
 | `devrev_works_update` | Update a work item's fields |
 | `devrev_works_delete` | Delete a work item (requires destructive tools enabled) |
+| `devrev_works_export` | Bulk-export work items (accepts `sort_by`) |
+| `devrev_works_list_modified_since` | List work items with `modified_date >= after` (ISO-8601), paged newest-first |
+| `devrev_works_list_created_since` | List work items with `created_date >= after` (ISO-8601), paged newest-first |
+
+**Key parameters:**
+
+- `sort_by` (on `devrev_works_list` / `devrev_works_export`): List of
+  `"field:asc"` / `"field:desc"` entries. The legacy `"-field"` shortcut is
+  also accepted and normalized by the SDK before the request is sent.
+- `after` (on `*_list_modified_since` / `*_list_created_since`): ISO-8601
+  timestamp (e.g., `"2025-01-15T00:00:00Z"`). Items at or after this
+  timestamp are returned.
+- `limit` (on `*_list_modified_since` / `*_list_created_since`): Hard cap on
+  total items returned across all pages.
 
 ### Accounts
 
@@ -64,10 +81,21 @@ Tools are the primary way AI assistants interact with DevRev. Each tool maps to 
 
 | Tool | Description |
 |------|-------------|
-| `devrev_conversations_list` | List conversations |
+| `devrev_conversations_list` | List conversations; supports `modified_date_after` / `modified_date_before` (ISO-8601) and `sort_by` |
+| `devrev_conversations_list_modified_since` | List conversations with `modified_date >= after` (ISO-8601), paged newest-first |
 | `devrev_conversations_get` | Get conversation details |
 | `devrev_conversations_create` | Create a conversation |
 | `devrev_conversations_update` | Update a conversation |
+
+**Key parameters:**
+
+- `modified_date_after` / `modified_date_before` (on `devrev_conversations_list`):
+  ISO-8601 timestamps bounding the `modified_date` filter.
+- `sort_by` (on `devrev_conversations_list`): Same syntax as on
+  `devrev_works_list` — `"field:asc"` / `"field:desc"` entries, with the
+  legacy `"-field"` shortcut accepted and normalized by the SDK.
+- `after` (on `devrev_conversations_list_modified_since`): ISO-8601
+  timestamp. Items at or after this timestamp are returned.
 
 ### Parts (Products & Features)
 

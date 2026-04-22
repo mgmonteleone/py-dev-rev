@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
 
 from devrev.exceptions import NotFoundError, ValidationError
+from devrev.models.base import DateFilter
+from devrev.models.conversations import ConversationsListRequest
 from devrev_mcp.tools.conversations import (
     devrev_conversations_create,
     devrev_conversations_delete,
     devrev_conversations_export,
     devrev_conversations_get,
     devrev_conversations_list,
+    devrev_conversations_list_modified_since,
     devrev_conversations_update,
 )
 
@@ -280,3 +284,138 @@ class TestConversationsExportTool:
         # Act & Assert
         with pytest.raises(RuntimeError, match="Export endpoint not available"):
             await devrev_conversations_export(mock_ctx)
+
+
+class TestConversationsListDateFilterAndSort:
+    """Tests for modified_date_*/sort_by handling on devrev_conversations_list."""
+
+    @staticmethod
+    def _call_request(mock_client) -> ConversationsListRequest:
+        """Return the ConversationsListRequest passed to the SDK list mock."""
+        args, kwargs = mock_client.conversations.list.call_args
+        if args:
+            return args[0]
+        return kwargs["request"]
+
+    async def test_list_forwards_modified_date_after(self, mock_ctx, mock_client):
+        """modified_date_after (with trailing Z) builds a DateFilter.after."""
+        mock_client.conversations.list.return_value = []
+
+        await devrev_conversations_list(mock_ctx, modified_date_after="2025-01-01T00:00:00Z")
+
+        request = self._call_request(mock_client)
+        assert isinstance(request.modified_date, DateFilter)
+        assert request.modified_date.after == datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
+        assert request.modified_date.before is None
+
+    async def test_list_forwards_modified_date_before(self, mock_ctx, mock_client):
+        """modified_date_before (no trailing Z) builds a DateFilter.before."""
+        mock_client.conversations.list.return_value = []
+
+        await devrev_conversations_list(mock_ctx, modified_date_before="2025-02-01T12:30:00+00:00")
+
+        request = self._call_request(mock_client)
+        assert isinstance(request.modified_date, DateFilter)
+        assert request.modified_date.after is None
+        assert request.modified_date.before == datetime(2025, 2, 1, 12, 30, 0, tzinfo=UTC)
+
+    async def test_list_forwards_both_bounds(self, mock_ctx, mock_client):
+        """Both modified_date bounds produce a single DateFilter with both set."""
+        mock_client.conversations.list.return_value = []
+
+        await devrev_conversations_list(
+            mock_ctx,
+            modified_date_after="2025-01-01T00:00:00Z",
+            modified_date_before="2025-02-01T00:00:00Z",
+        )
+
+        request = self._call_request(mock_client)
+        assert request.modified_date is not None
+        assert request.modified_date.after is not None
+        assert request.modified_date.before is not None
+
+    async def test_list_without_dates_sets_no_filter(self, mock_ctx, mock_client):
+        """Omitting both date params leaves modified_date unset."""
+        mock_client.conversations.list.return_value = []
+
+        await devrev_conversations_list(mock_ctx)
+
+        request = self._call_request(mock_client)
+        assert request.modified_date is None
+
+    async def test_list_invalid_modified_date_after_raises(self, mock_ctx, mock_client):
+        """Malformed modified_date_after raises RuntimeError without calling SDK."""
+        with pytest.raises(RuntimeError, match="Invalid modified_date_after"):
+            await devrev_conversations_list(mock_ctx, modified_date_after="not-a-date")
+        mock_client.conversations.list.assert_not_called()
+
+    async def test_list_invalid_modified_date_before_raises(self, mock_ctx, mock_client):
+        """Malformed modified_date_before raises RuntimeError without calling SDK."""
+        with pytest.raises(RuntimeError, match="Invalid modified_date_before"):
+            await devrev_conversations_list(mock_ctx, modified_date_before="bogus")
+        mock_client.conversations.list.assert_not_called()
+
+    async def test_list_forwards_sort_by(self, mock_ctx, mock_client):
+        """sort_by is forwarded to the SDK untouched (SDK normalizes it)."""
+        mock_client.conversations.list.return_value = []
+
+        await devrev_conversations_list(mock_ctx, sort_by=["-modified_date"])
+
+        request = self._call_request(mock_client)
+        assert request.sort_by == ["-modified_date"]
+
+    async def test_list_sort_by_none_is_none(self, mock_ctx, mock_client):
+        """Omitting sort_by leaves it as None on the request."""
+        mock_client.conversations.list.return_value = []
+
+        await devrev_conversations_list(mock_ctx)
+
+        request = self._call_request(mock_client)
+        assert request.sort_by is None
+
+
+class TestConversationsListModifiedSinceTool:
+    """Tests for devrev_conversations_list_modified_since tool."""
+
+    async def test_parses_after_and_forwards(self, mock_ctx, mock_client):
+        """A valid ISO ``after`` is parsed and forwarded with optional limit."""
+        conv = _make_mock_conversation()
+        mock_client.conversations.list_modified_since.return_value = [conv]
+
+        result = await devrev_conversations_list_modified_since(
+            mock_ctx, after="2025-01-01T00:00:00Z", limit=5
+        )
+
+        assert result["count"] == 1
+        assert len(result["conversations"]) == 1
+        kwargs = mock_client.conversations.list_modified_since.call_args.kwargs
+        assert kwargs["after"] == datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
+        assert kwargs["limit"] == 5
+
+    async def test_defaults_limit_to_none(self, mock_ctx, mock_client):
+        """Calling without an explicit limit forwards ``limit=None``."""
+        mock_client.conversations.list_modified_since.return_value = []
+
+        result = await devrev_conversations_list_modified_since(
+            mock_ctx, after="2025-03-01T00:00:00Z"
+        )
+
+        assert result["count"] == 0
+        assert result["conversations"] == []
+        kwargs = mock_client.conversations.list_modified_since.call_args.kwargs
+        assert kwargs["limit"] is None
+
+    async def test_invalid_after_raises_without_sdk_call(self, mock_ctx, mock_client):
+        """An unparseable ``after`` raises RuntimeError before any SDK call."""
+        with pytest.raises(RuntimeError, match="Invalid after"):
+            await devrev_conversations_list_modified_since(mock_ctx, after="nope")
+        mock_client.conversations.list_modified_since.assert_not_called()
+
+    async def test_sdk_error_is_wrapped(self, mock_ctx, mock_client):
+        """DevRevError from the SDK becomes a RuntimeError."""
+        mock_client.conversations.list_modified_since.side_effect = NotFoundError(
+            "not found", status_code=404
+        )
+
+        with pytest.raises(RuntimeError, match="Not found"):
+            await devrev_conversations_list_modified_since(mock_ctx, after="2025-01-01T00:00:00Z")

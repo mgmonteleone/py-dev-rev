@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 from typing import overload
 
+from devrev.models.base import DateFilter
 from devrev.models.conversations import (
     Conversation,
     ConversationExportItem,
@@ -24,6 +26,68 @@ from devrev.models.conversations import (
 from devrev.services.base import AsyncBaseService, BaseService
 
 
+def _normalize_sort_by(sort_by: Sequence[str] | None) -> list[str] | None:
+    """Normalize sort_by entries to the ``field:direction`` format.
+
+    Accepts entries already in ``field:direction`` form (e.g.
+    ``"modified_date:desc"``), the legacy ``"-field"`` shorthand for
+    descending order, and bare field names (e.g. ``"modified_date"``) which
+    default to ascending order.
+    """
+    if sort_by is None:
+        return None
+    normalized: list[str] = []
+    for entry in sort_by:
+        if ":" in entry:
+            normalized.append(entry)
+        elif entry.startswith("-"):
+            normalized.append(f"{entry[1:]}:desc")
+        else:
+            normalized.append(f"{entry}:asc")
+    return normalized
+
+
+# ``ConversationsListRequest.limit`` is pydantic-constrained to ``le=100``;
+# clamp any computed per-page limit so pagination loops do not construct a
+# request body that fails validation before it is ever sent.
+_CONVERSATIONS_MAX_PAGE = 100
+
+
+def _resolve_page_limit(
+    overall_limit: int | None,
+    collected: int,
+    page_size: int | None,
+) -> int | None:
+    """Compute the ``limit`` to send for the next page request.
+
+    The returned value is always clamped to ``_CONVERSATIONS_MAX_PAGE`` so
+    callers using an ``overall_limit`` greater than the server maximum (e.g.
+    ``limit=200, page_size=None``) still paginate correctly.
+    """
+    if overall_limit is None:
+        if page_size is None:
+            return None
+        return min(page_size, _CONVERSATIONS_MAX_PAGE)
+    remaining = overall_limit - collected
+    if page_size is None:
+        return min(remaining, _CONVERSATIONS_MAX_PAGE)
+    return min(page_size, remaining, _CONVERSATIONS_MAX_PAGE)
+
+
+def _is_before_cutoff(modified_date: datetime | None, cutoff: datetime) -> bool:
+    """Return True if ``modified_date`` is strictly older than ``cutoff``.
+
+    Returns False when the timestamp is unknown or when the two datetimes have
+    incompatible tz-awareness; the server-side filter remains authoritative.
+    """
+    if modified_date is None:
+        return False
+    try:
+        return modified_date < cutoff
+    except TypeError:
+        return False
+
+
 class ConversationsService(BaseService):
     """Service for managing DevRev Conversations."""
 
@@ -41,8 +105,54 @@ class ConversationsService(BaseService):
         """List conversations."""
         if request is None:
             request = ConversationsListRequest()
+        if request.sort_by is not None:
+            request.sort_by = _normalize_sort_by(request.sort_by)
         response = self._post("/conversations.list", request, ConversationsListResponse)
         return response.conversations
+
+    def list_modified_since(
+        self,
+        after: datetime,
+        *,
+        limit: int | None = None,
+        page_size: int | None = None,
+    ) -> Sequence[Conversation]:
+        """List conversations modified after a given datetime, newest first.
+
+        Streams pages via cursor until the server returns no further cursor,
+        ``limit`` is reached, or a conversation older than ``after`` is seen.
+
+        Args:
+            after: Only include conversations modified after this datetime.
+            limit: Maximum number of conversations to return overall.
+            page_size: Number of results per API request; ``None`` defers to server.
+
+        Returns:
+            List of Conversation objects modified after ``after``, newest first.
+        """
+        results: list[Conversation] = []
+        cursor: str | None = None
+        while True:
+            if limit is not None and len(results) >= limit:
+                break
+            request_limit = _resolve_page_limit(limit, len(results), page_size)
+            request = ConversationsListRequest(
+                cursor=cursor,
+                limit=request_limit,
+                modified_date=DateFilter(after=after),
+                sort_by=_normalize_sort_by(["modified_date:desc"]),
+            )
+            response = self._post("/conversations.list", request, ConversationsListResponse)
+            for conversation in response.conversations:
+                if _is_before_cutoff(conversation.modified_date, after):
+                    return results
+                results.append(conversation)
+                if limit is not None and len(results) >= limit:
+                    return results
+            if not response.next_cursor:
+                break
+            cursor = response.next_cursor
+        return results
 
     def update(self, request: ConversationsUpdateRequest) -> Conversation:
         """Update a conversation."""
@@ -127,8 +237,54 @@ class AsyncConversationsService(AsyncBaseService):
         """List conversations."""
         if request is None:
             request = ConversationsListRequest()
+        if request.sort_by is not None:
+            request.sort_by = _normalize_sort_by(request.sort_by)
         response = await self._post("/conversations.list", request, ConversationsListResponse)
         return response.conversations
+
+    async def list_modified_since(
+        self,
+        after: datetime,
+        *,
+        limit: int | None = None,
+        page_size: int | None = None,
+    ) -> Sequence[Conversation]:
+        """List conversations modified after a given datetime, newest first.
+
+        Streams pages via cursor until the server returns no further cursor,
+        ``limit`` is reached, or a conversation older than ``after`` is seen.
+
+        Args:
+            after: Only include conversations modified after this datetime.
+            limit: Maximum number of conversations to return overall.
+            page_size: Number of results per API request; ``None`` defers to server.
+
+        Returns:
+            List of Conversation objects modified after ``after``, newest first.
+        """
+        results: list[Conversation] = []
+        cursor: str | None = None
+        while True:
+            if limit is not None and len(results) >= limit:
+                break
+            request_limit = _resolve_page_limit(limit, len(results), page_size)
+            request = ConversationsListRequest(
+                cursor=cursor,
+                limit=request_limit,
+                modified_date=DateFilter(after=after),
+                sort_by=_normalize_sort_by(["modified_date:desc"]),
+            )
+            response = await self._post("/conversations.list", request, ConversationsListResponse)
+            for conversation in response.conversations:
+                if _is_before_cutoff(conversation.modified_date, after):
+                    return results
+                results.append(conversation)
+                if limit is not None and len(results) >= limit:
+                    return results
+            if not response.next_cursor:
+                break
+            cursor = response.next_cursor
+        return results
 
     async def update(self, request: ConversationsUpdateRequest) -> Conversation:
         """Update a conversation."""
