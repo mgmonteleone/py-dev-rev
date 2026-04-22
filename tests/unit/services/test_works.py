@@ -405,6 +405,83 @@ class TestListCreatedSince:
         assert mock_http_client.post.call_count == 1
 
 
+class TestListSincePageLimitClamp:
+    """``_list_since`` must never send ``limit>100`` to the server."""
+
+    def test_page_size_above_server_max_clamped_to_100(self, mock_http_client: MagicMock) -> None:
+        """``page_size=200`` must be clamped to 100 in the outgoing request."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_http_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = WorksService(mock_http_client)
+        service.list_modified_since(after, page_size=200)
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["limit"] == 100
+
+    def test_limit_above_server_max_clamped_to_100(self, mock_http_client: MagicMock) -> None:
+        """``limit=200, page_size=None`` must never send ``limit>100`` per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        page1_works = [
+            _work_record(
+                f"don:core:work:a{i}",
+                "modified_date",
+                f"2024-07-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        page2_works = [
+            _work_record(
+                f"don:core:work:b{i}",
+                "modified_date",
+                f"2024-06-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        mock_http_client.post.side_effect = [
+            create_mock_response(_work_page(page1_works, next_cursor="cursor-2")),
+            create_mock_response(_work_page(page2_works, next_cursor=None)),
+        ]
+
+        service = WorksService(mock_http_client)
+        results = service.list_modified_since(after, limit=200)
+
+        assert len(results) == 200
+        assert mock_http_client.post.call_count == 2
+        for call in mock_http_client.post.call_args_list:
+            payload = call[1]["data"]
+            assert payload["limit"] is not None
+            assert payload["limit"] <= 100
+
+    def test_small_limit_below_server_max_passed_through(self, mock_http_client: MagicMock) -> None:
+        """``limit=50, page_size=None`` sends the small limit directly."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_http_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = WorksService(mock_http_client)
+        service.list_modified_since(after, limit=50)
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["limit"] == 50
+
+    def test_list_created_since_page_size_clamped_smoke(self, mock_http_client: MagicMock) -> None:
+        """Smoke test: shared helper path clamps for ``list_created_since`` too."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_http_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = WorksService(mock_http_client)
+        service.list_created_since(after, page_size=200)
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["limit"] == 100
+
+
 class TestAsyncListSince:
     """Async variants for ``list_modified_since`` / ``list_created_since``."""
 
@@ -461,6 +538,72 @@ class TestAsyncListSince:
 
         _, kwargs = mock_async_client.post.call_args
         assert kwargs["data"]["sort_by"] == ["modified_date:desc"]
+
+    @pytest.mark.asyncio
+    async def test_async_page_size_above_server_max_clamped_to_100(self) -> None:
+        """Async: ``page_size=200`` must be clamped to 100 per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = AsyncWorksService(mock_async_client)
+        await service.list_modified_since(after, page_size=200)
+
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"]["limit"] == 100
+
+    @pytest.mark.asyncio
+    async def test_async_limit_above_server_max_clamped_to_100(self) -> None:
+        """Async: ``limit=200, page_size=None`` must never send ``limit>100`` per page."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        page1_works = [
+            _work_record(
+                f"don:core:work:a{i}",
+                "modified_date",
+                f"2024-07-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        page2_works = [
+            _work_record(
+                f"don:core:work:b{i}",
+                "modified_date",
+                f"2024-06-{(i % 28) + 1:02d}T00:00:00Z",
+            )
+            for i in range(100)
+        ]
+        mock_async_client = AsyncMock()
+        mock_async_client.post.side_effect = [
+            create_mock_response(_work_page(page1_works, next_cursor="cursor-2")),
+            create_mock_response(_work_page(page2_works, next_cursor=None)),
+        ]
+
+        service = AsyncWorksService(mock_async_client)
+        results = await service.list_modified_since(after, limit=200)
+
+        assert len(results) == 200
+        assert mock_async_client.post.call_count == 2
+        for call in mock_async_client.post.call_args_list:
+            payload = call[1]["data"]
+            assert payload["limit"] is not None
+            assert payload["limit"] <= 100
+
+    @pytest.mark.asyncio
+    async def test_async_small_limit_passed_through(self) -> None:
+        """Async: ``limit=50, page_size=None`` sends the small limit directly."""
+        after = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(
+            {"works": [], "next_cursor": None}
+        )
+
+        service = AsyncWorksService(mock_async_client)
+        await service.list_modified_since(after, limit=50)
+
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"]["limit"] == 50
 
 
 class TestIsBeforeCutoffHelper:

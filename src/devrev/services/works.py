@@ -58,6 +58,31 @@ def _is_before_cutoff(timestamp: datetime | None, cutoff: datetime) -> bool:
         return False
 
 
+# ``WorksListRequest.limit`` is pydantic-constrained to ``le=100``; clamp any
+# computed per-page limit so pagination loops do not construct a request body
+# that fails validation before it is ever sent.
+_WORKS_MAX_PAGE = 100
+
+
+def _resolve_page_limit(
+    overall_limit: int | None,
+    collected: int,
+    page_size: int | None,
+) -> int | None:
+    """Compute the ``limit`` to send for the next page request.
+
+    The returned value is always clamped to ``_WORKS_MAX_PAGE`` so callers using
+    an ``overall_limit`` greater than the server maximum (e.g. ``limit=200,
+    page_size=None``) still paginate correctly.
+    """
+    if page_size is not None:
+        return min(page_size, _WORKS_MAX_PAGE)
+    if overall_limit is None:
+        return None
+    remaining = overall_limit - collected
+    return min(remaining, _WORKS_MAX_PAGE)
+
+
 def _normalize_sort_by(sort_by: Sequence[str] | None) -> _StrList | None:
     """Normalize sort_by entries to the server-expected ``field:direction`` form.
 
@@ -326,7 +351,7 @@ class WorksService(BaseService):
                 owned_by=owned_by,
                 applies_to_part=applies_to_part,
                 cursor=cursor,
-                limit=page_size,
+                limit=_resolve_page_limit(limit, len(collected), page_size),
                 sort_by=sort_by,
             )
             stop = False
@@ -552,7 +577,7 @@ class AsyncWorksService(AsyncBaseService):
                 owned_by=owned_by,
                 applies_to_part=applies_to_part,
                 cursor=cursor,
-                limit=page_size,
+                limit=_resolve_page_limit(limit, len(collected), page_size),
                 sort_by=sort_by,
             )
             stop = False
