@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [3.0.0] - 2026-04-22
+
+### Added
+
 - **`WorksService.list_modified_since` and `list_created_since`** (CUSS-451) —
   New sync and async helpers on `WorksService` / `AsyncWorksService` that
   stream work items with `modified_date >= after` or `created_date >= after`.
@@ -716,6 +724,7 @@ This release marks the completion of all four development phases, providing a pr
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 3.0.0 | 2026-04-22 | 🚨 BREAKING: Remove unsupported date filter fields from Works requests; add time-windowed list helpers |
 | 2.7.0 | 2026-02-28 | 🔍 Server version discoverability for AI agents |
 | 2.6.0 | 2026-02-28 | 🔐 Compliance-grade audit logging, MCP documentation |
 | 2.4.1 | 2026-02-27 | 🐛 CI: mypy strict-mode type errors, test collection |
