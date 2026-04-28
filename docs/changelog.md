@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Timeline entry visibility** (CUSS-569) — `TimelineEntriesCreateRequest`
+  now accepts optional `visibility`, `private_to`, and `body_type` fields,
+  matching the DevRev REST `timeline-entries.create` contract. The
+  `devrev_timeline_create` MCP tool exposes a new `visibility` argument
+  (`external` / `internal` / `private` / `public`); when set to `internal`,
+  the entry is posted to the ticket's internal-discussion tab. A new
+  `TimelineEntryVisibility` enum is exported from `devrev.models`.
+
 ### Changed
 
 ### Fixed

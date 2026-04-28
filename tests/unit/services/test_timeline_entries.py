@@ -11,6 +11,7 @@ from devrev.models.timeline_entries import (
     TimelineEntriesUpdateRequest,
     TimelineEntry,
     TimelineEntryType,
+    TimelineEntryVisibility,
 )
 from devrev.services.timeline_entries import TimelineEntriesService
 
@@ -147,3 +148,78 @@ class TestTimelineEntriesService:
 
         assert len(result) == 0
         mock_http_client.post.assert_called_once()
+
+    def test_create_timeline_entry_with_internal_visibility(
+        self,
+        mock_http_client: MagicMock,
+        sample_timeline_entry_data: dict[str, Any],
+    ) -> None:
+        """Internal visibility is forwarded to the timeline-entries.create payload."""
+        mock_http_client.post.return_value = create_mock_response(
+            {"timeline_entry": sample_timeline_entry_data}
+        )
+
+        service = TimelineEntriesService(mock_http_client)
+        request = TimelineEntriesCreateRequest(
+            object="don:core:issue:456",
+            type=TimelineEntryType.COMMENT,
+            body="Internal note",
+            visibility=TimelineEntryVisibility.INTERNAL,
+        )
+        service.create(request)
+
+        mock_http_client.post.assert_called_once()
+        _, call_kwargs = mock_http_client.post.call_args
+        payload = call_kwargs["data"]
+        assert payload["visibility"] == "internal"
+        assert payload["body"] == "Internal note"
+
+    def test_create_timeline_entry_omits_visibility_when_unset(
+        self,
+        mock_http_client: MagicMock,
+        sample_timeline_entry_data: dict[str, Any],
+    ) -> None:
+        """When visibility is unset, it is excluded from the payload (server default)."""
+        mock_http_client.post.return_value = create_mock_response(
+            {"timeline_entry": sample_timeline_entry_data}
+        )
+
+        service = TimelineEntriesService(mock_http_client)
+        request = TimelineEntriesCreateRequest(
+            object="don:core:issue:456",
+            type=TimelineEntryType.COMMENT,
+            body="External comment",
+        )
+        service.create(request)
+
+        mock_http_client.post.assert_called_once()
+        _, call_kwargs = mock_http_client.post.call_args
+        payload = call_kwargs["data"]
+        assert "visibility" not in payload
+        assert "private_to" not in payload
+        assert "body_type" not in payload
+
+    def test_create_timeline_entry_with_private_visibility_and_recipients(
+        self,
+        mock_http_client: MagicMock,
+        sample_timeline_entry_data: dict[str, Any],
+    ) -> None:
+        """Private visibility with private_to is forwarded as-is."""
+        mock_http_client.post.return_value = create_mock_response(
+            {"timeline_entry": sample_timeline_entry_data}
+        )
+
+        service = TimelineEntriesService(mock_http_client)
+        request = TimelineEntriesCreateRequest(
+            object="don:core:issue:456",
+            type=TimelineEntryType.COMMENT,
+            body="Private",
+            visibility=TimelineEntryVisibility.PRIVATE,
+            private_to=["don:identity:dvrv-us-1:devo/1:devu/2"],
+        )
+        service.create(request)
+
+        _, call_kwargs = mock_http_client.post.call_args
+        payload = call_kwargs["data"]
+        assert payload["visibility"] == "private"
+        assert payload["private_to"] == ["don:identity:dvrv-us-1:devo/1:devu/2"]

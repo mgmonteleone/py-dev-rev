@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import Field
 
@@ -29,6 +30,24 @@ class TimelineEntryType(StrEnum):
     EVENT = "timeline_event"
 
 
+class TimelineEntryVisibility(StrEnum):
+    """Timeline entry visibility enumeration.
+
+    Mirrors the DevRev REST API ``timeline-entry-visibility`` enum:
+
+    - ``external``: visible to the Dev organization and Rev users (default).
+    - ``internal``: visible only within the Dev organization
+      (the "internal discussion" tab).
+    - ``private``: visible only to the creator (and ``private_to`` users).
+    - ``public``: visible to all.
+    """
+
+    EXTERNAL = "external"
+    INTERNAL = "internal"
+    PRIVATE = "private"
+    PUBLIC = "public"
+
+
 class TimelineEntry(DevRevResponseModel):
     """DevRev Timeline Entry model."""
 
@@ -49,6 +68,24 @@ class TimelineEntriesCreateRequest(DevRevBaseModel):
     object: str = Field(..., description="Parent object ID")
     type: TimelineEntryType = Field(..., description="Entry type")
     body: str | None = Field(default=None, description="Entry content")
+    visibility: TimelineEntryVisibility | None = Field(
+        default=None,
+        description=(
+            "Entry visibility. If unset, the server default ('external') is used. "
+            "Use 'internal' to post to the internal-discussion tab."
+        ),
+    )
+    private_to: list[str] | None = Field(
+        default=None,
+        description=(
+            "If visibility is 'private', the user IDs the entry is private to. "
+            "The creator is always implicitly included."
+        ),
+    )
+    body_type: Literal["data", "snap_kit", "snap_widget", "text"] | None = Field(
+        default=None,
+        description="Body type for timeline_comment entries (default: text).",
+    )
 
 
 class TimelineEntriesGetRequest(DevRevBaseModel):

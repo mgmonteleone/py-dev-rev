@@ -176,6 +176,86 @@ class TestTimelineCreateTool:
                 mock_ctx, object_id="don:core:ticket:123", type="invalid_type"
             )
 
+    async def test_timeline_create_with_internal_visibility(self, mock_ctx, mock_client):
+        """Internal visibility is forwarded on the create request."""
+        # Arrange
+        entry = _make_mock_timeline_entry({"body": "Internal note"})
+        mock_client.timeline_entries.create.return_value = entry
+
+        # Act
+        await devrev_timeline_create(
+            mock_ctx,
+            object_id="don:core:ticket:123",
+            type="timeline_comment",
+            body="Internal note",
+            visibility="internal",
+        )
+
+        # Assert
+        mock_client.timeline_entries.create.assert_called_once()
+        request = mock_client.timeline_entries.create.call_args.args[0]
+        assert request.visibility is not None
+        assert request.visibility.value == "internal"
+
+    async def test_timeline_create_with_external_visibility(self, mock_ctx, mock_client):
+        """External visibility is forwarded on the create request."""
+        # Arrange
+        entry = _make_mock_timeline_entry()
+        mock_client.timeline_entries.create.return_value = entry
+
+        # Act
+        await devrev_timeline_create(
+            mock_ctx,
+            object_id="don:core:ticket:123",
+            visibility="external",
+        )
+
+        # Assert
+        request = mock_client.timeline_entries.create.call_args.args[0]
+        assert request.visibility is not None
+        assert request.visibility.value == "external"
+
+    async def test_timeline_create_visibility_omitted_by_default(self, mock_ctx, mock_client):
+        """Visibility defaults to None (server default 'external' applies)."""
+        # Arrange
+        entry = _make_mock_timeline_entry()
+        mock_client.timeline_entries.create.return_value = entry
+
+        # Act
+        await devrev_timeline_create(mock_ctx, object_id="don:core:ticket:123")
+
+        # Assert
+        request = mock_client.timeline_entries.create.call_args.args[0]
+        assert request.visibility is None
+
+    async def test_timeline_create_visibility_case_insensitive(self, mock_ctx, mock_client):
+        """Visibility input is normalised to lower-case."""
+        # Arrange
+        entry = _make_mock_timeline_entry()
+        mock_client.timeline_entries.create.return_value = entry
+
+        # Act
+        await devrev_timeline_create(
+            mock_ctx,
+            object_id="don:core:ticket:123",
+            visibility="INTERNAL",
+        )
+
+        # Assert
+        request = mock_client.timeline_entries.create.call_args.args[0]
+        assert request.visibility is not None
+        assert request.visibility.value == "internal"
+
+    async def test_timeline_create_invalid_visibility(self, mock_ctx, mock_client):
+        """Invalid visibility values are rejected with ValueError."""
+        # Act & Assert
+        with pytest.raises(ValueError, match="Invalid visibility"):
+            await devrev_timeline_create(
+                mock_ctx,
+                object_id="don:core:ticket:123",
+                visibility="not-a-real-visibility",
+            )
+
 
 class TestTimelineUpdateTool:
     """Tests for devrev_timeline_update tool."""

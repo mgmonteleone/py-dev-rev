@@ -15,6 +15,7 @@ from devrev.models.timeline_entries import (
     TimelineEntriesListRequest,
     TimelineEntriesUpdateRequest,
     TimelineEntryType,
+    TimelineEntryVisibility,
 )
 from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.don_id import validate_don_id
@@ -84,6 +85,7 @@ if _config.enable_destructive_tools:
         object_id: str,
         type: str = "timeline_comment",
         body: str | None = None,
+        visibility: str | None = None,
     ) -> dict[str, Any]:
         """Create a new DevRev timeline entry.
 
@@ -92,6 +94,10 @@ if _config.enable_destructive_tools:
             type: Entry type (default: "timeline_comment"). Valid values: "timeline_comment",
                 "timeline_note", "timeline_event", "timeline_change_event".
             body: Entry content/body text.
+            visibility: Optional entry visibility. One of "external", "internal", "private",
+                or "public". If omitted, the DevRev server default ("external") is used. Use
+                "internal" to post to the ticket's internal-discussion tab; use "external" to
+                post a customer-facing comment.
         """
         app = ctx.request_context.lifespan_context
         try:
@@ -104,7 +110,22 @@ if _config.enable_destructive_tools:
                     f"timeline_comment, timeline_note, timeline_event, timeline_change_event"
                 ) from exc
 
-            request = TimelineEntriesCreateRequest(object=object_id, type=entry_type, body=body)
+            entry_visibility: TimelineEntryVisibility | None = None
+            if visibility is not None:
+                try:
+                    entry_visibility = TimelineEntryVisibility(visibility.lower())
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Invalid visibility: {visibility}. Valid values: "
+                        f"external, internal, private, public"
+                    ) from exc
+
+            request = TimelineEntriesCreateRequest(
+                object=object_id,
+                type=entry_type,
+                body=body,
+                visibility=entry_visibility,
+            )
             entry = await app.get_client().timeline_entries.create(request)
             return serialize_model(entry)
         except DevRevError as e:

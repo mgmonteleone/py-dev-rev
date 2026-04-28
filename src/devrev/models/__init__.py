@@ -382,6 +382,7 @@ from devrev.models.timeline_entries import (
     TimelineEntriesUpdateResponse,
     TimelineEntry,
     TimelineEntryType,
+    TimelineEntryVisibility,
 )
 from devrev.models.timeline_events import (
     FieldChange,
@@ -817,6 +818,7 @@ __all__ = [
     # Timeline Entries
     "TimelineEntry",
     "TimelineEntryType",
+    "TimelineEntryVisibility",
     "TimelineEntriesCreateRequest",
     "TimelineEntriesCreateResponse",
     "TimelineEntriesGetRequest",
