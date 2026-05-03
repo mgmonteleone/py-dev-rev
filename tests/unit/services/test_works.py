@@ -100,7 +100,8 @@ class TestWorksService:
 
         assert result == raw_payload
         mock_http_client.post.assert_called_once()
-        _, kwargs = mock_http_client.post.call_args
+        (endpoint,), kwargs = mock_http_client.post.call_args
+        assert endpoint == "/works.get"
         assert kwargs["data"] == {"id": "don:core:issue:123"}
 
     def test_work_parses_ticket_integration_fields(
@@ -136,7 +137,7 @@ class TestWorksService:
         assert result.rev_org == {"id": "don:core:rev_org:123", "display_name": "Acme"}
         assert result.sentiment == {"id": 5, "label": "Frustrated", "ordinal": 5}
         assert result.sentiment_summary == {"summary": "Customer is happy"}
-        assert result.sentiment_modified_date is not None
+        assert result.sentiment_modified_date == datetime(2024, 1, 16, 10, 0, tzinfo=UTC)
         assert result.sla_summary == {"stage": "active", "remaining_time": 3600}
         assert result.needs_response is True
         assert result.channels == [{"id": 3, "label": "email"}, "plug"]
@@ -144,6 +145,37 @@ class TestWorksService:
         assert result.group == {"id": "don:core:group:123", "name": "Support"}
         assert result.is_frozen is False
         assert result.visibility == {"id": 2, "label": "external", "ordinal": 2}
+
+    def test_work_parses_string_ticket_integration_fields(
+        self,
+        mock_http_client: MagicMock,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Test ticket integration fields when the API returns bare strings."""
+        sample_work_data.update(
+            {
+                "type": "ticket",
+                "account": "don:core:account:123",
+                "rev_org": "don:core:rev_org:123",
+                "sentiment": "frustrated",
+                "sentiment_summary": "Customer is unhappy",
+                "source_channel": "email",
+                "group": "support",
+                "visibility": "external",
+            }
+        )
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
+
+        service = WorksService(mock_http_client)
+        result = service.get("don:core:issue:123")
+
+        assert result.account == "don:core:account:123"
+        assert result.rev_org == "don:core:rev_org:123"
+        assert result.sentiment == "frustrated"
+        assert result.sentiment_summary == "Customer is unhappy"
+        assert result.source_channel == "email"
+        assert result.group == "support"
+        assert result.visibility == "external"
 
     def test_list_works(
         self,
@@ -561,7 +593,8 @@ class TestAsyncListSince:
         result = await service.get_raw("don:core:work:1")
 
         assert result == raw_payload
-        _, kwargs = mock_async_client.post.call_args
+        (endpoint,), kwargs = mock_async_client.post.call_args
+        assert endpoint == "/works.get"
         assert kwargs["data"] == {"id": "don:core:work:1"}
 
     @pytest.mark.asyncio

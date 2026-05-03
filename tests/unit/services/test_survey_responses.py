@@ -83,6 +83,29 @@ class TestSurveyResponsesService:
         assert kwargs["data"]["objects"] == ["don:core:ticket:456", "don:core:ticket:789"]
         assert kwargs["data"]["mode"] == "after"
 
+    def test_list_prepends_new_object_id_to_objects(self) -> None:
+        """object_id NOT already in objects is inserted at position 0.
+
+        This exercises the ``insert(0, object_id)`` branch of
+        ``_merge_object_filters`` — the complementary case to the deduplication
+        test above, where object_id IS already present.
+        """
+        mock_http_client = MagicMock()
+        mock_http_client.post.return_value = create_mock_response({"survey_responses": []})
+
+        service = SurveyResponsesService(mock_http_client)
+        service.list(
+            object_id="don:core:ticket:NEW",
+            objects=["don:core:ticket:456", "don:core:ticket:789"],
+        )
+
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["objects"] == [
+            "don:core:ticket:NEW",
+            "don:core:ticket:456",
+            "don:core:ticket:789",
+        ]
+
 
 class TestAsyncSurveyResponsesService:
     """Tests for AsyncSurveyResponsesService."""

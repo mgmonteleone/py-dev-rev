@@ -233,6 +233,7 @@ The SDK provides complete coverage of all 209 DevRev public API endpoints, organ
 |---------|-----------|-------------|
 | **Articles** | 5 | Knowledge base articles |
 | **Conversations** | 5 | Customer conversations |
+| **Survey Responses** | 1 | Survey and CSAT response listing |
 | **Timeline Entries** | 5 | Activity timeline management |
 | **Tags** | 5 | Tagging and categorization |
 

@@ -69,9 +69,15 @@ async def main():
 asyncio.run(main())
 ```
 
+## Pagination
+
+`survey_responses.list(...)` returns a paginated response with `next_cursor`.
+When you need more than one page, pass the returned cursor into a follow-up
+call and continue until `next_cursor` is `None`.
+
 ## Related Models
 
-- `SurveyResponse`
-- `SurveyResponsesListRequest`
-- `SurveyResponsesListResponse`
-- `SurveyResponsesListMode`
+- [`SurveyResponse`](../models/survey-responses.md#surveyresponse)
+- [`SurveyResponsesListRequest`](../models/survey-responses.md#surveyresponseslistrequest)
+- [`SurveyResponsesListResponse`](../models/survey-responses.md#surveyresponseslistresponse)
+- [`SurveyResponsesListMode`](../models/survey-responses.md#surveyresponseslistmode)

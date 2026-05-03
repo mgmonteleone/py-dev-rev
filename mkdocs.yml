@@ -181,6 +181,7 @@ nav:
       - api/models/index.md
       - Base: api/models/base.md
       - Accounts: api/models/accounts.md
+      - Survey Responses: api/models/survey-responses.md
       - Works: api/models/works.md
       - Users: api/models/users.md
   - Examples:

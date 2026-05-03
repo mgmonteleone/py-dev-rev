@@ -89,7 +89,24 @@ class AsyncSurveyResponsesService(AsyncBaseService):
         stages: Sequence[int] | None = None,
         surveys: Sequence[str] | None = None,
     ) -> SurveyResponsesListResponse:
-        """List survey responses."""
+        """List survey responses.
+
+        Args:
+            object_id: Convenience filter for a single ticket/work/object ID.
+            objects: Object IDs to filter responses by.
+            created_by: Creator user filters.
+            cursor: Pagination cursor.
+            dispatch_ids: Survey dispatch IDs.
+            limit: Maximum number of responses to return.
+            mode: Cursor iteration mode.
+            recipient: Recipient user filters.
+            sort_by: Sort order entries.
+            stages: Survey response stage filters.
+            surveys: Survey IDs to filter by.
+
+        Returns:
+            Paginated survey response list.
+        """
         request = SurveyResponsesListRequest(
             created_by=list(created_by) if created_by else None,
             cursor=cursor,
