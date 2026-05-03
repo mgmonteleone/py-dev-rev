@@ -30,6 +30,7 @@ Models for specific resources:
 | Resource | Description |
 |----------|-------------|
 | [Accounts](accounts.md) | Customer account models |
+| [Survey Responses](survey-responses.md) | Survey response list and payload models |
 | [Works](works.md) | Work item models (tickets, issues) |
 | [Users](users.md) | User models (dev and rev users) |
 

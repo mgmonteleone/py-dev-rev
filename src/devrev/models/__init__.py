@@ -328,6 +328,12 @@ from devrev.models.slas import (
     SlasUpdateResponse,
     SlaTrackerStatus,
 )
+from devrev.models.survey_responses import (
+    SurveyResponse,
+    SurveyResponsesListMode,
+    SurveyResponsesListRequest,
+    SurveyResponsesListResponse,
+)
 from devrev.models.sync import (
     ExternalRef,
     StagedInfo,
@@ -699,6 +705,11 @@ __all__ = [
     "QuestionAnswersUpdateRequest",
     "QuestionAnswersUpdateResponse",
     "QuestionAnswersDeleteRequest",
+    # Survey Responses
+    "SurveyResponse",
+    "SurveyResponsesListMode",
+    "SurveyResponsesListRequest",
+    "SurveyResponsesListResponse",
     # Recommendations
     "MessageRole",
     "ChatMessage",

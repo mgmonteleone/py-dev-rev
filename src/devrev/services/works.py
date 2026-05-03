@@ -147,6 +147,21 @@ class WorksService(BaseService):
         response = self._post("/works.get", request, WorksGetResponse)
         return response.work
 
+    def get_raw(self, id: str) -> dict[str, Any]:
+        """Get the raw API payload for a work item.
+
+        Use this supported escape hatch when the DevRev API returns fields that
+        are not yet represented on the typed :class:`Work` model.
+
+        Args:
+            id: Work item ID
+
+        Returns:
+            Raw ``/works.get`` response payload.
+        """
+        request = WorksGetRequest(id=id)
+        return self._post("/works.get", request)
+
     def list(
         self,
         *,
@@ -438,6 +453,11 @@ class AsyncWorksService(AsyncBaseService):
         request = WorksGetRequest(id=id)
         response = await self._post("/works.get", request, WorksGetResponse)
         return response.work
+
+    async def get_raw(self, id: str) -> dict[str, Any]:
+        """Get the raw API payload for a work item."""
+        request = WorksGetRequest(id=id)
+        return await self._post("/works.get", request)
 
     async def list(
         self,

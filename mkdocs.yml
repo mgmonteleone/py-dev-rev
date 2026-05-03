@@ -169,6 +169,7 @@ nav:
       - Parts: api/services/parts.md
       - Articles: api/services/articles.md
       - Conversations: api/services/conversations.md
+      - Survey Responses: api/services/survey-responses.md
       - Tags: api/services/tags.md
       - Groups: api/services/groups.md
       - Webhooks: api/services/webhooks.md
@@ -180,6 +181,7 @@ nav:
       - api/models/index.md
       - Base: api/models/base.md
       - Accounts: api/models/accounts.md
+      - Survey Responses: api/models/survey-responses.md
       - Works: api/models/works.md
       - Users: api/models/users.md
   - Examples:

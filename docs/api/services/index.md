@@ -36,6 +36,7 @@ client.dev_users     # DevUsersService
 |---------|-------------|-----------|
 | **Articles** | Knowledge base articles with unified content management | [articles](articles.md) |
 | **Conversations** | Customer conversations | [conversations](conversations.md) |
+| **Survey Responses** | Survey and CSAT responses | [survey-responses](survey-responses.md) |
 | **Tags** | Categorization | [tags](tags.md) |
 | **Timeline Entries** | Activity tracking | [timeline-entries](timeline-entries.md) |
 

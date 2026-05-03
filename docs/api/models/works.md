@@ -111,6 +111,9 @@ print(f"Stage: {work.stage.name if work.stage else 'N/A'}")
 
 if work.type == WorkType.TICKET:
     print(f"Severity: {work.severity}")
+    print(f"Account: {work.account}")
+    print(f"Rev org: {work.rev_org}")
+    print(f"Needs response: {work.needs_response}")
 elif work.type == WorkType.ISSUE:
     print(f"Priority: {work.priority}")
 ```

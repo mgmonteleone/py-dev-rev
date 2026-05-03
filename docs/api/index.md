@@ -44,6 +44,7 @@ All API operations are organized into service classes:
 | [Parts](services/parts.md) | Product components | 5 |
 | [Articles](services/articles.md) | Knowledge base | 5 |
 | [Conversations](services/conversations.md) | Customer conversations | 5 |
+| [Survey Responses](services/survey-responses.md) | Survey and CSAT responses | 1 |
 | [Tags](services/tags.md) | Categorization | 5 |
 | [Groups](services/groups.md) | User groups | 6 |
 | [Webhooks](services/webhooks.md) | Event notifications | 6 |
@@ -77,6 +78,7 @@ Request and response models:
 |--------|-------------|
 | [Base](models/base.md) | Common base classes |
 | [Accounts](models/accounts.md) | Account models |
+| [Survey Responses](models/survey-responses.md) | Survey response models |
 | [Works](models/works.md) | Work item models |
 | [Users](models/users.md) | User models |
 

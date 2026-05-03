@@ -140,6 +140,17 @@ for account in accounts:
 work = client.works.get(id="don:core:...")
 print(f"Work: {work.title} - Status: {work.stage.name}")
 
+# Ticket integrations can read optional account/sentiment/SLA fields
+ticket = client.works.get(id="don:core:dvrv-us-1:devo/1:ticket/123")
+print(ticket.rev_org, ticket.account, ticket.needs_response)
+
+# Use a supported raw escape hatch when the API returns newer fields
+raw_ticket = client.works.get_raw(id="don:core:dvrv-us-1:devo/1:ticket/123")
+print(raw_ticket["work"].keys())
+
+# List survey/CSAT responses for a ticket without using private _http
+survey_responses = client.survey_responses.list(object_id=ticket.id)
+
 # Create a new ticket
 ticket = client.works.create(
     title="Bug: Login page not loading",
@@ -222,6 +233,7 @@ The SDK provides complete coverage of all 209 DevRev public API endpoints, organ
 |---------|-----------|-------------|
 | **Articles** | 5 | Knowledge base articles |
 | **Conversations** | 5 | Customer conversations |
+| **Survey Responses** | 1 | Survey and CSAT response listing |
 | **Timeline Entries** | 5 | Activity timeline management |
 | **Tags** | 5 | Tagging and categorization |
 
