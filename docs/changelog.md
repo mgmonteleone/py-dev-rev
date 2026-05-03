@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [3.0.4] - 2026-05-03
+
+### Added
+
 - **Ticket SDK coverage enhancements** (CUSS-370, GitHub #220) — Added optional
   typed `Work` fields used by ticket integrations (`account`, `rev_org`,
   sentiment fields, `sla_summary`, `needs_response`, channels, group,
