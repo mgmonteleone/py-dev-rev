@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Ticket SDK coverage enhancements** (CUSS-370, GitHub #220) — Added optional
+  typed `Work` fields used by ticket integrations (`account`, `rev_org`,
+  sentiment fields, `sla_summary`, `needs_response`, channels, group,
+  `is_frozen`, and `visibility`), a public `WorksService.get_raw` /
+  `AsyncWorksService.get_raw` escape hatch for raw `/works.get` payloads, and
+  new sync/async `survey_responses.list(...)` support for
+  `/surveys.responses.list`.
+
 ### Changed
 
 ### Fixed

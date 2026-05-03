@@ -86,6 +86,65 @@ class TestWorksService:
         assert isinstance(result, Work)
         assert result.id == "don:core:issue:123"
 
+    def test_get_raw_work_returns_unparsed_payload(
+        self,
+        mock_http_client: MagicMock,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Test supported raw-response escape hatch for works.get."""
+        raw_payload = {"work": sample_work_data, "server_extra": {"unknown": True}}
+        mock_http_client.post.return_value = create_mock_response(raw_payload)
+
+        service = WorksService(mock_http_client)
+        result = service.get_raw("don:core:issue:123")
+
+        assert result == raw_payload
+        mock_http_client.post.assert_called_once()
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"] == {"id": "don:core:issue:123"}
+
+    def test_work_parses_ticket_integration_fields(
+        self,
+        mock_http_client: MagicMock,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Test optional ticket fields needed by downstream integrations."""
+        sample_work_data.update(
+            {
+                "type": "ticket",
+                "account": {"id": "don:core:account:123", "display_name": "Acme"},
+                "rev_org": {"id": "don:core:rev_org:123", "display_name": "Acme"},
+                "sentiment": "positive",
+                "sentiment_summary": {"summary": "Customer is happy"},
+                "sentiment_modified_date": "2024-01-16T10:00:00Z",
+                "sla_summary": {"stage": "active", "remaining_time": 3600},
+                "needs_response": True,
+                "channels": [{"id": 3, "label": "email"}, "plug"],
+                "source_channel": {"id": 3, "label": "email"},
+                "group": {"id": "don:core:group:123", "name": "Support"},
+                "is_frozen": False,
+                "visibility": "external",
+            }
+        )
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
+
+        service = WorksService(mock_http_client)
+        result = service.get("don:core:issue:123")
+
+        assert result.type == WorkType.TICKET
+        assert result.account == {"id": "don:core:account:123", "display_name": "Acme"}
+        assert result.rev_org == {"id": "don:core:rev_org:123", "display_name": "Acme"}
+        assert result.sentiment == "positive"
+        assert result.sentiment_summary == {"summary": "Customer is happy"}
+        assert result.sentiment_modified_date is not None
+        assert result.sla_summary == {"stage": "active", "remaining_time": 3600}
+        assert result.needs_response is True
+        assert result.channels == [{"id": 3, "label": "email"}, "plug"]
+        assert result.source_channel == {"id": 3, "label": "email"}
+        assert result.group == {"id": "don:core:group:123", "name": "Support"}
+        assert result.is_frozen is False
+        assert result.visibility == "external"
+
     def test_list_works(
         self,
         mock_http_client: MagicMock,
@@ -484,6 +543,26 @@ class TestListSincePageLimitClamp:
 
 class TestAsyncListSince:
     """Async variants for ``list_modified_since`` / ``list_created_since``."""
+
+    @pytest.mark.asyncio
+    async def test_async_get_raw_work_returns_unparsed_payload(self) -> None:
+        raw_payload = {
+            "work": {
+                "id": "don:core:work:1",
+                "type": "ticket",
+                "title": "Raw ticket",
+            },
+            "server_extra": {"unknown": True},
+        }
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response(raw_payload)
+
+        service = AsyncWorksService(mock_async_client)
+        result = await service.get_raw("don:core:work:1")
+
+        assert result == raw_payload
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"] == {"id": "don:core:work:1"}
 
     @pytest.mark.asyncio
     async def test_async_list_modified_since_early_exit(self) -> None:

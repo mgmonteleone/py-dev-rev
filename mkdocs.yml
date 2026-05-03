@@ -169,6 +169,7 @@ nav:
       - Parts: api/services/parts.md
       - Articles: api/services/articles.md
       - Conversations: api/services/conversations.md
+      - Survey Responses: api/services/survey-responses.md
       - Tags: api/services/tags.md
       - Groups: api/services/groups.md
       - Webhooks: api/services/webhooks.md

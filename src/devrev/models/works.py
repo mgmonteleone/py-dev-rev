@@ -96,6 +96,42 @@ class Work(DevRevResponseModel):
     actual_close_date: datetime | None = Field(default=None, description="Actual close date")
     custom_fields: dict[str, Any] | None = Field(default=None, description="Custom fields")
     external_ref: str | None = Field(default=None, description="External reference")
+    account: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Account associated with the ticket/work, when returned by the API",
+    )
+    rev_org: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Rev organization associated with the ticket/work",
+    )
+    sentiment: str | None = Field(default=None, description="Current ticket sentiment")
+    sentiment_summary: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Structured or textual sentiment summary",
+    )
+    sentiment_modified_date: datetime | None = Field(
+        default=None,
+        description="When ticket sentiment was last modified",
+    )
+    sla_summary: dict[str, Any] | None = Field(default=None, description="Ticket SLA summary")
+    needs_response: bool | None = Field(
+        default=None,
+        description="Whether the ticket needs a customer response",
+    )
+    channels: list[dict[str, Any] | str] | None = Field(
+        default=None,
+        description="Channels associated with the ticket",
+    )
+    source_channel: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Source channel that created the ticket",
+    )
+    group: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Group associated with the work item",
+    )
+    is_frozen: bool | None = Field(default=None, description="Whether the work item is frozen")
+    visibility: str | None = Field(default=None, description="Work item visibility")
 
 
 class WorkSummary(DevRevResponseModel):

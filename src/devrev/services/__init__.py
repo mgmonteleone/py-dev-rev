@@ -38,6 +38,7 @@ from devrev.services.rev_orgs import AsyncRevOrgsService, RevOrgsService
 from devrev.services.rev_users import AsyncRevUsersService, RevUsersService
 from devrev.services.search import AsyncSearchService, SearchService
 from devrev.services.slas import AsyncSlasService, SlasService
+from devrev.services.survey_responses import AsyncSurveyResponsesService, SurveyResponsesService
 from devrev.services.tags import AsyncTagsService, TagsService
 from devrev.services.timeline_entries import (
     AsyncTimelineEntriesService,
@@ -112,6 +113,9 @@ __all__ = [
     # SLAs
     "SlasService",
     "AsyncSlasService",
+    # Survey Responses
+    "SurveyResponsesService",
+    "AsyncSurveyResponsesService",
     # Tags
     "TagsService",
     "AsyncTagsService",

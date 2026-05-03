@@ -13,6 +13,7 @@ issues (engineering), and tasks.
       members:
         - list
         - get
+        - get_raw
         - create
         - update
         - delete
@@ -57,11 +58,37 @@ response = client.works.list(
 ### Get Work Item
 
 ```python
-response = client.works.get(id="don:core:dvrv-us-1:devo/1:ticket/123")
-work = response.work
+work = client.works.get(id="don:core:dvrv-us-1:devo/1:ticket/123")
 print(f"Title: {work.title}")
 print(f"Type: {work.type}")
 print(f"Stage: {work.stage.name if work.stage else 'N/A'}")
+```
+
+### Get Raw Work Payload
+
+Use `get_raw` when the REST API returns a newly-added field that is not yet
+modeled by the typed `Work` object. This keeps callers on a supported SDK API
+instead of relying on the private `_http` transport.
+
+```python
+payload = client.works.get_raw(id="don:core:dvrv-us-1:devo/1:ticket/123")
+raw_work = payload["work"]
+print(raw_work.get("rev_org"))
+```
+
+### Ticket Account Association
+
+For tickets, the typed `Work` model now includes optional account-association
+fields when the API returns them. Prefer the typed fields first, and use
+`get_raw` only as a fallback for workspace-specific or newly-added fields.
+
+```python
+ticket = client.works.get(id="don:core:dvrv-us-1:devo/1:ticket/123")
+
+if ticket.rev_org:
+    print(f"Ticket rev org: {ticket.rev_org}")
+if ticket.account:
+    print(f"Ticket account: {ticket.account}")
 ```
 
 ### Create Ticket

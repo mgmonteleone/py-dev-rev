@@ -2,6 +2,7 @@
 
 from devrev.client import AsyncDevRevClient, DevRevClient
 from devrev.config import APIVersion, DevRevConfig
+from devrev.services.survey_responses import AsyncSurveyResponsesService, SurveyResponsesService
 
 
 class TestDevRevClient:
@@ -45,6 +46,11 @@ class TestDevRevClient:
         with DevRevClient() as client:
             assert client._config is not None
 
+    def test_client_exposes_survey_responses_service(self, mock_env_vars: dict[str, str]) -> None:
+        """Test client exposes the public survey responses service."""
+        client = DevRevClient()
+        assert isinstance(client.survey_responses, SurveyResponsesService)
+
 
 class TestAsyncDevRevClient:
     """Tests for AsyncDevRevClient class."""
@@ -66,6 +72,13 @@ class TestAsyncDevRevClient:
         )
         assert client._config.api_token.get_secret_value() == "explicit-token"
         assert client._config.timeout == 90
+
+    def test_async_client_exposes_survey_responses_service(
+        self, mock_env_vars: dict[str, str]
+    ) -> None:
+        """Test async client exposes the public survey responses service."""
+        client = AsyncDevRevClient()
+        assert isinstance(client.survey_responses, AsyncSurveyResponsesService)
 
 
 class TestAPIVersionPrecedence:

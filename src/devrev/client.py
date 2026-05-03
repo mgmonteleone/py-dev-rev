@@ -42,6 +42,10 @@ from devrev.services.rev_orgs import AsyncRevOrgsService, RevOrgsService
 from devrev.services.rev_users import AsyncRevUsersService, RevUsersService
 from devrev.services.search import AsyncSearchService, SearchService
 from devrev.services.slas import AsyncSlasService, SlasService
+from devrev.services.survey_responses import (
+    AsyncSurveyResponsesService,
+    SurveyResponsesService,
+)
 from devrev.services.tags import AsyncTagsService, TagsService
 from devrev.services.timeline_entries import (
     AsyncTimelineEntriesService,
@@ -164,6 +168,7 @@ class DevRevClient:
         self._rev_orgs = RevOrgsService(self._http)
         self._rev_users = RevUsersService(self._http)
         self._slas = SlasService(self._http)
+        self._survey_responses = SurveyResponsesService(self._http)
         self._tags = TagsService(self._http)
         self._timeline_entries = TimelineEntriesService(self._http)
         self._webhooks = WebhooksService(self._http)
@@ -258,6 +263,11 @@ class DevRevClient:
     def slas(self) -> SlasService:
         """Access the SLAs service."""
         return self._slas
+
+    @property
+    def survey_responses(self) -> SurveyResponsesService:
+        """Access the Survey Responses service."""
+        return self._survey_responses
 
     @property
     def tags(self) -> TagsService:
@@ -492,6 +502,7 @@ class AsyncDevRevClient:
         self._rev_orgs = AsyncRevOrgsService(self._http)
         self._rev_users = AsyncRevUsersService(self._http)
         self._slas = AsyncSlasService(self._http)
+        self._survey_responses = AsyncSurveyResponsesService(self._http)
         self._tags = AsyncTagsService(self._http)
         self._timeline_entries = AsyncTimelineEntriesService(self._http)
         self._webhooks = AsyncWebhooksService(self._http)
@@ -586,6 +597,11 @@ class AsyncDevRevClient:
     def slas(self) -> AsyncSlasService:
         """Access the SLAs service."""
         return self._slas
+
+    @property
+    def survey_responses(self) -> AsyncSurveyResponsesService:
+        """Access the Survey Responses service."""
+        return self._survey_responses
 
     @property
     def tags(self) -> AsyncTagsService:
