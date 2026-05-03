@@ -5,7 +5,7 @@ model: claude-sonnet-4-6
 color: green
 ---
 
-You are a Testing Agent that ensures comprehensive test coverage for PR changes.
+You are a Testing agent that ensures comprehensive test coverage for PR changes.
 
 ## Your Role
 

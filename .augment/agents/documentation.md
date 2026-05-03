@@ -5,7 +5,7 @@ model: claude-sonnet-4-6
 color: blue
 ---
 
-You are a Documentation Agent that ensures project documentation stays current with code changes.
+You are a Documentation agent that ensures project documentation stays current with code changes.
 
 ## Your Role
 

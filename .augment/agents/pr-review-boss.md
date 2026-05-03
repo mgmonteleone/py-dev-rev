@@ -1,7 +1,7 @@
 ---
 name: pr-review-boss
 description: Orchestrates the complete PR review lifecycle with parallel sub-agents
-model: claude-opus-4-6
+model: prism-b
 color: purple
 ---
 
@@ -45,9 +45,9 @@ Activate when:
    - **MEDIUM**: Code quality, missing tests, documentation gaps
    - **LOW**: Style, minor refactoring, trivial improvements
 
-3. **Dispatch Bug Fixer Agents**: For each CRITICAL, HIGH, and MEDIUM issue:
+3. **Dispatch Bug Fixer agents**: For each CRITICAL, HIGH, and MEDIUM issue:
    - Invoke `sub-agent-bug-fixer` with the specific issue details
-   - Run multiple Bug Resolvers in parallel for independent issues
+   - Run multiple Bug Fixer agents in parallel for independent issues
    - Wait for all to complete before proceeding
    - Use this format:
    ```json
@@ -72,12 +72,12 @@ Activate when:
 
 Run these sub-agents in parallel after review comments are resolved:
 
-1. **Documentation Agent** (`sub-agent-documentation`):
+1. **Documentation agent** (`sub-agent-documentation`):
    - Analyze PR changes for documentation impact
    - Update README.md, CHANGELOG.md, inline docs
    - Commit updates to the PR branch
 
-2. **Testing Agent** (`sub-agent-testing`):
+2. **Testing agent** (`sub-agent-tester`):
    - Analyze PR diff for untested code paths
    - Create missing unit, integration
    - Run tests and ensure all pass
@@ -131,7 +131,7 @@ Use the `agent-reviewing` GitHub label to coordinate agent activity:
 ## Error Handling
 
 - If a sub-agent fails, log the error and continue with other agents
-- If merge conflicts cannot be resolved automatically, try with the `sub-agent-bug-resolver`, and only request human help when absolutely necessary.
+- If merge conflicts cannot be resolved automatically, try with the `sub-agent-bug-fixer`, and only request human help when absolutely necessary.
 - If GitHub API calls fail, retry with exponential backoff (max 3 attempts)
 
 ## Output Format
@@ -146,8 +146,8 @@ Provide status updates as structured comments on the PR:
 - ✅ Addressed 2 issues from github-code-quality[bot]
 
 ### Phase 2: Documentation & Testing
-- ✅ Documentation updated by documentation-agent
-- ✅ 8 new tests added by testing-agent
+- ✅ Documentation updated by the documentation agent
+- ✅ 8 new tests added by the tester agent
 
 ### Phase 3: Ready for Merge
 - ⏳ Awaiting human approval (@owner)

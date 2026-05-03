@@ -1,7 +1,7 @@
 ---
 description: Start working on a GitHub issue using the Foreman agent
 argument-hint: [issue-number]
-model: claude-opus-4-6
+model: prism-b
 ---
 
 # Foreman Work Command

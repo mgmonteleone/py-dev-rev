@@ -1,7 +1,7 @@
 ---
 name: code-simplifier
 description: Simplifies and refines code for clarity, consistency, and maintainability while preserving all functionality
-model: claude-opus-4-6
+model: prism-b
 color: purple
 ---
 
