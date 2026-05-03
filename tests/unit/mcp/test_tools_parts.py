@@ -145,8 +145,8 @@ class TestPartsCreateTool:
         assert call_args.type == PartType.PRODUCT
 
     @pytest.mark.asyncio
-    async def test_create_with_type_enum(self, mock_ctx, mock_client):
-        """Test creating a part with different type."""
+    async def test_create_with_uppercase_type_string(self, mock_ctx, mock_client):
+        """Test creating a part with an uppercase type string."""
         mock_part = _make_mock_part(id="FEAT-789", name="New Feature", type="feature")
         mock_client.parts.create.return_value = mock_part
 
@@ -253,7 +253,7 @@ class TestPartsCreateTool:
     @pytest.mark.asyncio
     async def test_create_capability_without_parent_part_raises(self, mock_ctx, mock_client):
         """Test that creating a CAPABILITY without parent_part raises RuntimeError. (#184)"""
-        with pytest.raises(RuntimeError, match="parent_part is required"):
+        with pytest.raises(RuntimeError, match="parent_part is required when creating a CAPABILITY"):
             await devrev_parts_create(
                 mock_ctx,
                 name="Orphan Capability",
@@ -263,7 +263,7 @@ class TestPartsCreateTool:
     @pytest.mark.asyncio
     async def test_create_feature_without_parent_part_raises(self, mock_ctx, mock_client):
         """Test that creating a FEATURE without parent_part raises RuntimeError. (#184)"""
-        with pytest.raises(RuntimeError, match="parent_part is required"):
+        with pytest.raises(RuntimeError, match="parent_part is required when creating a FEATURE"):
             await devrev_parts_create(
                 mock_ctx,
                 name="Orphan Feature",
@@ -273,7 +273,7 @@ class TestPartsCreateTool:
     @pytest.mark.asyncio
     async def test_create_enhancement_without_parent_part_raises(self, mock_ctx, mock_client):
         """Test that creating an ENHANCEMENT without parent_part raises RuntimeError. (#184)"""
-        with pytest.raises(RuntimeError, match="parent_part is required"):
+        with pytest.raises(RuntimeError, match="parent_part is required when creating a ENHANCEMENT"):
             await devrev_parts_create(
                 mock_ctx,
                 name="Orphan Enhancement",
