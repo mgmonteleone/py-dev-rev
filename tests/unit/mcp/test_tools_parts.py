@@ -253,7 +253,9 @@ class TestPartsCreateTool:
     @pytest.mark.asyncio
     async def test_create_capability_without_parent_part_raises(self, mock_ctx, mock_client):
         """Test that creating a CAPABILITY without parent_part raises RuntimeError. (#184)"""
-        with pytest.raises(RuntimeError, match="parent_part is required when creating a CAPABILITY"):
+        with pytest.raises(
+            RuntimeError, match="parent_part is required when creating a CAPABILITY"
+        ):
             await devrev_parts_create(
                 mock_ctx,
                 name="Orphan Capability",
@@ -273,7 +275,9 @@ class TestPartsCreateTool:
     @pytest.mark.asyncio
     async def test_create_enhancement_without_parent_part_raises(self, mock_ctx, mock_client):
         """Test that creating an ENHANCEMENT without parent_part raises RuntimeError. (#184)"""
-        with pytest.raises(RuntimeError, match="parent_part is required when creating a ENHANCEMENT"):
+        with pytest.raises(
+            RuntimeError, match="parent_part is required when creating a ENHANCEMENT"
+        ):
             await devrev_parts_create(
                 mock_ctx,
                 name="Orphan Enhancement",
