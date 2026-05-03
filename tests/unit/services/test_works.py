@@ -114,7 +114,7 @@ class TestWorksService:
                 "type": "ticket",
                 "account": {"id": "don:core:account:123", "display_name": "Acme"},
                 "rev_org": {"id": "don:core:rev_org:123", "display_name": "Acme"},
-                "sentiment": "positive",
+                "sentiment": {"id": 5, "label": "Frustrated", "ordinal": 5},
                 "sentiment_summary": {"summary": "Customer is happy"},
                 "sentiment_modified_date": "2024-01-16T10:00:00Z",
                 "sla_summary": {"stage": "active", "remaining_time": 3600},
@@ -123,7 +123,7 @@ class TestWorksService:
                 "source_channel": {"id": 3, "label": "email"},
                 "group": {"id": "don:core:group:123", "name": "Support"},
                 "is_frozen": False,
-                "visibility": "external",
+                "visibility": {"id": 2, "label": "external", "ordinal": 2},
             }
         )
         mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
@@ -134,7 +134,7 @@ class TestWorksService:
         assert result.type == WorkType.TICKET
         assert result.account == {"id": "don:core:account:123", "display_name": "Acme"}
         assert result.rev_org == {"id": "don:core:rev_org:123", "display_name": "Acme"}
-        assert result.sentiment == "positive"
+        assert result.sentiment == {"id": 5, "label": "Frustrated", "ordinal": 5}
         assert result.sentiment_summary == {"summary": "Customer is happy"}
         assert result.sentiment_modified_date is not None
         assert result.sla_summary == {"stage": "active", "remaining_time": 3600}
@@ -143,7 +143,7 @@ class TestWorksService:
         assert result.source_channel == {"id": 3, "label": "email"}
         assert result.group == {"id": "don:core:group:123", "name": "Support"}
         assert result.is_frozen is False
-        assert result.visibility == "external"
+        assert result.visibility == {"id": 2, "label": "external", "ordinal": 2}
 
     def test_list_works(
         self,

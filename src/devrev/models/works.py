@@ -104,7 +104,10 @@ class Work(DevRevResponseModel):
         default=None,
         description="Rev organization associated with the ticket/work",
     )
-    sentiment: str | None = Field(default=None, description="Current ticket sentiment")
+    sentiment: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Current ticket sentiment, when returned by the API",
+    )
     sentiment_summary: dict[str, Any] | str | None = Field(
         default=None,
         description="Structured or textual sentiment summary",
@@ -131,7 +134,10 @@ class Work(DevRevResponseModel):
         description="Group associated with the work item",
     )
     is_frozen: bool | None = Field(default=None, description="Whether the work item is frozen")
-    visibility: str | None = Field(default=None, description="Work item visibility")
+    visibility: dict[str, Any] | str | None = Field(
+        default=None,
+        description="Work item visibility, when returned by the API",
+    )
 
 
 class WorkSummary(DevRevResponseModel):
