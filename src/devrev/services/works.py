@@ -194,6 +194,7 @@ class WorksService(BaseService):
         *,
         title: str | None = None,
         body: str | None = None,
+        applies_to_part: str | None = None,
         owned_by: Sequence[str] | None = None,
         stage: StageUpdate | None = None,
         priority: IssuePriority | None = None,
@@ -206,6 +207,7 @@ class WorksService(BaseService):
             id: Work item ID
             title: New title
             body: New body/description
+            applies_to_part: New part ID this work applies to (re-parents the work item)
             owned_by: New owner IDs
             stage: New stage
             priority: New priority (for issues)
@@ -220,6 +222,7 @@ class WorksService(BaseService):
             id=id,
             title=title,
             body=body,
+            applies_to_part=applies_to_part,
             owned_by=owned_by_update,
             stage=stage,
             priority=priority,
@@ -471,16 +474,31 @@ class AsyncWorksService(AsyncBaseService):
         *,
         title: str | None = None,
         body: str | None = None,
+        applies_to_part: str | None = None,
         owned_by: Sequence[str] | None = None,
         priority: IssuePriority | None = None,
         severity: TicketSeverity | None = None,
     ) -> Work:
-        """Update a work item."""
+        """Update a work item.
+
+        Args:
+            id: Work item ID
+            title: New title
+            body: New body/description
+            applies_to_part: New part ID this work applies to (re-parents the work item)
+            owned_by: New owner IDs
+            priority: New priority (for issues)
+            severity: New severity (for tickets)
+
+        Returns:
+            The updated Work item
+        """
         owned_by_update = WorksUpdateRequestOwnedBy(set=owned_by) if owned_by else None
         request = WorksUpdateRequest(
             id=id,
             title=title,
             body=body,
+            applies_to_part=applies_to_part,
             owned_by=owned_by_update,
             priority=priority,
             severity=severity,

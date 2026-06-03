@@ -7,10 +7,12 @@ from enum import StrEnum
 
 from pydantic import Field
 
+from devrev.models.artifacts import Artifact
 from devrev.models.base import (
     DevRevBaseModel,
     DevRevResponseModel,
     PaginatedResponse,
+    TagWithValue,
     UserSummary,
 )
 
@@ -33,6 +35,12 @@ class Part(DevRevResponseModel):
     type: PartType | None = Field(default=None, description="Part type")
     description: str | None = Field(default=None, description="Description")
     owned_by: list[UserSummary] | None = Field(default=None, description="Owners")
+    artifacts: list[Artifact] | None = Field(
+        default=None, description="Artifacts attached to the part"
+    )
+    tags: list[TagWithValue] | None = Field(
+        default=None, description="Tags associated with the part"
+    )
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")
 
@@ -87,12 +95,34 @@ class PartsDeleteRequest(DevRevBaseModel):
     id: str = Field(..., description="Part ID to delete")
 
 
+class ParentPartFilter(DevRevBaseModel):
+    """Filter for fetching a part hierarchy by parent part.
+
+    Mirrors the OpenAPI ``parent-part-filter`` schema used by ``/parts.list``.
+    """
+
+    parts: list[str] = Field(
+        ...,
+        min_length=1,
+        description="Part IDs to fetch the hierarchy for",
+    )
+    level: int | None = Field(
+        default=None,
+        ge=1,
+        description="Number of levels to fetch the part hierarchy up to",
+    )
+
+
 class PartsListRequest(DevRevBaseModel):
     """Request to list parts."""
 
     cursor: str | None = Field(default=None, description="Pagination cursor")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results")
     type: list[PartType] | None = Field(default=None, description="Filter by type")
+    parent_part: ParentPartFilter | None = Field(
+        default=None,
+        description="Filter parts by parent part hierarchy",
+    )
 
 
 class PartsUpdateRequest(DevRevBaseModel):

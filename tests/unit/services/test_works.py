@@ -130,6 +130,21 @@ class TestWorksService:
         assert isinstance(result, Work)
         assert result.title == "Updated Title"
 
+    def test_update_work_applies_to_part(
+        self,
+        mock_http_client: MagicMock,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Test re-parenting a work item via applies_to_part on update."""
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
+
+        service = WorksService(mock_http_client)
+        service.update("don:core:issue:123", applies_to_part="don:core:part:999")
+
+        mock_http_client.post.assert_called_once()
+        sent = mock_http_client.post.call_args.kwargs["data"]
+        assert sent["applies_to_part"] == "don:core:part:999"
+
     def test_create_work_with_priority(
         self,
         mock_http_client: MagicMock,

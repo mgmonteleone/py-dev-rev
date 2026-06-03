@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from devrev.models.parts import (
+    ParentPartFilter,
     Part,
     PartsCreateRequest,
     PartsCreateResponse,
@@ -16,6 +19,24 @@ from devrev.models.parts import (
     PartsUpdateResponse,
 )
 from devrev.services.base import AsyncBaseService, BaseService
+
+
+def _build_parent_part_filter(
+    parent_part_parts: Sequence[str] | None,
+    parent_part_level: int | None,
+) -> ParentPartFilter | None:
+    """Build a ``ParentPartFilter`` from explicit list parameters.
+
+    Args:
+        parent_part_parts: Part IDs to fetch the hierarchy for.
+        parent_part_level: Number of hierarchy levels to fetch.
+
+    Returns:
+        A ``ParentPartFilter`` when ``parent_part_parts`` is provided, else None.
+    """
+    if parent_part_parts:
+        return ParentPartFilter(parts=list(parent_part_parts), level=parent_part_level)
+    return None
 
 
 class PartsService(BaseService):
@@ -36,17 +57,26 @@ class PartsService(BaseService):
         *,
         limit: int | None = None,
         cursor: str | None = None,
+        parent_part_parts: Sequence[str] | None = None,
+        parent_part_level: int | None = None,
     ) -> PartsListResponse:
         """List parts.
 
         Args:
             limit: Maximum number of results to return (1-100).
             cursor: Pagination cursor from previous response.
+            parent_part_parts: Filter to the hierarchy of these part IDs.
+            parent_part_level: Number of hierarchy levels to fetch (requires
+                ``parent_part_parts``).
 
         Returns:
             PartsListResponse with parts and next_cursor for pagination.
         """
-        request = PartsListRequest(limit=limit, cursor=cursor)
+        request = PartsListRequest(
+            limit=limit,
+            cursor=cursor,
+            parent_part=_build_parent_part_filter(parent_part_parts, parent_part_level),
+        )
         return self._post("/parts.list", request, PartsListResponse)
 
     def update(self, request: PartsUpdateRequest) -> Part:
@@ -77,17 +107,26 @@ class AsyncPartsService(AsyncBaseService):
         *,
         limit: int | None = None,
         cursor: str | None = None,
+        parent_part_parts: Sequence[str] | None = None,
+        parent_part_level: int | None = None,
     ) -> PartsListResponse:
         """List parts.
 
         Args:
             limit: Maximum number of results to return (1-100).
             cursor: Pagination cursor from previous response.
+            parent_part_parts: Filter to the hierarchy of these part IDs.
+            parent_part_level: Number of hierarchy levels to fetch (requires
+                ``parent_part_parts``).
 
         Returns:
             PartsListResponse with parts and next_cursor for pagination.
         """
-        request = PartsListRequest(limit=limit, cursor=cursor)
+        request = PartsListRequest(
+            limit=limit,
+            cursor=cursor,
+            parent_part=_build_parent_part_filter(parent_part_parts, parent_part_level),
+        )
         return await self._post("/parts.list", request, PartsListResponse)
 
     async def update(self, request: PartsUpdateRequest) -> Part:
