@@ -179,6 +179,7 @@ if _config.enable_destructive_tools:
         owned_by: list[str] | None = None,
         priority: str | None = None,
         severity: str | None = None,
+        applies_to_part: str | None = None,
     ) -> dict[str, Any]:
         """Update an existing DevRev work item (ticket, issue, or task).
 
@@ -191,6 +192,7 @@ if _config.enable_destructive_tools:
             owned_by: New list of owner user IDs.
             priority: New issue priority: P0, P1, P2, P3.
             severity: New ticket severity: BLOCKER, HIGH, MEDIUM, LOW.
+            applies_to_part: New part ID this work applies to (re-parents the work item).
         """
         validate_don_id(id, ["work", "ticket", "issue"], "devrev_works_update")
         app = ctx.request_context.lifespan_context
@@ -223,6 +225,7 @@ if _config.enable_destructive_tools:
                 owned_by=owned_by,
                 priority=issue_priority,
                 severity=ticket_severity,
+                applies_to_part=applies_to_part,
             )
             return serialize_model(work)
         except DevRevError as e:

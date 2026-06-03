@@ -2,17 +2,28 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
 
 from devrev.exceptions import DevRevError
-from devrev.models.parts import PartType
+from devrev.models.base import ObjectSummary, TagWithValue, UserSummary
+from devrev.models.links import Link
+from devrev.models.parts import Part, PartType
+from devrev.models.tags import Tag
 from devrev_mcp.tools.parts import (
+    _collect_old_ids_postorder,
+    _extract_object_id,
+    _extract_owner_ids,
+    _extract_tag_ids,
+    _MovePlanNode,
+    _replace_link_endpoint,
     devrev_parts_create,
     devrev_parts_delete,
     devrev_parts_get,
     devrev_parts_list,
+    devrev_parts_move,
     devrev_parts_update,
 )
 
@@ -345,3 +356,295 @@ class TestPartsDeleteTool:
 
         with pytest.raises(RuntimeError, match="Part not found"):
             await devrev_parts_delete(mock_ctx, id="PROD-999")
+
+
+# ---------------------------------------------------------------------------
+# Helpers used by the part-move workaround.
+# ---------------------------------------------------------------------------
+
+SRC_ID = "don:core:dvrv-us-1:devo/1:part/1"
+NEW_PARENT_ID = "don:core:dvrv-us-1:devo/1:part/2"
+
+
+def _real_part(
+    id: str = SRC_ID,
+    name: str = "Source Part",
+    type: PartType | None = PartType.FEATURE,
+    owners: list[UserSummary] | None = None,
+    tags: list[TagWithValue] | None = None,
+) -> Part:
+    """Build a real Part model for move tests."""
+    return Part(id=id, name=name, type=type, owned_by=owners, tags=tags)
+
+
+def _list_resp(items: list, attr: str, next_cursor: str | None = None) -> SimpleNamespace:
+    """Build a paginated list response stub exposing ``attr`` and next_cursor."""
+    return SimpleNamespace(**{attr: items, "next_cursor": next_cursor})
+
+
+def _mock_work(id: str = "don:core:dvrv-us-1:devo/1:work/1") -> MagicMock:
+    work = MagicMock()
+    work.id = id
+    return work
+
+
+def _mock_link(
+    id: str = "don:core:dvrv-us-1:devo/1:link/1",
+    link_type: str = "is_related_to",
+    source: str = SRC_ID,
+    target: str = "don:core:dvrv-us-1:devo/1:ticket/9",
+) -> MagicMock:
+    link = MagicMock()
+    link.id = id
+    link.link_type = link_type
+    link.source = source
+    link.target = target
+    return link
+
+
+class TestPartsMoveHelpers:
+    """Tests for the pure helpers backing devrev_parts_move."""
+
+    def test_extract_owner_ids_returns_ids(self):
+        part = _real_part(owners=[UserSummary(id="DEVU-1"), UserSummary(id="DEVU-2")])
+        assert _extract_owner_ids(part) == ["DEVU-1", "DEVU-2"]
+
+    def test_extract_owner_ids_empty_when_unset(self):
+        assert _extract_owner_ids(_real_part(owners=None)) == []
+
+    def test_extract_tag_ids_handles_tag_objects_and_strings(self):
+        part = _real_part(
+            tags=[
+                TagWithValue(tag=Tag(id="tag-1", name="Alpha")),
+                TagWithValue(tag="tag-2"),
+            ]
+        )
+        assert _extract_tag_ids(part) == ["tag-1", "tag-2"]
+
+    def test_extract_tag_ids_empty_when_unset(self):
+        assert _extract_tag_ids(_real_part(tags=None)) == []
+
+    def test_extract_object_id_variants(self):
+        assert _extract_object_id("part/1") == "part/1"
+        assert _extract_object_id(ObjectSummary(id="part/2")) == "part/2"
+        assert _extract_object_id({"id": "part/3"}) == "part/3"
+        assert _extract_object_id({"no_id": "x"}) is None
+
+    def test_replace_link_endpoint_source_match(self):
+        link = Link(id="l1", link_type="is_related_to", source="part/1", target="ticket/9")
+        assert _replace_link_endpoint(link, "part/1", "part/2") == ("part/2", "ticket/9")
+
+    def test_replace_link_endpoint_target_match(self):
+        link = Link(id="l1", link_type="is_related_to", source="ticket/9", target="part/1")
+        assert _replace_link_endpoint(link, "part/1", "part/2") == ("ticket/9", "part/2")
+
+    def test_replace_link_endpoint_no_match_returns_none(self):
+        link = Link(id="l1", link_type="is_related_to", source="a", target="b")
+        assert _replace_link_endpoint(link, "part/1", "part/2") is None
+
+    def test_collect_old_ids_postorder(self):
+        child = _MovePlanNode(_real_part(id="c1"), works=[], links=[], children=[])
+        root = _MovePlanNode(_real_part(id="r1"), works=[], links=[], children=[child])
+        assert _collect_old_ids_postorder(root) == ["c1", "r1"]
+
+
+def _configure_no_dependents(mock_client) -> None:
+    """Configure a source part with no children, works, or links."""
+    mock_client.parts.get.side_effect = [_real_part(), _real_part(id=NEW_PARENT_ID, name="Parent")]
+    mock_client.parts.list.return_value = _list_resp([], "parts")
+    mock_client.works.list.return_value = _list_resp([], "works")
+    mock_client.links.list.return_value = []
+
+
+class TestPartsMoveTool:
+    """Tests for the devrev_parts_move tool."""
+
+    @pytest.mark.asyncio
+    async def test_dry_run_does_not_mutate(self, mock_ctx, mock_client):
+        """Dry run gathers a plan and performs no mutations."""
+        _configure_no_dependents(mock_client)
+
+        result = await devrev_parts_move(
+            mock_ctx, source_part_id=SRC_ID, new_parent_part_id=NEW_PARENT_ID
+        )
+
+        assert result["dry_run"] is True
+        assert result["success"] is True
+        assert any(op["op"] == "create_part" for op in result["planned_operations"])
+        assert result["completed_operations"] == []
+        mock_client.parts.create.assert_not_called()
+        mock_client.works.update.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_confirmation_required_for_mutation(self, mock_ctx, mock_client):
+        """With dry_run False but confirm False, nothing is mutated."""
+        _configure_no_dependents(mock_client)
+
+        result = await devrev_parts_move(
+            mock_ctx, source_part_id=SRC_ID, new_parent_part_id=NEW_PARENT_ID, dry_run=False
+        )
+
+        assert result["success"] is False
+        assert any("confirm=True" in w for w in result["warnings"])
+        mock_client.parts.create.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_successful_move_creates_part(self, mock_ctx, mock_client):
+        """A confirmed move with no dependents creates the replacement part."""
+        _configure_no_dependents(mock_client)
+        created = _real_part(id="don:core:dvrv-us-1:devo/1:part/100", name="Source Part")
+        mock_client.parts.create.return_value = created
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            source_part_id=SRC_ID,
+            new_parent_part_id=NEW_PARENT_ID,
+            dry_run=False,
+            confirm=True,
+        )
+
+        assert result["success"] is True
+        assert result["new_part_id"] == "don:core:dvrv-us-1:devo/1:part/100"
+        assert result["created_part"]["id"] == "don:core:dvrv-us-1:devo/1:part/100"
+        mock_client.parts.create.assert_called_once()
+        create_req = mock_client.parts.create.call_args[0][0]
+        assert create_req.parent_part == [NEW_PARENT_ID]
+        assert create_req.type == PartType.FEATURE
+        mock_client.parts.delete.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_move_relinks_work_items(self, mock_ctx, mock_client):
+        """Work items applying to the source are relinked to the new part."""
+        _configure_no_dependents(mock_client)
+        mock_client.works.list.return_value = _list_resp([_mock_work(id="w1")], "works")
+        created = _real_part(id="don:core:dvrv-us-1:devo/1:part/100")
+        mock_client.parts.create.return_value = created
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            source_part_id=SRC_ID,
+            new_parent_part_id=NEW_PARENT_ID,
+            dry_run=False,
+            confirm=True,
+        )
+
+        assert result["success"] is True
+        assert result["counts"]["works_relinked"] == 1
+        mock_client.works.update.assert_called_once_with(
+            "w1", applies_to_part="don:core:dvrv-us-1:devo/1:part/100"
+        )
+
+    @pytest.mark.asyncio
+    async def test_move_recreates_links_before_delete(self, mock_ctx, mock_client):
+        """Links are recreated against the new part, then the old link deleted."""
+        _configure_no_dependents(mock_client)
+        mock_client.links.list.return_value = [_mock_link(id="lnk1")]
+        created = _real_part(id="don:core:dvrv-us-1:devo/1:part/100")
+        mock_client.parts.create.return_value = created
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            source_part_id=SRC_ID,
+            new_parent_part_id=NEW_PARENT_ID,
+            dry_run=False,
+            confirm=True,
+        )
+
+        assert result["success"] is True
+        assert result["counts"]["links_recreated"] == 1
+        mock_client.links.create.assert_called_once()
+        create_req = mock_client.links.create.call_args[0][0]
+        assert create_req.source == "don:core:dvrv-us-1:devo/1:part/100"
+        assert create_req.target == "don:core:dvrv-us-1:devo/1:ticket/9"
+        mock_client.links.delete.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_children_block_execution(self, mock_ctx, mock_client):
+        """Child parts block a confirmed move when recreate_children is False."""
+        mock_client.parts.get.side_effect = [
+            _real_part(),
+            _real_part(id=NEW_PARENT_ID, name="Parent"),
+        ]
+        child = _real_part(id="don:core:dvrv-us-1:devo/1:part/3", name="Child")
+        mock_client.parts.list.return_value = _list_resp([child], "parts")
+        mock_client.works.list.return_value = _list_resp([], "works")
+        mock_client.links.list.return_value = []
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            source_part_id=SRC_ID,
+            new_parent_part_id=NEW_PARENT_ID,
+            dry_run=False,
+            confirm=True,
+        )
+
+        assert result["success"] is False
+        assert "don:core:dvrv-us-1:devo/1:part/3" in result["unsupported_children"]
+        mock_client.parts.create.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_recreate_children_moves_subtree(self, mock_ctx, mock_client):
+        """recreate_children recursively recreates direct children."""
+        mock_client.parts.get.side_effect = [
+            _real_part(),
+            _real_part(id=NEW_PARENT_ID, name="Parent"),
+        ]
+        child = _real_part(id="don:core:dvrv-us-1:devo/1:part/3", name="Child")
+
+        def parts_list_side(**kwargs):
+            parent = kwargs["parent_part_parts"][0]
+            if parent == SRC_ID:
+                return _list_resp([child], "parts")
+            return _list_resp([], "parts")
+
+        mock_client.parts.list.side_effect = parts_list_side
+        mock_client.works.list.return_value = _list_resp([], "works")
+        mock_client.links.list.return_value = []
+        mock_client.parts.create.side_effect = [
+            _real_part(id="don:core:dvrv-us-1:devo/1:part/100"),
+            _real_part(id="don:core:dvrv-us-1:devo/1:part/101"),
+        ]
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            source_part_id=SRC_ID,
+            new_parent_part_id=NEW_PARENT_ID,
+            dry_run=False,
+            confirm=True,
+            recreate_children=True,
+        )
+
+        assert result["success"] is True
+        assert result["counts"]["parts_created"] == 2
+        assert mock_client.parts.create.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_delete_original_when_requested(self, mock_ctx, mock_client):
+        """delete_original removes the source part after a successful move."""
+        _configure_no_dependents(mock_client)
+        mock_client.parts.create.return_value = _real_part(id="don:core:dvrv-us-1:devo/1:part/100")
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            source_part_id=SRC_ID,
+            new_parent_part_id=NEW_PARENT_ID,
+            dry_run=False,
+            confirm=True,
+            delete_original=True,
+        )
+
+        assert result["success"] is True
+        assert result["counts"]["parts_deleted"] == 1
+        mock_client.parts.delete.assert_called_once()
+        delete_req = mock_client.parts.delete.call_args[0][0]
+        assert delete_req.id == SRC_ID
+
+    @pytest.mark.asyncio
+    async def test_move_api_error_raises_runtime_error(self, mock_ctx, mock_client):
+        """A DevRevError from the API surfaces as RuntimeError."""
+        mock_client.parts.get.side_effect = DevRevError("boom")
+
+        with pytest.raises(RuntimeError, match="boom"):
+            await devrev_parts_move(
+                mock_ctx, source_part_id=SRC_ID, new_parent_part_id=NEW_PARENT_ID
+            )

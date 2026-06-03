@@ -187,6 +187,18 @@ class TestWorksUpdateTool:
         call_kwargs = mock_client.works.update.call_args.kwargs
         assert call_kwargs["priority"] == IssuePriority.P0
 
+    async def test_update_with_applies_to_part(self, mock_ctx, mock_client):
+        """Test update re-parents a work item via applies_to_part."""
+        work = _make_mock_work({"id": "w1", "title": "Moved"})
+        mock_client.works.update.return_value = work
+
+        result = await devrev_works_update(
+            mock_ctx, id="w1", applies_to_part="don:core:dvrv-us-1:devo/1:part/99"
+        )
+        assert result["id"] == "w1"
+        call_kwargs = mock_client.works.update.call_args.kwargs
+        assert call_kwargs["applies_to_part"] == "don:core:dvrv-us-1:devo/1:part/99"
+
 
 class TestWorksDeleteTool:
     """Tests for devrev_works_delete tool."""
