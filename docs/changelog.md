@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [3.1.0] - 2026-06-16
+
+### Added
+
+- **Webhook management MCP tools** (CSS-1041) — New `devrev_webhooks_*` MCP
+  tools exposing the existing `WebhooksService` through the MCP server:
+  `devrev_webhooks_list` and `devrev_webhooks_get` (read-only), plus
+  `devrev_webhooks_create`, `devrev_webhooks_update`, and
+  `devrev_webhooks_delete` (registered only when destructive tools are
+  enabled). The module follows the established tool conventions (DON ID
+  validation, paginated list responses, `WebhookStatus` resolution on update)
+  and is registered in the core (non-beta) tool block. Documentation in
+  `docs/mcp/tools-reference.md` now covers all five tools plus an advisory
+  section on event types, target URL requirements, the signing `secret`, and
+  the webhook status lifecycle.
+
 ## [3.0.1] - 2026-04-22
 
 ### Changed
