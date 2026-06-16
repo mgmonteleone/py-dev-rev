@@ -30,7 +30,7 @@ class TestWebhooksService:
         service = WebhooksService(mock_http_client)
         request = WebhooksCreateRequest(
             url="https://example.com/webhook",
-            event_types=["work.created", "work.updated"],
+            event_types=["work_created", "work_updated"],
         )
         result = service.create(request)
 

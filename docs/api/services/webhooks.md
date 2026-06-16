@@ -35,7 +35,7 @@ import os
 
 response = client.webhooks.create(
     url="https://your-server.com/webhooks/devrev",
-    event_types=["work.created", "work.updated"],
+    event_types=["work_created", "work_updated"],
     secret=os.environ["WEBHOOK_SECRET"],  # Never hardcode!
 )
 print(f"Created: {response.webhook.id}")
@@ -46,7 +46,7 @@ print(f"Created: {response.webhook.id}")
 ```python
 response = client.webhooks.update(
     id="don:integration:dvrv-us-1:devo/1:webhook/123",
-    event_types=["work.created", "work.updated", "work.deleted"],
+    event_types=["work_created", "work_updated", "work_deleted"],
 )
 ```
 

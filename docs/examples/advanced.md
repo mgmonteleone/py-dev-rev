@@ -123,11 +123,11 @@ class WebhookHandler:
 # Usage example
 webhook = WebhookHandler(secret="your-webhook-secret")
 
-@webhook.on("work.created")
+@webhook.on("work_created")
 def handle_work_created(data):
     print(f"New work item: {data['work']['title']}")
 
-@webhook.on("work.updated")
+@webhook.on("work_updated")
 def handle_work_updated(data):
     print(f"Work updated: {data['work']['id']}")
 ```
