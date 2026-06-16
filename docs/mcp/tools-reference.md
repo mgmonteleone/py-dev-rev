@@ -6,7 +6,7 @@ icon: material/tools
 
 Complete reference of all MCP capabilities provided by the DevRev MCP Server.
 
-## Tools (83+)
+## Tools (88+)
 
 Tools are the primary way AI assistants interact with DevRev. Each tool maps to one or more DevRev API endpoints.
 
@@ -148,12 +148,37 @@ issues (engineering), and tasks.
 
 ### Webhooks
 
+Webhooks deliver DevRev events to an external HTTPS endpoint. Each webhook has a
+target `url`, an optional list of `event_types` to subscribe to (defaults to all
+events), and an optional `secret` used to sign payloads so the receiver can
+verify authenticity. A webhook's `status` moves through `unverified` → `active`
+once DevRev confirms the endpoint, and can be set to `inactive` to pause
+delivery.
+
 | Tool | Description |
 |------|-------------|
 | `devrev_webhooks_list` | List webhooks |
 | `devrev_webhooks_get` | Get webhook details |
 | `devrev_webhooks_create` | Create a webhook |
-| `devrev_webhooks_update` | Update a webhook |
+| `devrev_webhooks_update` | Update a webhook (url, event types, status) |
+| `devrev_webhooks_delete` | Delete a webhook |
+
+**Managing webhooks**
+
+- **Target URL** must be a publicly reachable HTTPS endpoint that responds to
+  DevRev's verification handshake; until it does, the webhook stays
+  `unverified` and no events are delivered.
+- **Event types** scope which events are sent. Omit `event_types` on create to
+  receive all event types, or pass a specific list (e.g. `work_created`,
+  `work_updated`) to narrow delivery.
+- **Secret** is a shared signing key — store it as a secret on the receiving
+  service and use it to verify each payload's signature. Never log or commit it.
+- **Status lifecycle**: `unverified` (awaiting handshake) → `active` (delivering)
+  ↔ `inactive` (paused). Use `devrev_webhooks_update` with `status` to pause or
+  resume a webhook.
+- **Typical workflow**: `devrev_webhooks_create` (register the endpoint) → verify
+  the endpoint so it becomes `active` → `devrev_webhooks_list` / `devrev_webhooks_get`
+  to confirm configuration → `devrev_webhooks_delete` when it is no longer needed.
 
 ### Beta Tools
 

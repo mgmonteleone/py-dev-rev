@@ -35,6 +35,7 @@ DON_TYPE_MAP: dict[str, str] = {
     "qa": "question_answer",
     "question_answer": "question_answer",
     "timeline_entry": "timeline_entry",
+    "webhook": "webhook",
 }
 
 TOOL_SUGGESTIONS: dict[str, str] = {
@@ -57,6 +58,7 @@ TOOL_SUGGESTIONS: dict[str, str] = {
     "qa": "devrev_question_answers_get",
     "question_answer": "devrev_question_answers_get",
     "timeline_entry": "devrev_timeline_get",
+    "webhook": "devrev_webhooks_get",
 }
 
 

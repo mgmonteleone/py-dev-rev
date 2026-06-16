@@ -84,7 +84,7 @@ This SDK is generated and maintained from the official DevRev OpenAPI specificat
 
 ### MCP Server (AI Integration)
 
-- ✅ **78+ MCP Tools** — Full CRUD for tickets, accounts, users, articles, and all DevRev resources
+- ✅ **83+ MCP Tools** — Full CRUD for tickets, accounts, users, articles, webhooks, and all DevRev resources
 - ✅ **7 Resource Templates** — `devrev://` URI scheme for AI-accessible data browsing
 - ✅ **8 Workflow Prompts** — Pre-built triage, escalation, investigation, and reporting workflows
 - ✅ **3 Transport Modes** — stdio (local), Streamable HTTP (production), SSE (legacy)
@@ -650,7 +650,7 @@ The DevRev MCP Server exposes the full DevRev platform as [Model Context Protoco
 
 ### MCP Server Features
 
-- **78+ MCP Tools** — Full CRUD for tickets, accounts, users, conversations, articles, parts, tags, groups, timeline, links, SLAs, plus beta tools (search, recommendations, incidents, engagements)
+- **83+ MCP Tools** — Full CRUD for tickets, accounts, users, conversations, articles, parts, tags, groups, timeline, links, SLAs, webhooks, plus beta tools (search, recommendations, incidents, engagements)
 - **7 Resource Templates** — `devrev://` URI scheme for browsing tickets, accounts, articles, users, parts, conversations
 - **8 Workflow Prompts** — Triage, draft response, escalate, summarize account, investigate, weekly report, find similar, onboard customer
 - **3 Transports** — stdio (local dev), Streamable HTTP (production), SSE (legacy)

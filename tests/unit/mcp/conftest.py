@@ -176,6 +176,14 @@ def mock_client():
     client.slas.update = AsyncMock()
     client.slas.transition = AsyncMock()
 
+    # Webhooks service
+    client.webhooks = AsyncMock()
+    client.webhooks.list = AsyncMock()
+    client.webhooks.get = AsyncMock()
+    client.webhooks.create = AsyncMock()
+    client.webhooks.update = AsyncMock()
+    client.webhooks.delete = AsyncMock()
+
     # Question Answers service
     client.question_answers = AsyncMock()
     client.question_answers.list = AsyncMock()

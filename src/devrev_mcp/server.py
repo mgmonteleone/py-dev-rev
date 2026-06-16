@@ -249,6 +249,7 @@ from devrev_mcp.tools import slas as _slas_tools  # noqa: E402, F401
 from devrev_mcp.tools import tags as _tags_tools  # noqa: E402, F401
 from devrev_mcp.tools import timeline as _timeline_tools  # noqa: E402, F401
 from devrev_mcp.tools import users as _users_tools  # noqa: E402, F401
+from devrev_mcp.tools import webhooks as _webhooks_tools  # noqa: E402, F401
 from devrev_mcp.tools import works as _works_tools  # noqa: E402, F401
 
 # Beta tools (only if beta tools are enabled)
