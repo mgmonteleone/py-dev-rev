@@ -123,7 +123,7 @@ def sample_webhook_data() -> dict[str, Any]:
     return {
         "id": "don:core:webhook:123",
         "url": "https://example.com/webhook",
-        "event_types": ["work.created", "work.updated"],
+        "event_types": ["work_created", "work_updated"],
     }
 
 

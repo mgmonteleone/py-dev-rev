@@ -121,7 +121,7 @@ def handle_webhook(request: Request):
     data = request.get_json()
     event_type = data.get("type")
     
-    if event_type == "work.created":
+    if event_type == "work_created":
         work = data.get("work", {})
         print(f"New work item: {work.get('title')}")
         

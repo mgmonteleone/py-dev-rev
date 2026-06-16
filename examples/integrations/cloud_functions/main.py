@@ -41,17 +41,17 @@ def handle_webhook(request: Request) -> tuple[dict[str, Any], int]:
     print(f"Received webhook: {event_type}")
 
     # Process different event types
-    if event_type == "work.created":
+    if event_type == "work_created":
         work = data.get("work", {})
         print(f"New work item created: {work.get('title')}")
         # Add your processing logic here
 
-    elif event_type == "work.updated":
+    elif event_type == "work_updated":
         work = data.get("work", {})
         print(f"Work item updated: {work.get('id')}")
         # Add your processing logic here
 
-    elif event_type == "conversation.created":
+    elif event_type == "conversation_created":
         conv = data.get("conversation", {})
         print(f"New conversation: {conv.get('id')}")
         # Add your processing logic here

@@ -13,6 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [3.1.1] - 2026-06-16
+
+### Changed
+
+- **Webhook event-type examples reconciled to underscore form** (CSS-1042) —
+  Pre-existing examples and docs that used the dotted DevRev webhook
+  event-type form (`work.created`) now use the canonical underscore form
+  (`work_created`, `work_updated`, `work_deleted`, `conversation_created`),
+  matching the form DevRev sends in webhook payloads and the form already used
+  by the README, SDK docs, and the webhooks MCP advisory. This corrects a
+  latent bug in the Google Cloud Functions example, whose handler compared the
+  incoming payload `type` against dotted strings that never matched.
+  Docs/examples only; no SDK or MCP behavior change.
+
 ## [3.1.0] - 2026-06-16
 
 ### Added
