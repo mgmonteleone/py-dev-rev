@@ -217,6 +217,7 @@ from devrev.models.notifications import (
     NotificationsSendResponse,
 )
 from devrev.models.parts import (
+    ParentPartFilter,
     Part,
     PartsCreateRequest,
     PartsCreateResponse,
@@ -672,6 +673,7 @@ __all__ = [
     "NotificationsSendRequest",
     "NotificationsSendResponse",
     # Parts
+    "ParentPartFilter",
     "Part",
     "PartSummary",
     "PartType",

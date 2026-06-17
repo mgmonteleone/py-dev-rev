@@ -11,6 +11,7 @@ from devrev.models.base import (
     DevRevBaseModel,
     DevRevResponseModel,
     PaginatedResponse,
+    TagWithValue,
     UserSummary,
 )
 
@@ -33,6 +34,7 @@ class Part(DevRevResponseModel):
     type: PartType | None = Field(default=None, description="Part type")
     description: str | None = Field(default=None, description="Description")
     owned_by: list[UserSummary] | None = Field(default=None, description="Owners")
+    tags: list[TagWithValue] | None = Field(default=None, description="Tags")
     created_date: datetime | None = Field(default=None, description="Creation date")
     modified_date: datetime | None = Field(default=None, description="Last modified")
 
@@ -87,12 +89,32 @@ class PartsDeleteRequest(DevRevBaseModel):
     id: str = Field(..., description="Part ID to delete")
 
 
+class ParentPartFilter(DevRevBaseModel):
+    """Hierarchy filter for ``parts.list`` to fetch parts under given parents.
+
+    Mirrors the DevRev ``parent_part`` query filter. ``parts`` lists the parent
+    part IDs to fetch the hierarchy for (required), and ``level`` optionally
+    bounds how many levels of the hierarchy to return (``level=1`` returns the
+    direct children of the given parents).
+    """
+
+    parts: list[str] = Field(
+        ..., min_length=1, description="Parent part IDs to fetch the hierarchy for"
+    )
+    level: int | None = Field(
+        default=None, ge=1, description="Number of levels of the hierarchy to fetch"
+    )
+
+
 class PartsListRequest(DevRevBaseModel):
     """Request to list parts."""
 
     cursor: str | None = Field(default=None, description="Pagination cursor")
     limit: int | None = Field(default=None, ge=1, le=100, description="Max results")
     type: list[PartType] | None = Field(default=None, description="Filter by type")
+    parent_part: ParentPartFilter | None = Field(
+        default=None, description="Filter by parent part hierarchy"
+    )
 
 
 class PartsUpdateRequest(DevRevBaseModel):
