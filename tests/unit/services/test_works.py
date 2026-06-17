@@ -130,6 +130,23 @@ class TestWorksService:
         assert isinstance(result, Work)
         assert result.title == "Updated Title"
 
+    def test_update_work_applies_to_part(
+        self,
+        mock_http_client: MagicMock,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Test re-parenting a work item via applies_to_part on update."""
+        mock_http_client.post.return_value = create_mock_response({"work": sample_work_data})
+
+        service = WorksService(mock_http_client)
+        result = service.update("don:core:issue:123", applies_to_part="PROD-2")
+
+        assert isinstance(result, Work)
+        mock_http_client.post.assert_called_once()
+        _, kwargs = mock_http_client.post.call_args
+        assert kwargs["data"]["applies_to_part"] == "PROD-2"
+        assert kwargs["data"]["id"] == "don:core:issue:123"
+
     def test_create_work_with_priority(
         self,
         mock_http_client: MagicMock,
@@ -604,6 +621,24 @@ class TestAsyncListSince:
 
         _, kwargs = mock_async_client.post.call_args
         assert kwargs["data"]["limit"] == 50
+
+    @pytest.mark.asyncio
+    async def test_async_update_work_applies_to_part(
+        self,
+        sample_work_data: dict[str, Any],
+    ) -> None:
+        """Async: re-parenting a work item via applies_to_part on update."""
+        mock_async_client = AsyncMock()
+        mock_async_client.post.return_value = create_mock_response({"work": sample_work_data})
+
+        service = AsyncWorksService(mock_async_client)
+        result = await service.update("don:core:issue:123", applies_to_part="PROD-2")
+
+        assert isinstance(result, Work)
+        mock_async_client.post.assert_called_once()
+        _, kwargs = mock_async_client.post.call_args
+        assert kwargs["data"]["applies_to_part"] == "PROD-2"
+        assert kwargs["data"]["id"] == "don:core:issue:123"
 
 
 class TestIsBeforeCutoffHelper:
