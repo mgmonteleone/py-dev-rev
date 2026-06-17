@@ -430,6 +430,57 @@ export_result = client.works.export(
 )
 ```
 
+### Managing Parts
+
+```python
+from devrev.models.parts import PartsCreateRequest, PartsMoveRequest, PartType
+
+# Create a feature under a capability
+feature = client.parts.create(PartsCreateRequest(
+    name="Bulk import",
+    type=PartType.FEATURE,
+    parent_part=["don:core:dvrv-us-1:devo/1:product/1"],
+))
+
+# Move (re-parent) a part under a new parent part
+#
+# The DevRev REST API only accepts `parent_part` on parts.create (not
+# parts.update), so move() implements a recreate-and-relink workaround: it
+# creates a new same-type part under the new parent (preserving name,
+# description, owners and tags), relinks work items (applies_to_part) and child
+# parts onto the new part, then deletes the original source part.
+#
+# CAVEAT: a real move is NOT an in-place update. It produces a NEW part id and
+# DELETES the original part. Update any references you hold to the old id.
+
+# Dry run first: returns the plan, mutates nothing.
+plan = client.parts.move(PartsMoveRequest(
+    id=feature.id,
+    new_parent_part="don:core:dvrv-us-1:devo/1:capability/2",
+    dry_run=True,
+))
+print(plan.plan.work_items_to_relink)       # work items that would be relinked
+print(plan.plan.child_parts_to_reparent)    # child parts that would be re-parented
+print(plan.plan.will_delete_source)         # True -> the source part will be deleted
+assert plan.source_deleted is False         # nothing was changed by the dry run
+
+# Real move: creates the new part, relinks dependents, deletes the source.
+result = client.parts.move(PartsMoveRequest(
+    id=feature.id,
+    new_parent_part="don:core:dvrv-us-1:devo/1:capability/2",
+))
+print(result.new_part_id)        # the NEW part id (the source id is now deleted)
+print(result.relinked_work_items)
+print(result.reparented_children)
+print(result.source_deleted)     # True
+```
+
+> **Note**: `move` requires the parts service be accessed via the client
+> (`client.parts`) because it coordinates with the works service to relink work
+> items. Via the MCP server, this is the `devrev_parts_move` tool, which is
+> gated behind `MCP_ENABLE_DESTRUCTIVE_TOOLS=true` (it creates and deletes
+> parts).
+
 ### Articles and Knowledge Base
 
 ```python
@@ -920,7 +971,7 @@ All settings are configurable via environment variables (prefix `MCP_`):
 | Users | 5 | dev list/get, rev list/get/create |
 | Conversations | 6 | list, get, create, update, delete, export |
 | Articles | 6 | list, get, create, update, delete, count |
-| Parts | 5 | list, get, create, update, delete |
+| Parts | 6 | list, get, create, update, delete, move |
 | Tags | 5 | list, get, create, update, delete |
 | Groups | 8 | list, get, create, update, delete, add/remove member, count |
 | Timeline | 5 | list, get, create, update, delete |
@@ -953,13 +1004,13 @@ py-devrev/
 │       ├── __main__.py         # CLI entry point
 │       ├── server.py           # FastMCP server setup & lifecycle
 │       ├── config.py           # MCPServerConfig (pydantic-settings)
-│       ├── tools/              # 78 MCP tools across 15 categories
+│       ├── tools/              # 79 MCP tools across 15 categories
 │       │   ├── works.py        # Works: list, get, create, update, delete, count, search
 │       │   ├── accounts.py     # Accounts: list, get, create, update, delete, merge
 │       │   ├── users.py        # Users: list/get dev users, list/get rev users, whoami
 │       │   ├── conversations.py # Conversations: list, get, create, update, delete, export
 │       │   ├── articles.py     # Articles: list, get, create, update, delete, count
-│       │   ├── parts.py        # Parts: list, get, create, update, delete
+│       │   ├── parts.py        # Parts: list, get, create, update, delete, move
 │       │   ├── tags.py         # Tags: list, get, create, update, delete
 │       │   ├── groups.py       # Groups: CRUD + member management + count
 │       │   ├── timeline.py     # Timeline: list, get, create, update, delete
