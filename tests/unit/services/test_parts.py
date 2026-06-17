@@ -362,6 +362,11 @@ class TestPartsServiceMove:
         """move requires a parent client to reach the works service."""
         service = PartsService(mock_http_client)
         service.get = MagicMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        # The self-move/cycle guard walks children (read-only) before reaching
+        # the works service; return no children so it falls through.
+        service.list = MagicMock(  # type: ignore[method-assign]
+            return_value=PartsListResponse.model_validate({"parts": []})
+        )
 
         with pytest.raises(DevRevError, match="requires a parent client"):
             service.move(
@@ -390,30 +395,39 @@ class TestPartsServiceMove:
 
         works.list.side_effect = _works_list
         works.update.return_value = None
-        # Two pages of children, then empty pages for each child's own move.
-        service.list = MagicMock(  # type: ignore[method-assign]
-            side_effect=[
-                PartsListResponse.model_validate(
-                    {
-                        "parts": [{"id": "don:core:part:c1", "name": "c1", "type": "feature"}],
-                        "next_cursor": "p1",
-                    }
-                ),
-                PartsListResponse.model_validate(
+
+        # Children of src arrive across two paginated pages (c1 then c2); every
+        # other part (and the new parent) has no children. Keyed on the parent
+        # filter + cursor so the lookup is robust to the read-only self-move/cycle
+        # guard walking the subtree before the move itself re-walks it.
+        def _list(**kwargs: Any) -> PartsListResponse:
+            parent = kwargs.get("parent_part")
+            cursor = kwargs.get("cursor")
+            if parent is not None and parent.parts == ["don:core:part:src"]:
+                if cursor is None:
+                    return PartsListResponse.model_validate(
+                        {
+                            "parts": [{"id": "don:core:part:c1", "name": "c1", "type": "feature"}],
+                            "next_cursor": "p1",
+                        }
+                    )
+                return PartsListResponse.model_validate(
                     {"parts": [{"id": "don:core:part:c2", "name": "c2", "type": "feature"}]}
-                ),
-                # children of c1 (during its move): empty
-                PartsListResponse.model_validate({"parts": []}),
-                # children of c2 (during its move): empty
-                PartsListResponse.model_validate({"parts": []}),
-            ]
+                )
+            return PartsListResponse.model_validate({"parts": []})
+
+        service.list = MagicMock(side_effect=_list)  # type: ignore[method-assign]
+
+        # get is called for the source and for each child move; keyed by id so it
+        # is robust to call ordering/count.
+        parts_by_id = {
+            "don:core:part:src": source,
+            "don:core:part:c1": _make_part("don:core:part:c1"),
+            "don:core:part:c2": _make_part("don:core:part:c2"),
+        }
+        service.get = MagicMock(  # type: ignore[method-assign]
+            side_effect=lambda req: parts_by_id[req.id]
         )
-        # get is called again for each child move.
-        service.get.side_effect = [
-            source,
-            _make_part("don:core:part:c1"),
-            _make_part("don:core:part:c2"),
-        ]
 
         result = service.move(
             PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:newp")
@@ -438,6 +452,118 @@ class TestPartsServiceMove:
                 PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:newp")
             )
         service.create.assert_not_called()
+
+    def test_self_move_raises_before_mutation(self, mock_http_client: MagicMock) -> None:
+        """new_parent_part == id is rejected before any create/delete/relink."""
+        service, works = self._service_with_works(mock_http_client)
+        source = _make_part("don:core:part:src")
+        service.get = MagicMock(return_value=source)  # type: ignore[method-assign]
+        service.create = MagicMock()  # type: ignore[method-assign]
+        service.delete = MagicMock()  # type: ignore[method-assign]
+        service.list = MagicMock(  # type: ignore[method-assign]
+            return_value=PartsListResponse.model_validate({"parts": []})
+        )
+
+        with pytest.raises(DevRevError, match="under itself"):
+            service.move(
+                PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:src")
+            )
+
+        # No mutation occurred -> no data loss.
+        service.create.assert_not_called()
+        service.delete.assert_not_called()
+        works.update.assert_not_called()
+
+    def test_self_move_rejected_even_for_dry_run(self, mock_http_client: MagicMock) -> None:
+        """A self-move is invalid regardless of dry_run -> still raises."""
+        service, works = self._service_with_works(mock_http_client)
+        service.get = MagicMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        service.create = MagicMock()  # type: ignore[method-assign]
+        service.delete = MagicMock()  # type: ignore[method-assign]
+        service.list = MagicMock(  # type: ignore[method-assign]
+            return_value=PartsListResponse.model_validate({"parts": []})
+        )
+
+        with pytest.raises(DevRevError, match="under itself"):
+            service.move(
+                PartsMoveRequest(
+                    id="don:core:part:src",
+                    new_parent_part="don:core:part:src",
+                    dry_run=True,
+                )
+            )
+        service.create.assert_not_called()
+        service.delete.assert_not_called()
+
+    def test_move_under_descendant_raises_before_mutation(
+        self, mock_http_client: MagicMock
+    ) -> None:
+        """new_parent_part being a (deep) descendant of source is a cycle -> reject."""
+        service, works = self._service_with_works(mock_http_client)
+        source = _make_part("don:core:part:src")
+        service.get = MagicMock(return_value=source)  # type: ignore[method-assign]
+        service.create = MagicMock()  # type: ignore[method-assign]
+        service.delete = MagicMock()  # type: ignore[method-assign]
+
+        # Subtree: src -> child -> grandchild. Target the grandchild (a deep
+        # descendant) to prove the walk goes beyond direct children.
+        def _list(**kwargs: Any) -> PartsListResponse:
+            parent = kwargs.get("parent_part")
+            if parent is not None and parent.parts == ["don:core:part:src"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:child", "name": "c", "type": "feature"}]}
+                )
+            if parent is not None and parent.parts == ["don:core:part:child"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:gc", "name": "gc", "type": "feature"}]}
+                )
+            return PartsListResponse.model_validate({"parts": []})
+
+        service.list = MagicMock(side_effect=_list)  # type: ignore[method-assign]
+
+        with pytest.raises(DevRevError, match="descendant"):
+            service.move(
+                PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:gc")
+            )
+
+        service.create.assert_not_called()
+        service.delete.assert_not_called()
+        works.update.assert_not_called()
+
+    def test_descendant_walk_tolerates_cyclic_hierarchy(self, mock_http_client: MagicMock) -> None:
+        """A malformed hierarchy with a cycle does not hang the descendant walk.
+
+        The ``visited`` guard in ``_collect_descendant_ids`` must terminate even
+        when the data forms a loop (src -> a -> src). Targeting ``a`` (a real
+        descendant) makes the cycle guard fire before any recursive move, so the
+        test proves both termination and rejection without mutating anything.
+        """
+        service, works = self._service_with_works(mock_http_client)
+        service.get = MagicMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        service.create = MagicMock()  # type: ignore[method-assign]
+        service.delete = MagicMock()  # type: ignore[method-assign]
+
+        # src -> a -> src (cycle in the data).
+        def _list(**kwargs: Any) -> PartsListResponse:
+            parent = kwargs.get("parent_part")
+            if parent is not None and parent.parts == ["don:core:part:src"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:a", "name": "a", "type": "feature"}]}
+                )
+            if parent is not None and parent.parts == ["don:core:part:a"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:src", "name": "s", "type": "feature"}]}
+                )
+            return PartsListResponse.model_validate({"parts": []})
+
+        service.list = MagicMock(side_effect=_list)  # type: ignore[method-assign]
+
+        with pytest.raises(DevRevError, match="descendant"):
+            service.move(
+                PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:a")
+            )
+        service.create.assert_not_called()
+        service.delete.assert_not_called()
 
 
 class TestAsyncPartsServiceMove:
@@ -573,8 +699,124 @@ class TestAsyncPartsServiceMove:
         """Async move requires a parent client to reach works."""
         service = AsyncPartsService(mock_async_http_client)
         service.get = AsyncMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        # The self-move/cycle guard walks children (read-only) before reaching
+        # the works service; return no children so it falls through.
+        service.list = AsyncMock(  # type: ignore[method-assign]
+            return_value=PartsListResponse.model_validate({"parts": []})
+        )
 
         with pytest.raises(DevRevError, match="requires a parent client"):
             await service.move(
                 PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:newp")
             )
+
+    @pytest.mark.asyncio
+    async def test_async_self_move_raises_before_mutation(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        """Async new_parent_part == id is rejected before any mutation."""
+        service, works = self._service_with_works(mock_async_http_client)
+        service.get = AsyncMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        service.create = AsyncMock()  # type: ignore[method-assign]
+        service.delete = AsyncMock()  # type: ignore[method-assign]
+        service.list = AsyncMock(  # type: ignore[method-assign]
+            return_value=PartsListResponse.model_validate({"parts": []})
+        )
+
+        with pytest.raises(DevRevError, match="under itself"):
+            await service.move(
+                PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:src")
+            )
+
+        service.create.assert_not_called()
+        service.delete.assert_not_called()
+        works.update.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_async_self_move_rejected_even_for_dry_run(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        """Async self-move is invalid regardless of dry_run -> still raises."""
+        service, works = self._service_with_works(mock_async_http_client)
+        service.get = AsyncMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        service.create = AsyncMock()  # type: ignore[method-assign]
+        service.delete = AsyncMock()  # type: ignore[method-assign]
+        service.list = AsyncMock(  # type: ignore[method-assign]
+            return_value=PartsListResponse.model_validate({"parts": []})
+        )
+
+        with pytest.raises(DevRevError, match="under itself"):
+            await service.move(
+                PartsMoveRequest(
+                    id="don:core:part:src",
+                    new_parent_part="don:core:part:src",
+                    dry_run=True,
+                )
+            )
+        service.create.assert_not_called()
+        service.delete.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_async_move_under_descendant_raises_before_mutation(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        """Async new_parent_part being a deep descendant is a cycle -> reject."""
+        service, works = self._service_with_works(mock_async_http_client)
+        service.get = AsyncMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        service.create = AsyncMock()  # type: ignore[method-assign]
+        service.delete = AsyncMock()  # type: ignore[method-assign]
+
+        # Subtree: src -> child -> grandchild. Target the grandchild.
+        def _list(**kwargs: Any) -> PartsListResponse:
+            parent = kwargs.get("parent_part")
+            if parent is not None and parent.parts == ["don:core:part:src"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:child", "name": "c", "type": "feature"}]}
+                )
+            if parent is not None and parent.parts == ["don:core:part:child"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:gc", "name": "gc", "type": "feature"}]}
+                )
+            return PartsListResponse.model_validate({"parts": []})
+
+        service.list = AsyncMock(side_effect=_list)  # type: ignore[method-assign]
+
+        with pytest.raises(DevRevError, match="descendant"):
+            await service.move(
+                PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:gc")
+            )
+
+        service.create.assert_not_called()
+        service.delete.assert_not_called()
+        works.update.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_async_descendant_walk_tolerates_cyclic_hierarchy(
+        self, mock_async_http_client: AsyncMock
+    ) -> None:
+        """Async cyclic hierarchy (src -> a -> src) terminates and rejects."""
+        service, works = self._service_with_works(mock_async_http_client)
+        service.get = AsyncMock(return_value=_make_part("don:core:part:src"))  # type: ignore[method-assign]
+        service.create = AsyncMock()  # type: ignore[method-assign]
+        service.delete = AsyncMock()  # type: ignore[method-assign]
+
+        def _list(**kwargs: Any) -> PartsListResponse:
+            parent = kwargs.get("parent_part")
+            if parent is not None and parent.parts == ["don:core:part:src"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:a", "name": "a", "type": "feature"}]}
+                )
+            if parent is not None and parent.parts == ["don:core:part:a"]:
+                return PartsListResponse.model_validate(
+                    {"parts": [{"id": "don:core:part:src", "name": "s", "type": "feature"}]}
+                )
+            return PartsListResponse.model_validate({"parts": []})
+
+        service.list = AsyncMock(side_effect=_list)  # type: ignore[method-assign]
+
+        with pytest.raises(DevRevError, match="descendant"):
+            await service.move(
+                PartsMoveRequest(id="don:core:part:src", new_parent_part="don:core:part:a")
+            )
+        service.create.assert_not_called()
+        service.delete.assert_not_called()

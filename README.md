@@ -439,7 +439,7 @@ from devrev.models.parts import PartsCreateRequest, PartsMoveRequest, PartType
 feature = client.parts.create(PartsCreateRequest(
     name="Bulk import",
     type=PartType.FEATURE,
-    parent_part=["don:core:dvrv-us-1:devo/1:product/1"],
+    parent_part=["don:core:dvrv-us-1:devo/1:part/1"],
 ))
 
 # Move (re-parent) a part under a new parent part
@@ -456,7 +456,7 @@ feature = client.parts.create(PartsCreateRequest(
 # Dry run first: returns the plan, mutates nothing.
 plan = client.parts.move(PartsMoveRequest(
     id=feature.id,
-    new_parent_part="don:core:dvrv-us-1:devo/1:capability/2",
+    new_parent_part="don:core:dvrv-us-1:devo/1:part/2",
     dry_run=True,
 ))
 print(plan.plan.work_items_to_relink)       # work items that would be relinked
@@ -467,7 +467,7 @@ assert plan.source_deleted is False         # nothing was changed by the dry run
 # Real move: creates the new part, relinks dependents, deletes the source.
 result = client.parts.move(PartsMoveRequest(
     id=feature.id,
-    new_parent_part="don:core:dvrv-us-1:devo/1:capability/2",
+    new_parent_part="don:core:dvrv-us-1:devo/1:part/2",
 ))
 print(result.new_part_id)        # the NEW part id (the source id is now deleted)
 print(result.relinked_work_items)

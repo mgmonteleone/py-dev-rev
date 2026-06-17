@@ -124,6 +124,50 @@ class PartsService(BaseService):
             cursor = page.next_cursor
         return child_ids
 
+    def _collect_descendant_ids(self, source_id: str) -> set[str]:
+        """Return the IDs of every descendant of ``source_id`` (whole subtree).
+
+        Performs a bounded breadth-first walk over the part hierarchy using the
+        existing ``_list_child_part_ids`` (level-1) lookup at each node. A
+        ``visited`` set guards against re-processing a node, so a malformed
+        hierarchy that contains a cycle cannot cause an infinite loop. The
+        source itself is never included in the returned set.
+        """
+        descendants: set[str] = set()
+        visited: set[str] = {source_id}
+        frontier: _StrList = [source_id]
+        while frontier:
+            current = frontier.pop()
+            for child_id in self._list_child_part_ids(current):
+                if child_id in visited:
+                    continue
+                visited.add(child_id)
+                descendants.add(child_id)
+                frontier.append(child_id)
+        return descendants
+
+    def _validate_move_target(self, source: Part, request: PartsMoveRequest) -> None:
+        """Reject self-moves and cycles before any mutation occurs.
+
+        A move whose ``new_parent_part`` is the source itself (self-move) or a
+        descendant of the source (cycle) would, under the recreate-and-relink
+        workaround, create the replacement part under the soon-to-be-deleted
+        source and then delete it -- destroying the new part (data loss). This
+        guard runs read-only lookups only and raises before create/relink/delete.
+        """
+        if request.new_parent_part == source.id:
+            raise DevRevError(
+                f"Cannot move part {source.id!r} under itself "
+                f"(new_parent_part == id): a self-move would orphan and delete "
+                "the recreated part."
+            )
+        if request.new_parent_part in self._collect_descendant_ids(source.id):
+            raise DevRevError(
+                f"Cannot move part {source.id!r} under its own descendant "
+                f"{request.new_parent_part!r}: this would create a cycle and "
+                "destroy the recreated part when the source is deleted."
+            )
+
     def _list_applies_to_work_ids(self, source_id: str) -> _StrList:
         """Return the IDs of all work items that apply to ``source_id``.
 
@@ -176,6 +220,12 @@ class PartsService(BaseService):
         source last. If any relink or re-parent fails, the source part is left
         intact (not deleted) so nothing is orphaned and the error is surfaced.
 
+        Before any mutation (and before computing the plan), the request is
+        validated against self-moves and cycles: ``new_parent_part`` may not be
+        the source itself nor any descendant of the source. Both checks run
+        read-only lookups only and apply to dry runs as well, since such a
+        request is invalid regardless of ``dry_run``.
+
         Args:
             request: The move request (source id, new parent id, dry_run flag).
 
@@ -185,10 +235,13 @@ class PartsService(BaseService):
             False, and ``plan`` describes what would happen with no mutations.
 
         Raises:
-            DevRevError: If no parent client is available, or if a relink or
-                re-parent fails (the source is not deleted in that case).
+            DevRevError: If no parent client is available; if ``new_parent_part``
+                is the source itself (self-move) or one of its descendants
+                (cycle); or if a relink or re-parent fails (the source is not
+                deleted in that case).
         """
         source = self.get(PartsGetRequest(id=request.id))
+        self._validate_move_target(source, request)
         plan = self._compute_move_plan(source, request)
 
         if request.dry_run:
@@ -308,6 +361,50 @@ class AsyncPartsService(AsyncBaseService):
             cursor = page.next_cursor
         return child_ids
 
+    async def _collect_descendant_ids(self, source_id: str) -> set[str]:
+        """Return the IDs of every descendant of ``source_id`` (whole subtree).
+
+        Performs a bounded breadth-first walk over the part hierarchy using the
+        existing ``_list_child_part_ids`` (level-1) lookup at each node. A
+        ``visited`` set guards against re-processing a node, so a malformed
+        hierarchy that contains a cycle cannot cause an infinite loop. The
+        source itself is never included in the returned set.
+        """
+        descendants: set[str] = set()
+        visited: set[str] = {source_id}
+        frontier: _StrList = [source_id]
+        while frontier:
+            current = frontier.pop()
+            for child_id in await self._list_child_part_ids(current):
+                if child_id in visited:
+                    continue
+                visited.add(child_id)
+                descendants.add(child_id)
+                frontier.append(child_id)
+        return descendants
+
+    async def _validate_move_target(self, source: Part, request: PartsMoveRequest) -> None:
+        """Reject self-moves and cycles before any mutation occurs.
+
+        A move whose ``new_parent_part`` is the source itself (self-move) or a
+        descendant of the source (cycle) would, under the recreate-and-relink
+        workaround, create the replacement part under the soon-to-be-deleted
+        source and then delete it -- destroying the new part (data loss). This
+        guard runs read-only lookups only and raises before create/relink/delete.
+        """
+        if request.new_parent_part == source.id:
+            raise DevRevError(
+                f"Cannot move part {source.id!r} under itself "
+                f"(new_parent_part == id): a self-move would orphan and delete "
+                "the recreated part."
+            )
+        if request.new_parent_part in await self._collect_descendant_ids(source.id):
+            raise DevRevError(
+                f"Cannot move part {source.id!r} under its own descendant "
+                f"{request.new_parent_part!r}: this would create a cycle and "
+                "destroy the recreated part when the source is deleted."
+            )
+
     async def _list_applies_to_work_ids(self, source_id: str) -> _StrList:
         """Return the IDs of all work items that apply to ``source_id``.
 
@@ -360,6 +457,12 @@ class AsyncPartsService(AsyncBaseService):
         source last. If any relink or re-parent fails, the source part is left
         intact (not deleted) so nothing is orphaned and the error is surfaced.
 
+        Before any mutation (and before computing the plan), the request is
+        validated against self-moves and cycles: ``new_parent_part`` may not be
+        the source itself nor any descendant of the source. Both checks run
+        read-only lookups only and apply to dry runs as well, since such a
+        request is invalid regardless of ``dry_run``.
+
         Args:
             request: The move request (source id, new parent id, dry_run flag).
 
@@ -369,10 +472,13 @@ class AsyncPartsService(AsyncBaseService):
             False, and ``plan`` describes what would happen with no mutations.
 
         Raises:
-            DevRevError: If no parent client is available, or if a relink or
-                re-parent fails (the source is not deleted in that case).
+            DevRevError: If no parent client is available; if ``new_parent_part``
+                is the source itself (self-move) or one of its descendants
+                (cycle); or if a relink or re-parent fails (the source is not
+                deleted in that case).
         """
         source = await self.get(PartsGetRequest(id=request.id))
+        await self._validate_move_target(source, request)
         plan = await self._compute_move_plan(source, request)
 
         if request.dry_run:
