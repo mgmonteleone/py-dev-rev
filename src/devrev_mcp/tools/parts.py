@@ -16,6 +16,7 @@ from devrev.models.parts import (
     PartsCreateRequest,
     PartsDeleteRequest,
     PartsGetRequest,
+    PartsMoveRequest,
     PartsUpdateRequest,
     PartType,
 )
@@ -189,5 +190,57 @@ if _config.enable_destructive_tools:
         try:
             await app.get_client().parts.delete(PartsDeleteRequest(id=id))
             return {"success": True, "message": f"Part {id} deleted successfully"}
+        except DevRevError as e:
+            raise RuntimeError(format_devrev_error(e)) from e
+
+    @mcp.tool()
+    async def devrev_parts_move(
+        ctx: Context[Any, Any, Any],
+        id: str,
+        new_parent_part: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Move (re-parent) a DevRev part under a new parent part.
+
+        This is NOT an in-place update. The DevRev REST API does not allow
+        changing a part's parent, so this operation RECREATES the part under the
+        new parent (giving it a NEW id), relinks dependents (work items that
+        apply to the source part and child parts of the source), and then, on a
+        real run, DELETES the original source part.
+
+        When ``dry_run`` is True, the move plan is computed and returned WITHOUT
+        mutating anything: no part is created, no dependents are relinked, and
+        the source part is not deleted. Use a dry run to review the impact
+        (``plan.work_items_to_relink``, ``plan.child_parts_to_reparent``,
+        ``plan.will_delete_source``) before performing a real move.
+
+        Args:
+            id: The ID of the part to move (re-parent). This part is recreated
+                under the new parent and, on a real run, deleted.
+            new_parent_part: The ID of the target parent part to move under.
+            dry_run: If True, return the computed move plan without applying any
+                changes. Defaults to False (perform the move).
+
+        Returns:
+            Dictionary containing the serialized move result, including the
+            new part ID, the original source part ID, the relinked work items,
+            the re-parented child parts, whether the source was deleted, the
+            dry-run flag, and the nested move plan.
+
+        Raises:
+            RuntimeError: If a provided ID is not a valid part DON ID, or if the
+                DevRev API call fails.
+        """
+        validate_don_id(id, "part", "devrev_parts_move")
+        validate_don_id(new_parent_part, "part", "devrev_parts_move")
+        app = ctx.request_context.lifespan_context
+        try:
+            request = PartsMoveRequest(
+                id=id,
+                new_parent_part=new_parent_part,
+                dry_run=dry_run,
+            )
+            result = await app.get_client().parts.move(request)
+            return serialize_model(result)
         except DevRevError as e:
             raise RuntimeError(format_devrev_error(e)) from e
