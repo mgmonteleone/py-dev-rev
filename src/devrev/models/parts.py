@@ -131,3 +131,75 @@ class PartsDeleteResponse(DevRevResponseModel):
     """Response from deleting a part."""
 
     pass
+
+
+class PartsMoveRequest(DevRevBaseModel):
+    """Request to move (re-parent) a part.
+
+    The DevRev REST API only accepts ``parent_part`` on ``parts.create``, not
+    ``parts.update``. This SDK-level convenience request describes a higher-level
+    "move" operation that re-parents a part by recreating it under a new parent
+    and relinking its dependents. It is NOT a direct DevRev API request body.
+    """
+
+    id: str = Field(..., description="ID of the part to move (re-parent)")
+    new_parent_part: str = Field(
+        ..., description="Target parent part ID under which the part should be moved"
+    )
+    dry_run: bool = Field(
+        default=False,
+        description="If True, compute and return the move plan without executing it",
+    )
+
+
+class PartsMovePlan(DevRevResponseModel):
+    """Plan describing what a part move (re-parent) would do.
+
+    Computed before (or instead of, for a dry run) executing a move so callers
+    can review the dependents that will be relinked or re-parented.
+    """
+
+    source_part_id: str = Field(..., description="ID of the part to be moved")
+    source_part_type: str | None = Field(
+        default=None, description="Type of the source part (product, capability, etc.)"
+    )
+    new_parent_part: str = Field(
+        ..., description="Target parent part ID the source will be moved under"
+    )
+    work_items_to_relink: list[str] = Field(
+        default_factory=list,
+        description="IDs of work items currently applies_to the source part that will be relinked",
+    )
+    child_parts_to_reparent: list[str] = Field(
+        default_factory=list,
+        description="IDs of child parts of the source that will be re-parented",
+    )
+    will_delete_source: bool = Field(
+        default=False,
+        description="Whether the original source part will be deleted after the move",
+    )
+
+
+class PartsMoveResult(DevRevResponseModel):
+    """Outcome of an executed (or dry-run) part move (re-parent) operation."""
+
+    new_part_id: str = Field(..., description="ID of the newly created part under the new parent")
+    source_part_id: str = Field(..., description="ID of the original source part that was moved")
+    relinked_work_items: list[str] = Field(
+        default_factory=list,
+        description="IDs of work items that were relinked from the source to the new part",
+    )
+    reparented_children: list[str] = Field(
+        default_factory=list,
+        description="IDs of child parts that were re-parented under the new part",
+    )
+    source_deleted: bool = Field(
+        default=False, description="Whether the original source part was deleted"
+    )
+    dry_run: bool = Field(
+        default=False,
+        description="Whether this result describes a dry run (no changes were applied)",
+    )
+    plan: PartsMovePlan = Field(
+        ..., description="The move plan that was computed for this operation"
+    )
