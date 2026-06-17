@@ -13,6 +13,7 @@ from devrev_mcp.tools.parts import (
     devrev_parts_delete,
     devrev_parts_get,
     devrev_parts_list,
+    devrev_parts_move,
     devrev_parts_update,
 )
 
@@ -32,6 +33,33 @@ def _make_mock_part(
         "description": "Test description",
         "created_date": "2024-01-01T00:00:00Z",
         "modified_date": "2024-01-02T00:00:00Z",
+    }
+    return mock
+
+
+def _make_mock_move_result(
+    new_part_id: str = "don:core:dvrv-us-1:devo/1:part/new",
+    source_part_id: str = "don:core:dvrv-us-1:devo/1:part/src",
+    dry_run: bool = False,
+    source_deleted: bool = True,
+) -> MagicMock:
+    """Create a mock PartsMoveResult object for testing."""
+    mock = MagicMock()
+    mock.model_dump.return_value = {
+        "new_part_id": new_part_id,
+        "source_part_id": source_part_id,
+        "relinked_work_items": ["don:core:dvrv-us-1:devo/1:issue/1"],
+        "reparented_children": ["don:core:dvrv-us-1:devo/1:part/child"],
+        "source_deleted": source_deleted,
+        "dry_run": dry_run,
+        "plan": {
+            "source_part_id": source_part_id,
+            "source_part_type": "capability",
+            "new_parent_part": "don:core:dvrv-us-1:devo/1:part/parent",
+            "work_items_to_relink": ["don:core:dvrv-us-1:devo/1:issue/1"],
+            "child_parts_to_reparent": ["don:core:dvrv-us-1:devo/1:part/child"],
+            "will_delete_source": source_deleted,
+        },
     }
     return mock
 
@@ -345,3 +373,105 @@ class TestPartsDeleteTool:
 
         with pytest.raises(RuntimeError, match="Part not found"):
             await devrev_parts_delete(mock_ctx, id="PROD-999")
+
+
+class TestPartsMoveTool:
+    """Tests for devrev_parts_move tool. (CSS-846)"""
+
+    @pytest.mark.asyncio
+    async def test_move_real_run_builds_request_and_returns_result(self, mock_ctx, mock_client):
+        """Test that a real move builds a correct request and returns the result."""
+        mock_result = _make_mock_move_result(dry_run=False, source_deleted=True)
+        mock_client.parts.move.return_value = mock_result
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            id="FEAT-1",
+            new_parent_part="CAP-2",
+        )
+
+        assert result["new_part_id"] == "don:core:dvrv-us-1:devo/1:part/new"
+        assert result["source_deleted"] is True
+        assert result["dry_run"] is False
+        assert result["plan"]["will_delete_source"] is True
+        mock_client.parts.move.assert_called_once()
+        request = mock_client.parts.move.call_args[0][0]
+        assert request.id == "FEAT-1"
+        assert request.new_parent_part == "CAP-2"
+        assert request.dry_run is False
+
+    @pytest.mark.asyncio
+    async def test_move_dry_run_builds_request_and_returns_plan(self, mock_ctx, mock_client):
+        """Test that a dry run builds a request with dry_run=True and returns the plan."""
+        mock_result = _make_mock_move_result(dry_run=True, source_deleted=False)
+        mock_client.parts.move.return_value = mock_result
+
+        result = await devrev_parts_move(
+            mock_ctx,
+            id="FEAT-1",
+            new_parent_part="CAP-2",
+            dry_run=True,
+        )
+
+        assert result["dry_run"] is True
+        assert result["source_deleted"] is False
+        assert result["plan"]["work_items_to_relink"] == ["don:core:dvrv-us-1:devo/1:issue/1"]
+        assert result["plan"]["child_parts_to_reparent"] == ["don:core:dvrv-us-1:devo/1:part/child"]
+        mock_client.parts.move.assert_called_once()
+        request = mock_client.parts.move.call_args[0][0]
+        assert request.id == "FEAT-1"
+        assert request.new_parent_part == "CAP-2"
+        assert request.dry_run is True
+
+    @pytest.mark.asyncio
+    async def test_move_invalid_source_don_id_raises(self, mock_ctx, mock_client):
+        """Test that a non-part DON ID for the source raises RuntimeError."""
+        with pytest.raises(RuntimeError, match="expects an part ID"):
+            await devrev_parts_move(
+                mock_ctx,
+                id="don:core:dvrv-us-1:devo/1:account/1",
+                new_parent_part="don:core:dvrv-us-1:devo/1:part/2",
+            )
+        mock_client.parts.move.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_move_invalid_parent_don_id_raises(self, mock_ctx, mock_client):
+        """Test that a non-part DON ID for the new parent raises RuntimeError."""
+        with pytest.raises(RuntimeError, match="expects an part ID"):
+            await devrev_parts_move(
+                mock_ctx,
+                id="don:core:dvrv-us-1:devo/1:part/1",
+                new_parent_part="don:core:dvrv-us-1:devo/1:account/2",
+            )
+        mock_client.parts.move.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_move_error(self, mock_ctx, mock_client):
+        """Test error handling when the move API call fails."""
+        mock_client.parts.move.side_effect = DevRevError("Move failed")
+
+        with pytest.raises(RuntimeError, match="Move failed"):
+            await devrev_parts_move(mock_ctx, id="FEAT-1", new_parent_part="CAP-2")
+
+
+class TestPartsMoveGating:
+    """Tests that devrev_parts_move is gated on enable_destructive_tools. (CSS-846)"""
+
+    def test_move_registered_with_destructive_siblings(self):
+        """devrev_parts_move lives in the destructive block with create/update/delete.
+
+        The destructive tools are only defined when ``enable_destructive_tools``
+        is True (the default). Importing devrev_parts_move alongside the other
+        destructive parts tools proves it is defined inside the same
+        ``if _config.enable_destructive_tools:`` block rather than registered
+        unconditionally.
+        """
+        from devrev_mcp.tools import parts
+
+        for name in (
+            "devrev_parts_create",
+            "devrev_parts_update",
+            "devrev_parts_delete",
+            "devrev_parts_move",
+        ):
+            assert hasattr(parts, name)

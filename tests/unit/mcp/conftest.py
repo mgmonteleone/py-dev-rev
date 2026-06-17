@@ -124,6 +124,7 @@ def mock_client():
     client.parts.create = AsyncMock()
     client.parts.update = AsyncMock()
     client.parts.delete = AsyncMock()
+    client.parts.move = AsyncMock()
 
     # Tags service
     client.tags = AsyncMock()

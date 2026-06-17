@@ -217,6 +217,7 @@ from devrev.models.notifications import (
     NotificationsSendResponse,
 )
 from devrev.models.parts import (
+    ParentPartFilter,
     Part,
     PartsCreateRequest,
     PartsCreateResponse,
@@ -226,6 +227,9 @@ from devrev.models.parts import (
     PartsGetResponse,
     PartsListRequest,
     PartsListResponse,
+    PartsMovePlan,
+    PartsMoveRequest,
+    PartsMoveResult,
     PartSummary,
     PartsUpdateRequest,
     PartsUpdateResponse,
@@ -669,6 +673,7 @@ __all__ = [
     "NotificationsSendRequest",
     "NotificationsSendResponse",
     # Parts
+    "ParentPartFilter",
     "Part",
     "PartSummary",
     "PartType",
@@ -682,6 +687,9 @@ __all__ = [
     "PartsUpdateResponse",
     "PartsDeleteRequest",
     "PartsDeleteResponse",
+    "PartsMoveRequest",
+    "PartsMovePlan",
+    "PartsMoveResult",
     # Preferences
     "Preferences",
     "PreferencesGetRequest",
