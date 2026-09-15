@@ -249,6 +249,74 @@ class TestLinksCreateTool:
                 target="don:core:dvrv-us-1:devo/1:issue/2",
             )
 
+    async def test_create_validation_error_with_none_response_body_uses_fallback(
+        self, mock_ctx, mock_client
+    ):
+        """Test creating a link with no response body at all falls back safely."""
+        mock_client.links.create.side_effect = ValidationError(
+            "Bad Request", status_code=400, response_body=None
+        )
+
+        with pytest.raises(RuntimeError, match=r"^Validation error: Bad Request\.$"):
+            await devrev_links_create(
+                mock_ctx,
+                link_type="is_related_to",
+                source="don:core:dvrv-us-1:devo/1:ticket/1",
+                target="don:core:dvrv-us-1:devo/1:issue/2",
+            )
+
+    @pytest.mark.parametrize("detail", ["", "   "])
+    async def test_create_validation_error_with_empty_detail_uses_fallback(
+        self, mock_ctx, mock_client, detail
+    ):
+        """Test an empty or whitespace-only detail does not get appended."""
+        mock_client.links.create.side_effect = ValidationError(
+            "Bad Request", status_code=400, response_body={"detail": detail}
+        )
+
+        with pytest.raises(RuntimeError, match=r"^Validation error: Bad Request\.$"):
+            await devrev_links_create(
+                mock_ctx,
+                link_type="is_related_to",
+                source="don:core:dvrv-us-1:devo/1:ticket/1",
+                target="don:core:dvrv-us-1:devo/1:issue/2",
+            )
+
+    async def test_create_validation_error_with_non_string_detail_uses_fallback(
+        self, mock_ctx, mock_client
+    ):
+        """Test a non-string detail value does not crash and is not appended."""
+        mock_client.links.create.side_effect = ValidationError(
+            "Bad Request",
+            status_code=400,
+            response_body={"detail": {"code": "invalid_link_type"}},
+        )
+
+        with pytest.raises(RuntimeError, match=r"^Validation error: Bad Request\.$"):
+            await devrev_links_create(
+                mock_ctx,
+                link_type="is_related_to",
+                source="don:core:dvrv-us-1:devo/1:ticket/1",
+                target="don:core:dvrv-us-1:devo/1:issue/2",
+            )
+
+    async def test_create_not_found_error_skips_detail_extraction(self, mock_ctx, mock_client):
+        """Test non-ValidationError DevRevErrors bypass the detail-extraction branch."""
+        mock_client.links.create.side_effect = NotFoundError(
+            "Object not found",
+            status_code=404,
+            response_body={"detail": "should not be surfaced by the ValidationError path"},
+        )
+
+        with pytest.raises(RuntimeError, match=r"^Not found: Object not found$") as excinfo:
+            await devrev_links_create(
+                mock_ctx,
+                link_type="is_related_to",
+                source="don:core:dvrv-us-1:devo/1:ticket/1",
+                target="don:core:dvrv-us-1:devo/1:issue/2",
+            )
+        assert "Detail:" not in str(excinfo.value)
+
 
 class TestLinksDeleteTool:
     """Tests for devrev_links_delete tool."""
