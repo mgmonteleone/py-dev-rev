@@ -21,32 +21,37 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
       - name: Install dependencies
+        run: uv sync --frozen --extra dev --extra mcp --python ${{ matrix.python-version }}
+
+      - name: Verify uv is using the matrix interpreter
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev,mcp]"
+          uv run --no-sync python -c "import sys; v='${{ matrix.python-version }}'; actual='.'.join(map(str, sys.version_info[:2])); assert actual == v, f'Expected Python {v}, got {actual}'"
 
       - name: Lint with Ruff
-        run: ruff check .
+        run: uv run --no-sync ruff check .
 
       - name: Check formatting
-        run: ruff format --check .
+        run: uv run --no-sync ruff format --check .
 
       - name: Type check with mypy
-        run: mypy src/
+        run: uv run --no-sync mypy src/
 
       - name: Validate AI documentation
-        run: python scripts/build_ai_docs.py --verbose
+        run: uv run --no-sync python scripts/build_ai_docs.py --verbose
 
       - name: Run tests (unit tests only)
-        run: pytest --cov=src/devrev --cov-report=xml -v -m "not integration" --ignore=tests/performance
+        run: uv run --no-sync pytest --cov=src/devrev --cov-report=xml -v -m "not integration" --ignore=tests/performance
 
       - name: Run integration tests (if API token available)
         env:
           DEVREV_API_TOKEN: ${{ secrets.DEVREV_API_TOKEN }}
         run: |
           if [ -n "$DEVREV_API_TOKEN" ]; then
-            pytest tests/integration/ -v -m integration --cov=src/devrev --cov-append --cov-report=xml
+            uv run --no-sync pytest tests/integration/ -v -m integration --cov=src/devrev --cov-append --cov-report=xml
           else
             echo "Skipping integration tests - no API token available"
           fi
