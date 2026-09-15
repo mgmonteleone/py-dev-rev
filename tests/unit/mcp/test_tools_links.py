@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from inspect import getdoc
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -15,7 +17,7 @@ from devrev_mcp.tools.links import (
 )
 
 
-def _make_mock_link(data: dict | None = None) -> MagicMock:
+def _make_mock_link(data: dict[str, Any] | None = None) -> MagicMock:
     """Create a mock Link model with model_dump method.
 
     Args:
@@ -155,23 +157,23 @@ class TestLinksCreateTool:
         assert result["link_type"] == "is_related_to"
         mock_client.links.create.assert_called_once()
 
-    async def test_create_with_enum_type(self, mock_ctx, mock_client):
-        """Test creating a link with enum link type."""
-        # Arrange
-        link = _make_mock_link({"link_type": "is_blocked_by"})
+    async def test_create_ticket_dependency_forwards_link_type(self, mock_ctx, mock_client):
+        """Test forwarding is_dependent_on for a ticket-to-issue link."""
+        link = _make_mock_link({"link_type": "is_dependent_on"})
         mock_client.links.create.return_value = link
 
-        # Act
         result = await devrev_links_create(
             mock_ctx,
-            link_type="is_blocked_by",
+            link_type="is_dependent_on",
             source="don:core:dvrv-us-1:devo/1:ticket/1",
-            target="don:core:dvrv-us-1:devo/1:ticket/2",
+            target="don:core:dvrv-us-1:devo/1:issue/2",
         )
 
-        # Assert
-        assert result["link_type"] == "is_blocked_by"
-        mock_client.links.create.assert_called_once()
+        assert result["link_type"] == "is_dependent_on"
+        request = mock_client.links.create.call_args.args[0]
+        assert request.link_type == "is_dependent_on"
+        assert request.source.endswith(":ticket/1")
+        assert request.target.endswith(":issue/2")
 
     async def test_create_with_custom_type(self, mock_ctx, mock_client):
         """Test creating a link with custom link type."""
@@ -191,20 +193,60 @@ class TestLinksCreateTool:
         assert result["link_type"] == "custom_link_type"
         mock_client.links.create.assert_called_once()
 
-    async def test_create_validation_error(self, mock_ctx, mock_client):
-        """Test creating a link with validation error."""
-        # Arrange
+    def test_create_docs_list_valid_link_types(self):
+        """Test link guidance contains the accepted values and reported association."""
+        docs = getdoc(devrev_links_create)
+        assert docs is not None
+        for link_type in (
+            "custom_link",
+            "developed_with",
+            "imports",
+            "is_analyzed_by",
+            "is_converted_to",
+            "is_dependent_on",
+            "is_duplicate_of",
+            "is_follow_up_of",
+            "is_merged_into",
+            "is_parent_of",
+            "is_part_of",
+            "is_related_to",
+            "serves",
+        ):
+            assert link_type in docs
+        assert "is_blocked_by" not in docs
+        assert "ticket" in docs
+        assert "tracking issue" in docs
+
+    async def test_create_validation_error_includes_response_detail(self, mock_ctx, mock_client):
+        """Test creating a link surfaces DevRev's response detail."""
         mock_client.links.create.side_effect = ValidationError(
-            "Invalid source or target", status_code=400
+            "Bad Request",
+            status_code=400,
+            response_body={"detail": "link_type is not valid for this source and target"},
         )
 
-        # Act & Assert
-        with pytest.raises(RuntimeError, match="Invalid source or target"):
+        with pytest.raises(RuntimeError, match="link_type is not valid"):
             await devrev_links_create(
                 mock_ctx,
                 link_type="is_related_to",
-                source="invalid",
-                target="invalid",
+                source="don:core:dvrv-us-1:devo/1:ticket/1",
+                target="don:core:dvrv-us-1:devo/1:issue/2",
+            )
+
+    async def test_create_validation_error_without_detail_uses_fallback(
+        self, mock_ctx, mock_client
+    ):
+        """Test creating a link preserves existing formatting without detail."""
+        mock_client.links.create.side_effect = ValidationError(
+            "Bad Request", status_code=400, response_body={"request_id": "request-1"}
+        )
+
+        with pytest.raises(RuntimeError, match=r"^Validation error: Bad Request\.$"):
+            await devrev_links_create(
+                mock_ctx,
+                link_type="is_related_to",
+                source="don:core:dvrv-us-1:devo/1:ticket/1",
+                target="don:core:dvrv-us-1:devo/1:issue/2",
             )
 
 

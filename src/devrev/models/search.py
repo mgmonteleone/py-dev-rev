@@ -109,8 +109,8 @@ class HybridSearchRequest(DevRevBaseModel):
     """Request model for hybrid search."""
 
     query: str = Field(..., description="Search query")
-    namespaces: list[SearchNamespace] = Field(
-        ..., description="Namespaces to search in (e.g. ['account'], ['work', 'ticket'])"
+    namespace: SearchNamespace = Field(
+        ..., description="Namespace to search in (e.g. 'issue' or 'product')"
     )
     semantic_weight: float | None = Field(
         default=None, description="Weight for semantic search (0-1)"

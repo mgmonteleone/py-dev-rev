@@ -3,6 +3,7 @@
 Tests for devrev_mcp.tools.search module covering hybrid and core search operations.
 """
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -15,7 +16,7 @@ from devrev_mcp.tools.search import (
 )
 
 
-def _make_mock_search_result(data: dict | None = None) -> MagicMock:
+def _make_mock_search_result(data: dict[str, Any] | None = None) -> MagicMock:
     """Create a mock search result with realistic data format.
 
     Args:
@@ -184,6 +185,7 @@ class TestSearchHybridTool:
         [
             ("TICKET", "TICKET"),
             ("INCIDENT", "INCIDENT"),
+            ("ISSUE", "ISSUE"),
             ("PRODUCT", "PRODUCT"),
             ("ENHANCEMENT", "ENHANCEMENT"),
             ("CUSTOM_WORK", "CUSTOM_WORK"),
@@ -378,7 +380,7 @@ class TestReranking:
 
     def test_rerank_result_without_entity_dict(self):
         """Results without entity dicts should go to unmatched group."""
-        results = [
+        results: list[dict[str, Any]] = [
             {"type": "unknown", "snippet": "some text"},
             {"type": "account", "account": {"display_name": "MongoDB"}},
         ]

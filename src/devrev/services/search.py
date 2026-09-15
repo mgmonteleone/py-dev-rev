@@ -180,7 +180,7 @@ class SearchService(BaseService):
                 )
             request = HybridSearchRequest(
                 query=request_or_query,
-                namespaces=[namespace],
+                namespace=namespace,
                 semantic_weight=semantic_weight,
                 limit=limit,
                 cursor=cursor,
@@ -352,7 +352,7 @@ class AsyncSearchService(AsyncBaseService):
                 )
             request = HybridSearchRequest(
                 query=request_or_query,
-                namespaces=[namespace],
+                namespace=namespace,
                 semantic_weight=semantic_weight,
                 limit=limit,
                 cursor=cursor,
