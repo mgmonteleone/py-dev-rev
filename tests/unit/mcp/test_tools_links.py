@@ -217,6 +217,25 @@ class TestLinksCreateTool:
         assert "ticket" in docs
         assert "tracking issue" in docs
 
+    def test_create_docs_flag_custom_link_as_unsupported(self):
+        """Test link guidance distinguishes the API enum from tool support.
+
+        custom_link is a valid DevRev link-type enum value, but creating one
+        also requires a custom_link_type ID that this tool does not accept.
+        The docstring must say so explicitly rather than implying custom_link
+        works like the other built-in values.
+        """
+        docs = getdoc(devrev_links_create)
+        assert docs is not None
+        normalized = " ".join(docs.split())
+        assert "custom_link_type" in normalized
+        assert "does not accept" in normalized
+        # The unsupported caveat must be attached to custom_link, not floating
+        # generic text elsewhere in the docstring.
+        custom_link_index = normalized.index("custom_link")
+        unsupported_index = normalized.index("except custom_link")
+        assert unsupported_index >= custom_link_index
+
     async def test_create_validation_error_includes_response_detail(self, mock_ctx, mock_client):
         """Test creating a link surfaces DevRev's response detail."""
         mock_client.links.create.side_effect = ValidationError(

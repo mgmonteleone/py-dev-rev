@@ -86,11 +86,14 @@ if _config.enable_destructive_tools:
         """Create a link between two DevRev objects.
 
         Args:
-            link_type: Accepted values are custom_link, developed_with, imports,
-                is_analyzed_by, is_converted_to, is_dependent_on, is_duplicate_of,
-                is_follow_up_of, is_merged_into, is_parent_of, is_part_of,
-                is_related_to, and serves. Use is_dependent_on when linking a ticket
-                to its tracking issue.
+            link_type: DevRev's link-type enum is custom_link, developed_with,
+                imports, is_analyzed_by, is_converted_to, is_dependent_on,
+                is_duplicate_of, is_follow_up_of, is_merged_into, is_parent_of,
+                is_part_of, is_related_to, and serves. This tool supports all of
+                these built-in values except custom_link: creating a custom_link
+                also requires a custom_link_type ID, which this tool does not
+                accept, so passing custom_link here will fail. Use is_dependent_on
+                when linking a ticket to its tracking issue.
             source: Source object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/123").
             target: Target object ID (e.g., "don:core:dvrv-us-1:devo/1:issue/456").
         """
