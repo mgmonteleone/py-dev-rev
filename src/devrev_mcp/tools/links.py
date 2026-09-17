@@ -7,13 +7,12 @@ from typing import Any
 
 from mcp.server.fastmcp import Context
 
-from devrev.exceptions import DevRevError
+from devrev.exceptions import DevRevError, ValidationError
 from devrev.models.links import (
     LinksCreateRequest,
     LinksDeleteRequest,
     LinksGetRequest,
     LinksListRequest,
-    LinkType,
 )
 from devrev_mcp.server import _config, mcp
 from devrev_mcp.utils.don_id import validate_don_id
@@ -87,29 +86,33 @@ if _config.enable_destructive_tools:
         """Create a link between two DevRev objects.
 
         Args:
-            link_type: Type of link (e.g., "is_blocked_by", "is_related_to", "is_duplicate_of").
+            link_type: DevRev's link-type enum is custom_link, developed_with,
+                imports, is_analyzed_by, is_converted_to, is_dependent_on,
+                is_duplicate_of, is_follow_up_of, is_merged_into, is_parent_of,
+                is_part_of, is_related_to, and serves. This tool supports all of
+                these built-in values except custom_link: creating a custom_link
+                also requires a custom_link_type ID, which this tool does not
+                accept, so passing custom_link here will fail. Use is_dependent_on
+                when linking a ticket to its tracking issue.
             source: Source object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/123").
-            target: Target object ID (e.g., "don:core:dvrv-us-1:devo/1:ticket/456").
+            target: Target object ID (e.g., "don:core:dvrv-us-1:devo/1:issue/456").
         """
         app = ctx.request_context.lifespan_context
         try:
-            # Try to convert to LinkType enum, but allow custom link types
-            link_type_value: LinkType | str
-            try:
-                link_type_value = LinkType[link_type.upper()]
-            except KeyError:
-                # Custom link type - pass as raw string
-                link_type_value = link_type
-
             request = LinksCreateRequest(
-                link_type=link_type_value,
+                link_type=link_type,
                 source=source,
                 target=target,
             )
             link = await app.get_client().links.create(request)
             return serialize_model(link)
         except DevRevError as e:
-            raise RuntimeError(format_devrev_error(e)) from e
+            message = format_devrev_error(e)
+            if isinstance(e, ValidationError) and e.response_body:
+                detail = e.response_body.get("detail")
+                if isinstance(detail, str) and detail.strip():
+                    message = f"{message} Detail: {detail}"
+            raise RuntimeError(message) from e
 
     @mcp.tool()
     async def devrev_links_delete(

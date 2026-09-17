@@ -98,7 +98,7 @@ results = client.search.core(request)
 # Hybrid search with request object
 request = HybridSearchRequest(
     query="database performance issues",
-    namespaces=[SearchNamespace.WORK],
+    namespace=SearchNamespace.WORK,
     semantic_weight=0.8,
     limit=20,
 )
