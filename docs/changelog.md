@@ -34,19 +34,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   **Not a compatibility shim — no collapsing of lists.** Code that
   constructs `HybridSearchRequest(namespaces=[...])` directly (bypassing
-  the `client.search.hybrid()` / `client.search.async_hybrid()` convenience
-  methods) will now get a `pydantic.ValidationError` (unknown field
+  the `client.search.hybrid()` convenience method — `await
+  client.search.hybrid()` on `AsyncDevRevClient`, same method name, no
+  separate `async_hybrid`) will now get a `pydantic.ValidationError` (unknown field
   `namespaces`, missing required field `namespace`) instead of a silent
   200 or a silently-truncated single-namespace search. There is no
   multi-namespace hybrid search: querying more than one namespace with
   hybrid search requires one call per namespace, same as before.
 
   **Unaffected — convenience methods and MCP tools already used a
-  singular namespace.** `client.search.hybrid(query, namespace=...)` /
-  `client.search.async_hybrid(...)` and the `devrev_search_hybrid` MCP
-  tool already accepted (and required) a single `namespace` value via
-  their existing overloads/parameters; call sites using those call shapes
-  are unaffected by this change. Likewise `client.search.core(...)` and
+  singular namespace.** `client.search.hybrid(query, namespace=...)` on
+  `DevRevClient` and `await client.search.hybrid(query, namespace=...)`
+  on `AsyncDevRevClient` (there is no `async_hybrid` method — the async
+  client exposes the same `hybrid` method name, called with `await`) and
+  the `devrev_search_hybrid` MCP tool already accepted (and required) a
+  single `namespace` value via their existing overloads/parameters; call
+  sites using those call shapes are unaffected by this change. Likewise
+  `client.search.core(...)` and
   the `devrev_search_core` MCP tool are unaffected — both already took
   (and still take) a single `namespace` argument and internally build the
   plural `CoreSearchRequest.namespaces` list, which is unchanged.
