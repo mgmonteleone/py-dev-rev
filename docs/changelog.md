@@ -13,6 +13,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [4.0.0] - 2026-09-18
+
+### Changed / Breaking
+
+- **BREAKING: `HybridSearchRequest.namespace` is now a required scalar,
+  replacing `namespaces` (list)** (CSS-2275) — The DevRev `/search.hybrid`
+  endpoint rejects the plural `namespaces` array with a validation error;
+  it only accepts a single scalar `namespace`. `HybridSearchRequest` now
+  declares `namespace: SearchNamespace` (required) instead of
+  `namespaces: list[SearchNamespace]`.
+
+  This **supersedes the v2.12.1 (#204) guidance** to send `namespaces`
+  (plural) for both core and hybrid search — that fix correctly diagnosed
+  the `/search.core` payload shape but incorrectly applied the same plural
+  shape to `/search.hybrid`. `CoreSearchRequest.namespaces` (list) is
+  **unchanged** by this release; only the hybrid request model reverts to
+  a singular field. The historical 2.12.1 changelog entry above is left
+  as-is for the record — this note documents the correction going forward.
+
+  **Not a compatibility shim — no collapsing of lists.** Code that
+  constructs `HybridSearchRequest(namespaces=[...])` directly (bypassing
+  the `client.search.hybrid()` / `client.search.async_hybrid()` convenience
+  methods) will now get a `pydantic.ValidationError` (unknown field
+  `namespaces`, missing required field `namespace`) instead of a silent
+  200 or a silently-truncated single-namespace search. There is no
+  multi-namespace hybrid search: querying more than one namespace with
+  hybrid search requires one call per namespace, same as before.
+
+  **Unaffected — convenience methods and MCP tools already used a
+  singular namespace.** `client.search.hybrid(query, namespace=...)` /
+  `client.search.async_hybrid(...)` and the `devrev_search_hybrid` MCP
+  tool already accepted (and required) a single `namespace` value via
+  their existing overloads/parameters; call sites using those call shapes
+  are unaffected by this change. Likewise `client.search.core(...)` and
+  the `devrev_search_core` MCP tool are unaffected — both already took
+  (and still take) a single `namespace` argument and internally build the
+  plural `CoreSearchRequest.namespaces` list, which is unchanged.
+
+### Fixed
+
+- **`devrev_links_create` clarifies `custom_link` is unsupported**
+  (CSS-2275) — The tool's `link_type` docstring listed `custom_link` as an
+  accepted DevRev link-type enum value, but creating a `custom_link` also
+  requires a `custom_link_type` ID that this tool does not accept as a
+  parameter; passing `custom_link` always failed. The docstring now states
+  explicitly that `custom_link` is a valid DevRev API enum value but is
+  **not supported** by this tool, and recommends `is_dependent_on` for the
+  common ticket-to-tracking-issue case.
+- **Richer `devrev_links_create` validation errors** (CSS-2275) — When the
+  DevRev API returns a `ValidationError` with a `detail` field in the
+  response body, `devrev_links_create` now appends that detail text to the
+  raised error message (e.g. `"Validation error: Bad Request. Detail:
+  ..."`), instead of surfacing only the generic message. Falls back to the
+  prior generic message when no usable `detail` string is present.
+
+### Maintenance
+
+- **Reproducible CI dependency resolution** (CSS-2654) — CI now installs
+  via `uv sync --frozen` (matching the pattern already used in
+  `release.yml`) instead of unpinned `pip install -e ".[dev,mcp]"`, so CI
+  runs and local `uv.lock`-based installs resolve to byte-identical
+  dependency sets. No SDK or MCP runtime behavior change.
+
 ## [3.1.1] - 2026-06-16
 
 ### Changed
