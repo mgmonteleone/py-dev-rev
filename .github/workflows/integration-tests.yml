@@ -42,12 +42,13 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev,mcp]"
-      
+        run: uv sync --frozen --extra dev --extra mcp --python ${{ matrix.python-version }}
+
       - name: Run integration tests
         id: integration_tests
         env:
@@ -58,7 +59,7 @@ jobs:
             exit 0
           fi
           echo "Running integration tests against DevRev API..."
-          pytest tests/integration/ -v -m integration --tb=short
+          uv run --no-sync pytest tests/integration/ -v -m integration --tb=short
 
       - name: Report results
         if: always()
@@ -84,10 +85,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+        run: uv sync --frozen --extra dev --python 3.11
 
       - name: Run backwards compatibility tests
         env:
@@ -98,7 +100,7 @@ jobs:
             exit 0
           fi
           echo "Running backwards compatibility tests..."
-          pytest tests/integration/test_readonly_endpoints.py -v -m integration
+          uv run --no-sync pytest tests/integration/test_readonly_endpoints.py -v -m integration
       
       - name: Create issue on failure
         if: failure()
@@ -150,10 +152,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+        run: uv sync --frozen --extra dev --python 3.11
 
       - name: Validate environment safety
         run: |
@@ -175,7 +178,7 @@ jobs:
         run: |
           echo "Running write operation integration tests..."
           echo "⚠️ These tests create, update, and delete resources"
-          pytest tests/integration/test_write_operations.py -v -m write --tb=short
+          uv run --no-sync pytest tests/integration/test_write_operations.py -v -m write --tb=short
 
       - name: Report write test results
         if: always()
