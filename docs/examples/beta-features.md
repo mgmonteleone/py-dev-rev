@@ -266,6 +266,7 @@ from devrev import DevRevClient, APIVersion
 from devrev.models.incidents import IncidentSeverity, IncidentStage
 from devrev.models.engagements import EngagementType
 from devrev.models.recommendations import ChatMessage, MessageRole, ChatCompletionRequest
+from devrev.models.search import SearchNamespace
 from datetime import datetime, timezone
 
 client = DevRevClient(api_version=APIVersion.BETA)
@@ -283,7 +284,7 @@ print(f"Created incident: {incident.display_id}")
 # 2. Search for similar past incidents
 similar = client.search.hybrid(
     query="payment processing failures",
-    namespaces=["work"],
+    namespace=SearchNamespace.WORK,
     limit=5
 )
 

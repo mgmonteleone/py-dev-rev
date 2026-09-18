@@ -90,7 +90,7 @@ jobs:
     if: github.event.inputs.dry_run != 'true'
     environment:
       name: pypi
-      url: https://pypi.org/project/py-devrev/
+      url: https://pypi.org/project/devrev-Python-SDK/
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v8
@@ -146,7 +146,7 @@ jobs:
           ## Installation
 
           \`\`\`bash
-          pip install py-devrev==${{ steps.version.outputs.version }}
+          pip install devrev-python-sdk==${{ steps.version.outputs.version }}
           \`\`\`
 
           ## Full Changelog
